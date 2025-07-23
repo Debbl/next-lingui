@@ -15,6 +15,12 @@
   "keywords": [],
   "exports": {
     ".": "./dist/index.js",
+    "./macro": {
+      "types": "./macro/index.d.ts",
+      "default": "./macro/index.js"
+    },
+    "./middleware": "./dist/middleware.js",
+    "./routing": "./dist/routing.js",
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
@@ -33,6 +39,24 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepare": "simple-git-hooks"
+  },
+  "peerDependencies": {
+    "@lingui/babel-plugin-lingui-macro": ">=5.3.3",
+    "@lingui/cli": ">=5.3.3",
+    "@lingui/core": ">=5.3.3",
+    "babel-plugin-macros": "2 || 3",
+    "next": ">=15"
+  },
+  "peerDependenciesMeta": {
+    "@lingui/babel-plugin-lingui-macro": {
+      "optional": true
+    },
+    "babel-plugin-macros": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@lingui/conf": "^5.3.3"
   },
   "devDependencies": {
     "@debbl/eslint-config": "^3.12.0",
