@@ -1,0 +1,54 @@
+{
+  "name": "next-lingui",
+  "type": "module",
+  "version": "0.0.0",
+  "packageManager": "pnpm@10.13.1",
+  "description": "Next.js + Lingui",
+  "author": "Brendan Dash <me@aiwan.run> (https://aiwan.run)",
+  "license": "MIT",
+  "homepage": "https://github.com/Debbl/next-lingui#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Debbl/next-lingui.git"
+  },
+  "bugs": "https://github.com/Debbl/next-lingui/issues",
+  "keywords": [],
+  "exports": {
+    ".": "./dist/index.js",
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "dev": "pnpm build && node ./dist/index.cjs",
+    "build": "tsdown",
+    "test": "vitest",
+    "release": "pnpm build && bumpp && pnpm publish",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "prepare": "simple-git-hooks"
+  },
+  "devDependencies": {
+    "@debbl/eslint-config": "^3.12.0",
+    "@types/node": "^24.0.14",
+    "bumpp": "^10.2.0",
+    "eslint": "^9.31.0",
+    "lint-staged": "^16.1.2",
+    "simple-git-hooks": "^2.13.0",
+    "tsdown": "^0.12.9",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged"
+  },
+  "lint-staged": {
+    "*": "eslint --fix"
+  }
+}
