@@ -1,78 +1,57 @@
-/* eslint-disable no-restricted-globals */
-/* eslint-disable unused-imports/no-unused-vars */
-/* eslint-disable unicorn/consistent-function-scoping */
-import { setupI18n } from '@lingui/core'
-import { useLingui } from '@lingui/react'
-import { render } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import {
-  usePathname as useNextPathname,
-  useRouter as useNextRouter,
+  permanentRedirect as nextPermanentRedirect,
+  redirect as nextRedirect,
+  RedirectType,
 } from 'next/navigation.js'
-import * as React from 'react'
+import { renderToString } from 'react-dom/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useLocale } from '~/hooks/use-locale'
-import { createNavigation } from './create-navigation'
-import type { Locale } from '@lingui/core'
+import { defineRouting } from '../routing'
+import createNavigationClient from './react-client/create-navigation'
+import createNavigationServer from './react-server/create-navigation'
+import getServerLocale from './react-server/get-server-locale'
 import type { DomainsConfig, Pathnames } from '../routing'
 
-vi.mock('next/navigation')
-vi.mock('@lingui/react', async () => ({
-  ...(await vi.importActual('@lingui/react')),
-  useLingui: vi.fn(() => ({
-    i18n: {
-      locale: 'en',
-    },
-  })),
+vi.mock('react')
+vi.mock('next/navigation.js', async () => ({
+  ...(await vi.importActual('next/navigation.js')),
+  redirect: vi.fn(),
+  permanentRedirect: vi.fn(),
+}))
+vi.mock('./react-server/getServerLocale')
+vi.mock('use-intl', async () => ({
+  ...(await vi.importActual('use-intl')),
+  useLocale: vi.fn(() => 'en'),
 }))
 
 function mockCurrentLocale(locale: Locale) {
-  vi.mocked(useLingui).mockImplementation(() => {
-    const i18n = setupI18n({
-      locale,
-    })
+  // Enable synchronous rendering without having to suspend
+  const value = locale
+  const promise = Promise.resolve(value)
+  ;(promise as any).status = 'fulfilled'
+  ;(promise as any).value = value
 
-    return {
-      _: i18n._,
-      i18n,
-    }
-  })
+  vi.mocked(getServerLocale).mockImplementation(() => promise)
+
+  vi.mocked(useLocale).mockImplementation(() => locale)
 }
 
-function mockLocation(
-  location: Partial<typeof window.location>,
-  basePath?: string,
-) {
+function mockLocation(location: Partial<typeof window.location>) {
   delete (global.window as any).location
   global.window = Object.create(window)
   ;(global.window as any).location = location
-
-  if (location.pathname) {
-    const pathname = basePath
-      ? location.pathname.replace(basePath, '')
-      : location.pathname
-    vi.mocked(useNextPathname).mockReturnValue(pathname)
-  }
 }
 
 beforeEach(() => {
   mockCurrentLocale('en')
-  mockLocation({ host: 'localhost:3000', pathname: '/en' })
-
-  const router = {
-    push: vi.fn(),
-    replace: vi.fn(),
-    prefetch: vi.fn(),
-    back: vi.fn(),
-    forward: vi.fn(),
-    refresh: vi.fn(),
-  }
-  vi.mocked(useNextRouter).mockImplementation(() => router)
+  mockLocation({ host: 'localhost:3000' })
 })
 
 const locales = ['en', 'de', 'ja'] as const
 const defaultLocale = 'en' as const
 
-const domains: DomainsConfig<typeof locales> = [
+const domains = [
   {
     defaultLocale: 'en',
     domain: 'example.com',
@@ -83,7 +62,7 @@ const domains: DomainsConfig<typeof locales> = [
     domain: 'example.de',
     locales: ['de', 'ja'],
   },
-]
+] satisfies DomainsConfig<typeof locales>
 
 const pathnames = {
   '/': '/',
@@ -105,734 +84,1209 @@ const pathnames = {
   '/catch-all/[[...parts]]': '/catch-all/[[...parts]]',
 } satisfies Pathnames<typeof locales>
 
-function getRenderPathname<Return extends string>(usePathname: () => Return) {
-  return () => {
-    function Component() {
-      return usePathname()
-    }
-    render(<Component />)
+function runInRender(cb: () => void) {
+  function Component() {
+    cb()
+    return null
   }
+  render(<Component />)
 }
 
-function getInvokeRouter<Router>(useRouter: () => Router) {
-  return function invokeRouter(cb: (router: Router) => void) {
-    function Component() {
-      const router = useRouter()
-      cb(router)
-      return null
-    }
-    render(<Component />)
-  }
-}
+describe.each([
+  {
+    env: 'react-client',
+    implementation: createNavigationClient,
+  },
+  {
+    env: 'react-server',
+    implementation: createNavigationServer,
+  },
+])('createNavigation ($env)', ({ implementation: createNavigation }) => {
+  describe("localePrefix: 'always'", () => {
+    const { Link, getPathname, permanentRedirect, redirect } = createNavigation(
+      {
+        locales,
+        defaultLocale,
+        localePrefix: 'always',
+      },
+    )
 
-describe("localePrefix: 'always'", () => {
-  const { Link, usePathname, useRouter } = createNavigation({
-    locales,
-    defaultLocale,
-    localePrefix: 'always',
-  })
+    describe('createNavigation', () => {
+      it('ensures `defaultLocale` is in `locales`', () => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        ;() =>
+          createNavigation({
+            locales,
+            // @ts-expect-error
+            defaultLocale: 'zh',
+            localePrefix: 'always',
+          })
+      })
+    })
 
-  describe('link', () => {
-    it('can receive a ref', () => {
-      let ref
+    describe('link', () => {
+      it('renders a prefix when currently on the default locale', () => {
+        const markup = renderToString(<Link href='/about'>About</Link>)
+        expect(markup).toContain('href="/en/about"')
+      })
 
-      render(
-        <Link
-          ref={(node) => {
-            ref = node
+      it('renders a prefix when currently on a secondary locale', () => {
+        mockCurrentLocale('de')
+        const markup = renderToString(<Link href='/about'>About</Link>)
+        expect(markup).toContain('href="/de/about"')
+      })
+
+      it('accepts search params', () => {
+        const markup = renderToString(
+          <Link href={{ pathname: '/about', query: { foo: 'bar' } }}>
+            About
+          </Link>,
+        )
+        expect(markup).toContain('href="/en/about?foo=bar"')
+      })
+
+      it('accepts search params and hashes as part of the pathname', () => {
+        const markup = renderToString(
+          <Link href='/about?foo=bar#top'>About</Link>,
+        )
+        expect(markup).toContain('href="/en/about?foo=bar#top"')
+      })
+
+      it('renders a prefix for a different locale', () => {
+        // Being able to accept a string and not only a strictly typed locale is
+        // important in order to be able to use a result from `useLocale()`.
+        // This is less relevant for `Link`, but this should be in sync across
+        // al navigation APIs (see https://github.com/amannn/next-intl/issues/1377)
+        const locale = 'de' as string
+
+        const markup = renderToString(
+          <Link href='/about' locale={locale}>
+            Über uns
+          </Link>,
+        )
+        expect(markup).toContain('href="/de/about"')
+        expect(markup).toContain('hrefLang="de"')
+      })
+
+      it('renders an object href with an external host', () => {
+        render(
+          <Link
+            href={{
+              pathname: '/about',
+              query: { foo: 'bar' },
+              host: 'www.test.de',
+            }}
+          >
+            About
+          </Link>,
+        )
+        expect(
+          screen.getByRole('link', { name: 'About' }).getAttribute('href'),
+        ).toBe('//www.test.de/about?foo=bar')
+      })
+
+      it('handles params', () => {
+        render(
+          <Link href='/news/launch-party-3' locale='de'>
+            About
+          </Link>,
+        )
+        expect(
+          screen.getByRole('link', { name: 'About' }).getAttribute('href'),
+        ).toBe('/de/news/launch-party-3')
+      })
+
+      it('handles relative links correctly', () => {
+        const markup = renderToString(<Link href='test'>Test</Link>)
+        expect(markup).toContain('href="test"')
+      })
+
+      it('handles external links correctly', () => {
+        const markup = renderToString(
+          <Link href='https://example.com/test'>Test</Link>,
+        )
+        expect(markup).toContain('href="https://example.com/test"')
+      })
+
+      it('does not allow to receive params', () => {
+        ;<Link
+          href={{
+            pathname: '/news/[articleSlug]-[articleId]',
+            // @ts-expect-error -- This error is important when switching from localized pathnames to shared pathnames
+            params: {
+              articleSlug: 'launch-party',
+              articleId: 3,
+            },
           }}
-          href='/test'
-        >
-          Test
-        </Link>,
-      )
-
-      expect(ref).toBeDefined()
-    })
-  })
-
-  describe('useRouter', () => {
-    const invokeRouter = getInvokeRouter(useRouter)
-
-    it('leaves unrelated router functionality in place', () => {
-      ;(['back', 'forward', 'refresh'] as const).forEach((method) => {
-        invokeRouter((router) => router[method]())
-        expect(useNextRouter()[method]).toHaveBeenCalled()
-      })
-    })
-
-    describe.each(['push', 'replace'] as const)('`%s`', (method) => {
-      it('prefixes with the default locale', () => {
-        invokeRouter((router) => router[method]('/about'))
-        expect(useNextRouter()[method]).toHaveBeenCalledWith('/en/about')
+        />
       })
 
-      it('prefixes with a secondary locale', () => {
-        invokeRouter((router) => router[method]('/about', { locale: 'de' }))
-        expect(useNextRouter()[method]).toHaveBeenCalledWith('/de/about')
+      it('does not warn when setting the `prefetch` prop', () => {
+        const consoleSpy = vi.spyOn(console, 'error')
+        const markup = renderToString(
+          <Link href='/about' prefetch>
+            About
+          </Link>,
+        )
+        expect(markup).toContain('href="/en/about"')
+        expect(consoleSpy).not.toHaveBeenCalled()
       })
 
       it('can use a locale from `useLocale`', () => {
         function Component() {
           const locale = useLocale()
-          const router = useRouter()
-          router.push('/about', { locale })
-          return null
+          return <Link href='/about' locale={locale} />
         }
         render(<Component />)
       })
+    })
 
-      it('passes through unknown options to the Next.js router', () => {
-        invokeRouter((router) => router[method]('/about', { scroll: true }))
-        expect(useNextRouter()[method]).toHaveBeenCalledWith('/en/about', {
-          scroll: true,
+    describe('getPathname', () => {
+      it('can be called for the default locale', () => {
+        // Being able to accept a string and not only a strictly typed locale is
+        // important in order to be able to use a result from `useLocale()`.
+        // This is less relevant for `Link`, but this should be in sync across
+        // al navigation APIs (see https://github.com/amannn/next-intl/issues/1377)
+        const locale = 'en' as string
+
+        expect(getPathname({ href: '/unknown', locale })).toBe('/en/unknown')
+      })
+
+      it('can be called for a secondary locale', () => {
+        expect(getPathname({ locale: 'de', href: '/about' })).toBe('/de/about')
+      })
+
+      it('can incorporate search params', () => {
+        expect(
+          getPathname({
+            href: {
+              pathname: '/about',
+              query: { foo: 'bar' },
+            },
+            locale: 'en',
+          }),
+        ).toBe('/en/about?foo=bar')
+      })
+
+      it('does not accept `query` on the root', () => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        ;() =>
+          getPathname({
+            href: '/about',
+            locale: 'en',
+            // @ts-expect-error -- Not allowed
+            query: { foo: 'bar' },
+          })
+      })
+
+      it('does not accept `params` on href', () => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        ;() =>
+          getPathname({
+            href: {
+              pathname: '/users/[userId]',
+              // @ts-expect-error -- Not allowed
+              params: { userId: 3 },
+            },
+            locale: 'en',
+          })
+      })
+
+      it('requires a locale', () => {
+        // Some background: This function can be used either in the `react-server`
+        // or the `react-client` environment. Since the function signature doesn't
+        // impose a limit on where it can be called (e.g. during rendering), we
+        // can't determine the current locale in the `react-client` environment.
+        // While we could theoretically retrieve the current locale in the
+        // `react-server` environment we need a shared function signature that
+        // works in either environment.
+
+        // @ts-expect-error -- Missing locale
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        ;() => getPathname({ href: '/about' })
+      })
+
+      it('handles relative pathnames', () => {
+        // Not really useful, but we silently support this
+        expect(getPathname({ locale: 'en', href: 'about' })).toBe('about')
+      })
+
+      it('handles external pathnames', () => {
+        // Not really useful, but we silently support this
+        expect(
+          getPathname({ locale: 'en', href: 'https://example.com/about' }),
+        ).toBe('https://example.com/about')
+      })
+
+      it('does not allow to pass a domain', () => {
+        // @ts-expect-error -- Domain is not supported
+        getPathname({ locale: 'en', href: '/', domain: 'example.com' })
+      })
+
+      it('does not accept the _forcePrefix flag', () => {
+        getPathname(
+          { locale: 'en', href: '/' },
+          // @ts-expect-error -- Not supported
+          true,
+        )
+      })
+
+      it('can use a locale from `useLocale`', () => {
+        function Component() {
+          const locale = useLocale()
+          return getPathname({
+            locale,
+            href: '/about',
+          })
+        }
+        render(<Component />)
+      })
+    })
+
+    describe.each([
+      ['redirect', redirect, nextRedirect],
+      ['permanentRedirect', permanentRedirect, nextPermanentRedirect],
+    ])('%s', (_, redirectFn, nextRedirectFn) => {
+      it('can redirect for the default locale', () => {
+        const locale = 'en' as string
+        runInRender(() => redirectFn({ href: '/', locale }))
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('/en')
+      })
+
+      it('forwards a redirect type', () => {
+        runInRender(() =>
+          redirectFn({ href: '/', locale: 'en' }, RedirectType.push),
+        )
+        expect(nextRedirectFn).toHaveBeenLastCalledWith(
+          '/en',
+          RedirectType.push,
+        )
+      })
+
+      it('can redirect to a different locale', () => {
+        runInRender(() => redirectFn({ href: '/about', locale: 'de' }))
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('/de/about')
+      })
+
+      it('handles relative pathnames', () => {
+        runInRender(() => redirectFn({ href: 'about', locale: 'en' }))
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('about')
+      })
+
+      it('handles search params', () => {
+        runInRender(() =>
+          redirectFn({
+            href: { pathname: '/about', query: { foo: 'bar' } },
+            locale: 'en',
+          }),
+        )
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('/en/about?foo=bar')
+      })
+
+      it('requires a locale', () => {
+        // @ts-expect-error -- Object expected
+        redirectFn('/')
+        // @ts-expect-error -- Missing locale
+        redirectFn({ pathname: '/about' })
+      })
+
+      it('can use a locale from `useLocale`', () => {
+        function Component() {
+          const locale = useLocale()
+          return redirectFn({ href: '/about', locale })
+        }
+        render(<Component />)
+      })
+    })
+  })
+
+  describe("localePrefix: 'always', no `locales`", () => {
+    const { Link, getPathname, permanentRedirect, redirect } = createNavigation(
+      {
+        localePrefix: 'always',
+      },
+    )
+
+    describe('createNavigation', () => {
+      it('can create navigation APIs with no arguments at all', () => {
+        createNavigation()
+      })
+
+      it('can not be used with `pathnames`', () => {
+        // @ts-expect-error -- Missing locales
+        createNavigation({ pathnames })
+      })
+    })
+
+    describe('link', () => {
+      it('renders a prefix for the current locale', () => {
+        const markup = renderToString(<Link href='/about'>About</Link>)
+        expect(markup).toContain('href="/en/about"')
+      })
+
+      it('renders a prefix for a different locale', () => {
+        const markup = renderToString(
+          <Link href='/about' locale='zh'>
+            About
+          </Link>,
+        )
+        expect(markup).toContain('href="/zh/about"')
+      })
+    })
+
+    describe('getPathname', () => {
+      it('adds a prefix for the default locale', () => {
+        expect(getPathname({ href: '/about', locale: 'en' })).toBe('/en/about')
+      })
+
+      it('adds a prefix for a secondary locale', () => {
+        expect(getPathname({ href: '/about', locale: 'zh' })).toBe('/zh/about')
+      })
+    })
+
+    describe.each([
+      ['redirect', redirect, nextRedirect],
+      ['permanentRedirect', permanentRedirect, nextPermanentRedirect],
+    ])('%s', (_, redirectFn, nextRedirectFn) => {
+      it('can redirect for the default locale', () => {
+        runInRender(() => redirectFn({ href: '/', locale: 'en' }))
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('/en')
+      })
+    })
+  })
+
+  describe("localePrefix: 'always', with `pathnames`", () => {
+    const { Link, getPathname, permanentRedirect, redirect } = createNavigation(
+      {
+        locales,
+        defaultLocale,
+        localePrefix: 'always',
+        pathnames,
+      },
+    )
+
+    describe('createNavigation', () => {
+      it('requires `locales` for `pathnames`', () => {
+        // @ts-expect-error -- Missing locales
+        createNavigation({
+          pathnames: { '/': '/' },
         })
       })
 
-      it('handles search params via a final string', () => {
-        invokeRouter((router) => router[method]('/test?foo=bar'))
-        expect(useNextRouter()[method]).toHaveBeenCalledWith('/en/test?foo=bar')
-      })
-
-      it('handles search params via an object', () => {
-        invokeRouter((router) =>
-          router[method]({
-            pathname: '/test',
-            query: { foo: 'bar' },
+      it('can be called with a `routing` object', () => {
+        createNavigation(
+          defineRouting({
+            locales: ['en', 'de'],
+            defaultLocale: 'en',
           }),
         )
-        expect(useNextRouter()[method]).toHaveBeenCalledWith('/en/test?foo=bar')
+        createNavigation(
+          defineRouting({
+            locales: ['en', 'de'],
+            defaultLocale: 'en',
+            pathnames: {
+              home: '/',
+              about: {
+                en: '/about',
+                de: '/ueber-uns',
+              },
+            },
+          }),
+        )
       })
-
-      // it('passes through absolute urls', () => {
-      //   invokeRouter((router) => router[method]('https://example.com'))
-      //   expect(useNextRouter()[method]).toHaveBeenCalledWith(
-      //     'https://example.com',
-      //   )
-      // })
-
-      // it('passes through relative urls', () => {
-      //   invokeRouter((router) => router[method]('about'))
-      //   expect(useNextRouter()[method]).toHaveBeenCalledWith('about')
-      // })
     })
 
-    // describe('prefetch', () => {
-    //   it('prefixes with the default locale', () => {
-    //     invokeRouter((router) => router.prefetch('/about'))
-    //     expect(useNextRouter().prefetch).toHaveBeenCalledWith('/en/about')
-    //   })
+    describe('link', () => {
+      it('renders a prefix when currently on the default locale', () => {
+        const markup = renderToString(<Link href='/about'>About</Link>)
+        expect(markup).toContain('href="/en/about"')
+      })
 
-    //   it('prefixes with a secondary locale', () => {
-    //     invokeRouter((router) =>
-    //       router.prefetch('/about', {
-    //         locale: 'de',
-    //         // @ts-expect-error -- Somehow only works via the enum (which is not exported)
-    //         kind: 'full',
-    //       }),
-    //     )
-    //     expect(useNextRouter().prefetch).toHaveBeenCalledWith('/de/about', {
-    //       kind: 'full',
-    //     })
-    //   })
-    // })
+      it('renders a prefix when currently on a secondary locale', () => {
+        mockCurrentLocale('de')
+        const markup = renderToString(<Link href='/about'>About</Link>)
+        expect(markup).toContain('href="/de/ueber-uns"')
+      })
+
+      it('renders a prefix for a different locale', () => {
+        const markup = renderToString(
+          <Link href='/about' locale='de'>
+            Über uns
+          </Link>,
+        )
+        expect(markup).toContain('href="/de/ueber-uns"')
+      })
+
+      it('renders an object href', () => {
+        render(
+          <Link href={{ pathname: '/about', query: { foo: 'bar' } }}>
+            About
+          </Link>,
+        )
+        expect(
+          screen.getByRole('link', { name: 'About' }).getAttribute('href'),
+        ).toBe('/en/about?foo=bar')
+      })
+
+      it('handles params', () => {
+        render(
+          <Link
+            href={{
+              pathname: '/news/[articleSlug]-[articleId]',
+              params: {
+                articleId: 3,
+                articleSlug: 'launch-party',
+              },
+            }}
+            locale='de'
+          >
+            About
+          </Link>,
+        )
+        expect(
+          screen.getByRole('link', { name: 'About' }).getAttribute('href'),
+        ).toBe('/de/neuigkeiten/launch-party-3')
+      })
+
+      it('handles UTF-8 encoded pathnames', () => {
+        const markup = renderToString(
+          <Link
+            href={{
+              pathname: '/news/[articleSlug]-[articleId]',
+              params: {
+                articleId: 3,
+                articleSlug: 'launch-party',
+              },
+              query: {
+                foo: 'こんにちは',
+              },
+            }}
+            locale='ja'
+          >
+            Create
+          </Link>,
+        )
+        expect(markup).toContain(
+          'href="/ja/%E3%83%8B%E3%83%A5%E3%83%BC%E3%82%B9/launch-party-3?foo=%E3%81%93%E3%82%93%E3%81%AB%E3%81%A1%E3%81%AF"',
+        )
+      })
+
+      it('handles relative pathnames', () => {
+        // @ts-expect-error -- Validation is still on
+        const markup = renderToString(<Link href='test'>Test</Link>)
+        expect(markup).toContain('href="test"')
+      })
+
+      it('handles unknown pathnames', () => {
+        // @ts-expect-error -- Validation is still on
+        const markup = renderToString(<Link href='/test'>Test</Link>)
+        expect(markup).toContain('href="/en/test"')
+      })
+
+      it('handles unknown pathnames with a hash', () => {
+        // @ts-expect-error -- Validation is still on
+        const markup = renderToString(<Link href='/test#foo'>Test</Link>)
+        expect(markup).toContain('href="/en/test#foo"')
+      })
+
+      it('handles external links correctly', () => {
+        const markup = renderToString(
+          // @ts-expect-error -- Validation is still on
+          <Link href='https://example.com/test'>Test</Link>,
+        )
+        expect(markup).toContain('href="https://example.com/test"')
+      })
+
+      it('restricts invalid usage', () => {
+        // @ts-expect-error -- Unknown pathname
+        ;<Link href='/unknown' />
+        // @ts-expect-error -- Missing params (this error is important when switching from shared pathnames to localized pathnames)
+        ;<Link href={{ pathname: '/news/[articleSlug]-[articleId]' }} />
+      })
+    })
+
+    describe('getPathname', () => {
+      it('can be called with a known pathname', () => {
+        expect(getPathname({ href: '/about', locale: 'en' })).toBe('/en/about')
+        expect(
+          getPathname({
+            href: { pathname: '/about', query: { foo: 'bar' } },
+            locale: 'en',
+          }),
+        ).toBe('/en/about?foo=bar')
+      })
+
+      it('can resolve a pathname with params', () => {
+        expect(
+          getPathname({
+            locale: 'en',
+            href: {
+              pathname: '/news/[articleSlug]-[articleId]',
+              params: {
+                articleId: 3,
+                articleSlug: 'launch-party',
+              },
+              query: { foo: 'bar' },
+            },
+          }),
+        ).toBe('/en/news/launch-party-3?foo=bar')
+      })
+
+      it('can not be called with an arbitrary pathname', () => {
+        // @ts-expect-error -- Unknown pathname
+        expect(getPathname({ locale: 'en', href: '/unknown' }))
+          // Works regardless
+          .toBe('/en/unknown')
+      })
+
+      it('handles relative pathnames', () => {
+        // @ts-expect-error -- Validation is still on
+        expect(getPathname({ locale: 'en', href: 'about' })).toBe('about')
+      })
+
+      it('handles UTF-8 encoded pathnames', () => {
+        expect(
+          getPathname({
+            locale: 'ja',
+            href: {
+              pathname: '/news/[articleSlug]-[articleId]',
+              params: {
+                articleId: 3,
+                articleSlug: 'launch-party',
+              },
+              query: {
+                foo: 'こんにちは',
+              },
+            },
+          }),
+        ).toBe(
+          '/ja/%E3%83%8B%E3%83%A5%E3%83%BC%E3%82%B9/launch-party-3?foo=%E3%81%93%E3%82%93%E3%81%AB%E3%81%A1%E3%81%AF',
+        )
+      })
+    })
+
+    describe.each([
+      ['redirect', redirect, nextRedirect],
+      ['permanentRedirect', permanentRedirect, nextPermanentRedirect],
+    ])('%s', (_, redirectFn, nextRedirectFn) => {
+      it('can redirect for the default locale', () => {
+        runInRender(() => redirectFn({ href: '/', locale: 'en' }))
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('/en')
+      })
+
+      it('can redirect with params and search params', () => {
+        runInRender(() =>
+          redirectFn({
+            href: {
+              pathname: '/news/[articleSlug]-[articleId]',
+              params: {
+                articleId: 3,
+                articleSlug: 'launch-party',
+              },
+              query: { foo: 'bar' },
+            },
+            locale: 'en',
+          }),
+        )
+        expect(nextRedirectFn).toHaveBeenLastCalledWith(
+          '/en/news/launch-party-3?foo=bar',
+        )
+      })
+
+      it('can not be called with an arbitrary pathname', () => {
+        // @ts-expect-error -- Unknown pathname
+        runInRender(() => redirectFn({ href: '/unknown', locale: 'en' }))
+        // Works regardless
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('/en/unknown')
+      })
+
+      it('forwards a redirect type', () => {
+        runInRender(() =>
+          redirectFn({ href: '/', locale: 'en' }, RedirectType.push),
+        )
+        expect(nextRedirectFn).toHaveBeenLastCalledWith(
+          '/en',
+          RedirectType.push,
+        )
+      })
+
+      it('can handle relative pathnames', () => {
+        // @ts-expect-error -- Validation is still on
+        runInRender(() => redirectFn({ href: 'about', locale: 'en' }))
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('about')
+      })
+
+      it('handles UTF-8 encoded pathnames', () => {
+        runInRender(() =>
+          redirectFn({
+            href: {
+              pathname: '/news/[articleSlug]-[articleId]',
+              params: {
+                articleId: 3,
+                articleSlug: 'launch-party',
+              },
+              query: {
+                foo: 'こんにちは',
+              },
+            },
+            locale: 'ja',
+          }),
+        )
+        expect(nextRedirectFn).toHaveBeenLastCalledWith(
+          '/ja/%E3%83%8B%E3%83%A5%E3%83%BC%E3%82%B9/launch-party-3?foo=%E3%81%93%E3%82%93%E3%81%AB%E3%81%A1%E3%81%AF',
+        )
+      })
+    })
   })
 
-  // describe('usePathname', () => {
-  //   const renderPathname = getRenderPathname(usePathname)
+  describe("localePrefix: 'as-needed'", () => {
+    const { Link, getPathname, permanentRedirect, redirect } = createNavigation(
+      {
+        locales,
+        defaultLocale,
+        localePrefix: 'as-needed',
+      },
+    )
 
-  //   it('returns the correct pathname for the default locale', () => {
-  //     mockCurrentLocale('en')
-  //     mockLocation({ pathname: '/en/about' })
+    describe('createNavigation', () => {
+      it('errors when no `defaultLocale` is set', () => {
+        expect(
+          () => void createNavigation({ localePrefix: 'as-needed' }),
+        ).toThrowError("`localePrefix: 'as-needed' requires a `defaultLocale`.")
+      })
+    })
 
-  //     renderPathname()
-  //     screen.getByText('/about')
-  //   })
+    describe('link', () => {
+      it('does not render a prefix when currently on the default locale', () => {
+        const markup = renderToString(<Link href='/about'>About</Link>)
+        expect(markup).toContain('href="/about"')
+      })
 
-  //   it('returns the correct pathname for a secondary locale', () => {
-  //     mockCurrentLocale('de')
-  //     mockLocation({ pathname: '/de/about' })
+      it('renders a prefix when currently on a secondary locale', () => {
+        mockCurrentLocale('de')
+        const markup = renderToString(<Link href='/about'>About</Link>)
+        expect(markup).toContain('href="/de/about"')
+      })
 
-  //     renderPathname()
-  //     screen.getByText('/about')
-  //   })
-  // })
+      it('renders a prefix for a different locale', () => {
+        const markup = renderToString(
+          <Link href='/about' locale='de'>
+            Über uns
+          </Link>,
+        )
+        expect(markup).toContain('href="/de/about"')
+      })
+
+      it('renders a prefix when currently on a secondary locale and linking to the default locale', () => {
+        mockCurrentLocale('de')
+        const markup = renderToString(
+          <Link href='/about' locale='en'>
+            About
+          </Link>,
+        )
+        expect(markup).toContain('href="/en/about"')
+      })
+
+      it('renders an object href', () => {
+        render(
+          <Link href={{ pathname: '/about', query: { foo: 'bar' } }}>
+            About
+          </Link>,
+        )
+        expect(
+          screen.getByRole('link', { name: 'About' }).getAttribute('href'),
+        ).toBe('/about?foo=bar')
+      })
+
+      it('handles params', () => {
+        render(
+          <Link href='/news/launch-party-3' locale='de'>
+            About
+          </Link>,
+        )
+        expect(
+          screen.getByRole('link', { name: 'About' }).getAttribute('href'),
+        ).toBe('/de/news/launch-party-3')
+      })
+
+      it('handles relative links correctly on the initial render', () => {
+        const markup = renderToString(<Link href='test'>Test</Link>)
+        expect(markup).toContain('href="test"')
+      })
+
+      it('does not accept `params`', () => {
+        ;<Link
+          href={{
+            pathname: '/news/[articleSlug]-[articleId]',
+            // @ts-expect-error -- Not allowed
+            params: {
+              articleId: 3,
+              articleSlug: 'launch-party',
+            },
+          }}
+        />
+      })
+    })
+
+    describe('getPathname', () => {
+      it('does not add a prefix for the default locale', () => {
+        expect(getPathname({ locale: 'en', href: '/about' })).toBe('/about')
+      })
+
+      it('adds a prefix for a secondary locale', () => {
+        expect(getPathname({ locale: 'de', href: '/about' })).toBe('/de/about')
+      })
+
+      it('requires a locale', () => {
+        // @ts-expect-error -- Missing locale
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        ;() => getPathname({ href: '/about' })
+      })
+
+      it('can force a prefix for the default locale', () => {
+        expect(
+          getPathname({ locale: 'en', href: '/about', forcePrefix: true }),
+        ).toBe('/en/about')
+      })
+    })
+
+    describe.each([
+      ['redirect', redirect, nextRedirect],
+      ['permanentRedirect', permanentRedirect, nextPermanentRedirect],
+    ])('%s', (_, redirectFn, nextRedirectFn) => {
+      it('does not add a prefix when redirecting within the default locale', () => {
+        runInRender(() => redirectFn({ href: '/', locale: 'en' }))
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('/')
+      })
+
+      it('adds a prefix for a secondary locale', () => {
+        runInRender(() => redirectFn({ href: '/', locale: 'de' }))
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('/de')
+      })
+
+      it('forwards a redirect type', () => {
+        runInRender(() =>
+          redirectFn({ href: '/', locale: 'en' }, RedirectType.push),
+        )
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('/', RedirectType.push)
+      })
+
+      it('can force a prefix for the default locale', () => {
+        runInRender(() =>
+          redirectFn({ href: '/', locale: 'en', forcePrefix: true }),
+        )
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('/en')
+      })
+    })
+  })
+
+  describe("localePrefix: 'always', with `prefixes`", () => {
+    const { Link, getPathname, permanentRedirect, redirect } = createNavigation(
+      {
+        locales,
+        defaultLocale,
+        domains,
+        localePrefix: {
+          mode: 'always',
+          prefixes: {
+            en: '/us/en',
+            de: '/eu/de',
+            // (use /ja as-is)
+          },
+        },
+      },
+    )
+
+    describe('link', () => {
+      it('renders a prefix during SSR', () => {
+        const markup = renderToString(<Link href='/about'>About</Link>)
+        expect(markup).toContain('href="/us/en/about"')
+      })
+
+      it('renders a prefix when currently on a secondary locale', () => {
+        mockCurrentLocale('de')
+        render(<Link href='/about'>About</Link>)
+        expect(
+          screen.getByRole('link', { name: 'About' }).getAttribute('href'),
+        ).toBe('/eu/de/about')
+      })
+    })
+
+    describe('getPathname', () => {
+      it('adds a prefix for the default locale', () => {
+        expect(getPathname({ locale: 'en', href: '/about' })).toBe(
+          '/us/en/about',
+        )
+      })
+
+      it('adds a prefix for a secondary locale', () => {
+        expect(getPathname({ locale: 'de', href: '/about' })).toBe(
+          '/eu/de/about',
+        )
+      })
+    })
+
+    describe.each([
+      ['redirect', redirect, nextRedirect],
+      ['permanentRedirect', permanentRedirect, nextPermanentRedirect],
+    ])('%s', (_, redirectFn, nextRedirectFn) => {
+      it('adds a prefix for the default locale', () => {
+        runInRender(() => redirectFn({ href: '/', locale: 'en' }))
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('/us/en')
+      })
+
+      it('adds a prefix for a secondary locale', () => {
+        runInRender(() => redirectFn({ href: '/about', locale: 'de' }))
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('/eu/de/about')
+      })
+    })
+  })
+
+  describe("localePrefix: 'always', with `domains`", () => {
+    const { Link, getPathname, permanentRedirect, redirect } = createNavigation(
+      {
+        locales,
+        defaultLocale,
+        domains,
+        localePrefix: 'always',
+      },
+    )
+
+    describe('link', () => {
+      it('renders a prefix during SSR', () => {
+        const markup = renderToString(<Link href='/about'>About</Link>)
+        expect(markup).toContain('href="/en/about"')
+      })
+
+      it('renders a prefix eventually on the client side', () => {
+        mockLocation({ host: 'example.com' })
+        render(<Link href='/about'>About</Link>)
+        expect(
+          screen.getByRole('link', { name: 'About' }).getAttribute('href'),
+        ).toBe('/en/about')
+      })
+    })
+
+    describe('getPathname', () => {
+      it('adds a prefix for the default locale without printing a warning', () => {
+        const consoleSpy = vi.spyOn(console, 'error')
+        expect(getPathname({ locale: 'en', href: '/about' })).toBe('/en/about')
+        expect(consoleSpy).not.toHaveBeenCalled()
+        consoleSpy.mockRestore()
+      })
+    })
+
+    describe.each([
+      ['redirect', redirect, nextRedirect],
+      ['permanentRedirect', permanentRedirect, nextPermanentRedirect],
+    ])('%s', (_, redirectFn, nextRedirectFn) => {
+      it('adds a prefix for the default locale', () => {
+        runInRender(() => redirectFn({ href: '/', locale: 'en' }))
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('/en')
+      })
+
+      it('does not allow passing a domain', () => {
+        runInRender(() =>
+          redirectFn({
+            href: '/',
+            locale: 'en',
+            // @ts-expect-error -- Domain is not allowed
+            domain: 'example.com',
+          }),
+        )
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('/en')
+      })
+    })
+  })
+
+  describe("localePrefix: 'as-needed', with `domains`", () => {
+    const { Link, getPathname, permanentRedirect, redirect } = createNavigation(
+      {
+        locales,
+        defaultLocale,
+        domains,
+        localePrefix: 'as-needed',
+      },
+    )
+
+    describe('link', () => {
+      it('renders no prefix during SSR for the default locale', () => {
+        const markup = renderToString(<Link href='/about'>About</Link>)
+        expect(markup).toContain('href="/about"')
+      })
+
+      it('does not render a prefix eventually on the client side for the default locale of the given domain', () => {
+        mockLocation({ host: 'example.com' })
+        render(<Link href='/about'>About</Link>)
+        expect(
+          screen.getByRole('link', { name: 'About' }).getAttribute('href'),
+        ).toBe('/about')
+      })
+
+      it('renders a prefix when when linking to a secondary locale on an unknown domain', () => {
+        mockLocation({ host: 'localhost:3000' })
+        render(
+          <Link href='/about' locale='de'>
+            Über uns
+          </Link>,
+        )
+        expect(
+          screen.getByRole('link', { name: 'Über uns' }).getAttribute('href'),
+        ).toBe('/de/about')
+      })
+
+      it('renders a prefix when currently on a secondary locale', () => {
+        mockLocation({ host: 'example.de' })
+        mockCurrentLocale('ja')
+        render(<Link href='/about'>About</Link>)
+        expect(
+          screen.getByRole('link', { name: 'About' }).getAttribute('href'),
+        ).toBe('/ja/about')
+      })
+
+      it('does not render a prefix when currently on a domain with a different default locale', () => {
+        mockLocation({ host: 'example.de' })
+        mockCurrentLocale('de')
+        render(<Link href='/about'>About</Link>)
+        expect(
+          screen.getByRole('link', { name: 'About' }).getAttribute('href'),
+        ).toBe('/about')
+      })
+
+      it('renders a prefix when currently on a secondary locale and linking to the default locale', () => {
+        mockLocation({ host: 'example.de' })
+        mockCurrentLocale('en')
+        const markup = renderToString(
+          <Link href='/about' locale='de'>
+            About
+          </Link>,
+        )
+        expect(markup).toContain('href="/de/about"')
+      })
+
+      it('accepts search params', () => {
+        render(
+          <Link href={{ pathname: '/about', query: { foo: 'bar' } }}>
+            Test
+          </Link>,
+        )
+        expect(
+          screen.getByRole('link', { name: 'Test' }).getAttribute('href'),
+        ).toBe('/about?foo=bar')
+      })
+    })
+
+    describe('getPathname', () => {
+      it('does not add a prefix for a default locale', () => {
+        expect(getPathname({ locale: 'en', href: '/about' })).toBe('/about')
+        expect(getPathname({ locale: 'de', href: '/about' })).toBe('/about')
+      })
+    })
+
+    describe.each([
+      ['redirect', redirect, nextRedirect],
+      ['permanentRedirect', permanentRedirect, nextPermanentRedirect],
+    ])('%s', (_, redirectFn, nextRedirectFn) => {
+      it('adds a prefix even for the default locale', () => {
+        // There's one edge case that is not handled here: If `localePrefix:
+        // 'as-needed'` is used and the user redirects from a non-default locale
+        // to the default locale, no cookie will be updated and therefore the user
+        // redirected back to the original locale. Typically, redirect is not used
+        // for language switching though and uses the current locale of the user,
+        // therefore this is currently neglected.
+        runInRender(() => redirectFn({ href: '/', locale: 'en' }))
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('/')
+      })
+
+      it('adds a prefix for a secondary locale', () => {
+        runInRender(() => redirectFn({ href: '/', locale: 'ja' }))
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('/ja')
+      })
+    })
+  })
+
+  describe("localePrefix: 'as-needed', with `domains` and `pathnames`", () => {
+    const { Link, permanentRedirect, redirect } = createNavigation({
+      locales,
+      defaultLocale,
+      domains,
+      localePrefix: 'as-needed',
+      pathnames,
+    })
+
+    describe('link', () => {
+      it('accepts search params', () => {
+        render(
+          <Link href={{ pathname: '/about', query: { foo: 'bar' } }}>
+            Test
+          </Link>,
+        )
+        expect(
+          screen.getByRole('link', { name: 'Test' }).getAttribute('href'),
+        ).toBe('/about?foo=bar')
+      })
+    })
+
+    describe.each([
+      ['redirect', redirect, nextRedirect],
+      ['permanentRedirect', permanentRedirect, nextPermanentRedirect],
+    ])('%s', (_, redirectFn, nextRedirectFn) => {
+      it('accepts search params', () => {
+        runInRender(() =>
+          redirectFn({
+            href: { pathname: '/', query: { foo: 'bar' } },
+            locale: 'en',
+          }),
+        )
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('/?foo=bar')
+      })
+    })
+  })
+
+  describe("localePrefix: 'never'", () => {
+    const { Link, getPathname, permanentRedirect, redirect } = createNavigation(
+      {
+        locales,
+        defaultLocale,
+        localePrefix: 'never',
+      },
+    )
+
+    describe('link', () => {
+      it('renders no prefix when currently on the default locale', () => {
+        const markup = renderToString(<Link href='/about'>About</Link>)
+        expect(markup).toContain('href="/about"')
+      })
+
+      it('renders no prefix when currently on a secondary locale', () => {
+        mockCurrentLocale('de')
+        const markup = renderToString(<Link href='/about'>About</Link>)
+        expect(markup).toContain('href="/about"')
+      })
+
+      it('renders a prefix when linking to a secondary locale', () => {
+        const markup = renderToString(
+          <Link href='/about' locale='de'>
+            Über uns
+          </Link>,
+        )
+        expect(markup).toContain('href="/de/about"')
+        expect(markup).toContain('hrefLang="de"')
+      })
+
+      it('renders a prefix when currently on a secondary locale and linking to the default locale', () => {
+        mockCurrentLocale('de')
+        const markup = renderToString(
+          <Link href='/about' locale='en'>
+            About
+          </Link>,
+        )
+        expect(markup).toContain('href="/en/about"')
+      })
+    })
+
+    describe('getPathname', () => {
+      it('does not add a prefix for the default locale', () => {
+        expect(getPathname({ locale: 'en', href: '/unknown' })).toBe('/unknown')
+      })
+
+      it('does not add a prefix for a secondary locale', () => {
+        expect(getPathname({ locale: 'de', href: '/about' })).toBe('/about')
+      })
+
+      it('requires a locale', () => {
+        // @ts-expect-error -- Missing locale
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        ;() => getPathname({ href: '/about' })
+      })
+
+      it('can force a prefix', () => {
+        expect(
+          getPathname({ locale: 'en', href: '/about', forcePrefix: true }),
+        ).toBe('/en/about')
+      })
+    })
+
+    describe.each([
+      ['redirect', redirect, nextRedirect],
+      ['permanentRedirect', permanentRedirect, nextPermanentRedirect],
+    ])('%s', (_, redirectFn, nextRedirectFn) => {
+      it('can redirect for the default locale', () => {
+        runInRender(() => redirectFn({ href: '/', locale: 'en' }))
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('/')
+      })
+
+      it('forwards a redirect type', () => {
+        runInRender(() =>
+          redirectFn({ href: '/', locale: 'en' }, RedirectType.push),
+        )
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('/', RedirectType.push)
+      })
+
+      it('can force a prefix', () => {
+        runInRender(() =>
+          redirectFn({ href: '/', locale: 'en', forcePrefix: true }),
+        )
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('/en')
+      })
+    })
+  })
+
+  describe("localePrefix: 'never', with `domains`", () => {
+    const { Link, getPathname, permanentRedirect, redirect } = createNavigation(
+      {
+        locales,
+        defaultLocale,
+        domains,
+        localePrefix: 'never',
+      },
+    )
+
+    describe('link', () => {
+      it('renders no prefix during SSR', () => {
+        const markup = renderToString(<Link href='/about'>About</Link>)
+        expect(markup).toContain('href="/about"')
+      })
+
+      it('renders a prefix when linking to a secondary locale', () => {
+        const markup = renderToString(
+          <Link href='/about' locale='de'>
+            Über uns
+          </Link>,
+        )
+        expect(markup).toContain('href="/de/about"')
+        expect(markup).toContain('hrefLang="de"')
+      })
+
+      it('can link to a pathname on another domain', () => {
+        const markup = renderToString(
+          <Link href={{ pathname: '/about', host: 'example.de' }} locale='de'>
+            Über uns
+          </Link>,
+        )
+        expect(markup).toContain('href="//example.de/about"')
+        expect(markup).toContain('hrefLang="de"')
+      })
+    })
+
+    describe('getPathname', () => {
+      it('does not add a prefix for the default locale', () => {
+        const originalConsoleError = console.error
+        console.error = vi.fn()
+        expect(getPathname({ locale: 'en', href: '/about' })).toBe('/about')
+        expect(console.error).not.toHaveBeenCalled()
+        console.error = originalConsoleError
+      })
+    })
+
+    describe.each([
+      ['redirect', redirect, nextRedirect],
+      ['permanentRedirect', permanentRedirect, nextPermanentRedirect],
+    ])('%s', (_, redirectFn, nextRedirectFn) => {
+      it('adds no prefix for the default locale', () => {
+        runInRender(() => redirectFn({ href: '/', locale: 'en' }))
+        expect(nextRedirectFn).toHaveBeenLastCalledWith('/')
+      })
+    })
+  })
 })
-
-// describe("localePrefix: 'always', with `localeCookie`", () => {
-//   const { Link, useRouter } = createNavigation({
-//     locales,
-//     defaultLocale,
-//     localePrefix: 'always',
-//     localeCookie: {
-//       maxAge: 60,
-//       domain: 'example.com',
-//       sameSite: 'strict',
-//       partitioned: true,
-//       path: '/nested',
-//       priority: 'high',
-//       secure: true,
-//     },
-//   })
-
-//   describe('link', () => {
-//     it('uses the provided cookie options', () => {
-//       global.document.cookie = 'NEXT_LOCALE=en'
-//       const cookieSpy = vi.spyOn(global.document, 'cookie', 'set')
-
-//       render(
-//         <Link href='/' locale='de'>
-//           Test
-//         </Link>,
-//       )
-//       fireEvent.click(screen.getByRole('link', { name: 'Test' }))
-
-//       expect(cookieSpy).toHaveBeenCalledWith(
-//         `${[
-//           'NEXT_LOCALE=de',
-//           'sameSite=strict',
-//           'max-age=60',
-//           'domain=example.com',
-//           'partitioned',
-//           'path=/nested',
-//           'priority=high',
-//           'secure',
-//         ].join(';')};`,
-//       )
-//       cookieSpy.mockRestore()
-//     })
-//   })
-
-//   describe('useRouter', () => {
-//     const invokeRouter = getInvokeRouter(useRouter)
-
-//     it('uses the provided cookie options', () => {
-//       const cookieSpy = vi.spyOn(global.document, 'cookie', 'set')
-
-//       invokeRouter((router) => router.push('/about', { locale: 'de' }))
-
-//       expect(cookieSpy).toHaveBeenCalledWith(
-//         `${[
-//           'NEXT_LOCALE=de',
-//           'sameSite=strict',
-//           'max-age=60',
-//           'domain=example.com',
-//           'partitioned',
-//           'path=/nested',
-//           'priority=high',
-//           'secure',
-//         ].join(';')};`,
-//       )
-//       cookieSpy.mockRestore()
-//     })
-//   })
-// })
-
-// describe("localePrefix: 'always', with `basePath`", () => {
-//   const { useRouter } = createNavigation({
-//     locales,
-//     defaultLocale,
-//     localePrefix: 'always',
-//   })
-
-//   beforeEach(() => {
-//     mockLocation({ pathname: '/base/path/en' }, '/base/path')
-//   })
-
-//   describe('useRouter', () => {
-//     const invokeRouter = getInvokeRouter(useRouter)
-
-//     it('can push', () => {
-//       invokeRouter((router) => router.push('/test'))
-//       expect(useNextRouter().push).toHaveBeenCalledWith('/en/test')
-//     })
-
-//     it('can replace', () => {
-//       invokeRouter((router) => router.replace('/test'))
-//       expect(useNextRouter().replace).toHaveBeenCalledWith('/en/test')
-//     })
-
-//     it('can prefetch', () => {
-//       invokeRouter((router) => router.prefetch('/test'))
-//       expect(useNextRouter().prefetch).toHaveBeenCalledWith('/en/test')
-//     })
-
-//     it('sets the right cookie', () => {
-//       const cookieSpy = vi.spyOn(global.document, 'cookie', 'set')
-//       invokeRouter((router) => router.push('/about', { locale: 'de' }))
-
-//       expect(cookieSpy).toHaveBeenCalledWith(
-//         `${['NEXT_LOCALE=de', 'sameSite=lax', 'path=/base/path'].join(';')};`,
-//       )
-//       cookieSpy.mockRestore()
-//     })
-//   })
-// })
-
-// describe("localePrefix: 'always', with `pathnames`", () => {
-//   const { usePathname, useRouter } = createNavigation({
-//     locales,
-//     defaultLocale,
-//     localePrefix: 'always',
-//     pathnames,
-//   })
-
-//   describe('useRouter', () => {
-//     const invokeRouter = getInvokeRouter(useRouter)
-
-//     describe.each(['push', 'replace'] as const)('`%s`', (method) => {
-//       it('localizes a pathname for the default locale', () => {
-//         invokeRouter((router) => router[method]('/about'))
-//         expect(useNextRouter()[method]).toHaveBeenCalledWith('/en/about')
-//       })
-
-//       it('localizes a pathname for a secondary locale', () => {
-//         invokeRouter((router) => router[method]('/about', { locale: 'de' }))
-//         expect(useNextRouter()[method]).toHaveBeenCalledWith('/de/ueber-uns')
-//       })
-
-//       it('handles pathname params', () => {
-//         invokeRouter((router) =>
-//           router[method]({
-//             pathname: '/news/[articleSlug]-[articleId]',
-//             params: {
-//               articleSlug: 'launch-party',
-//               articleId: '3',
-//             },
-//           }),
-//         )
-//         expect(useNextRouter()[method]).toHaveBeenCalledWith(
-//           '/en/news/launch-party-3',
-//         )
-//       })
-
-//       it('handles search params', () => {
-//         invokeRouter((router) =>
-//           router[method]({
-//             pathname: '/about',
-//             query: {
-//               foo: 'bar',
-//             },
-//           }),
-//         )
-//         expect(useNextRouter()[method]).toHaveBeenCalledWith(
-//           '/en/about?foo=bar',
-//         )
-//       })
-
-//       it('disallows unknown pathnames', () => {
-//         // @ts-expect-error -- Unknown pathname
-//         invokeRouter((router) => router[method]('/unknown'))
-
-//         // Still works
-//         expect(useNextRouter()[method]).toHaveBeenCalledWith('/en/unknown')
-//       })
-
-//       it('handles UTF-8 encoded pathnames', () => {
-//         invokeRouter((router) =>
-//           router[method](
-//             {
-//               pathname: '/news/[articleSlug]-[articleId]',
-//               params: {
-//                 articleId: 3,
-//                 articleSlug: 'launch-party',
-//               },
-//               query: {
-//                 foo: 'こんにちは',
-//               },
-//             },
-//             { locale: 'ja' },
-//           ),
-//         )
-//         expect(useNextRouter()[method]).toHaveBeenCalledWith(
-//           '/ja/%E3%83%8B%E3%83%A5%E3%83%BC%E3%82%B9/launch-party-3?foo=%E3%81%93%E3%82%93%E3%81%AB%E3%81%A1%E3%81%AF',
-//         )
-//       })
-//     })
-//   })
-
-//   describe('usePathname', () => {
-//     it('returns a typed pathname', () => {
-//       type Return = ReturnType<typeof usePathname>
-
-//       '/about' satisfies Return
-//       '/categories/[...parts]' satisfies Return
-
-//       // @ts-expect-error
-//       '/unknown' satisfies Return
-//     })
-//   })
-// })
-
-// describe("localePrefix: 'always', custom `prefixes`", () => {
-//   const { usePathname } = createNavigation({
-//     locales,
-//     localePrefix: {
-//       mode: 'always',
-//       prefixes: {
-//         en: '/uk',
-//       },
-//     },
-//   })
-//   const renderPathname = getRenderPathname(usePathname)
-
-//   describe('usePathname', () => {
-//     it('returns the correct pathname for a custom locale prefix', () => {
-//       mockCurrentLocale('en')
-//       mockLocation({ pathname: '/uk/about' })
-//       renderPathname()
-//       screen.getByText('/about')
-//     })
-//   })
-// })
-
-// describe("localePrefix: 'as-needed'", () => {
-//   const { usePathname, useRouter } = createNavigation({
-//     locales,
-//     defaultLocale,
-//     localePrefix: 'as-needed',
-//   })
-
-//   function renderPathname() {
-//     function Component() {
-//       return usePathname()
-//     }
-//     render(<Component />)
-//   }
-
-//   describe('useRouter', () => {
-//     const invokeRouter = getInvokeRouter(useRouter)
-
-//     it('leaves unrelated router functionality in place', () => {
-//       ;(['back', 'forward', 'refresh'] as const).forEach((method) => {
-//         invokeRouter((router) => router[method]())
-//         expect(useNextRouter()[method]).toHaveBeenCalled()
-//       })
-//     })
-
-//     describe.each(['push', 'replace'] as const)('`%s`', (method) => {
-//       it('does not prefix the default locale', () => {
-//         invokeRouter((router) => router[method]('/about'))
-//         expect(useNextRouter()[method]).toHaveBeenCalledWith('/about')
-//       })
-
-//       it('prefixes a secondary locale', () => {
-//         invokeRouter((router) => router[method]('/about', { locale: 'de' }))
-//         expect(useNextRouter()[method]).toHaveBeenCalledWith('/de/about')
-//       })
-
-//       it('does not prefix the default locale when being switched to', () => {
-//         invokeRouter((router) => router[method]('/about', { locale: 'en' }))
-//         expect(useNextRouter()[method]).toHaveBeenCalledWith('/about')
-//       })
-//     })
-
-//     describe('prefetch', () => {
-//       it('does not prefix with the default locale', () => {
-//         invokeRouter((router) => router.prefetch('/about'))
-//         expect(useNextRouter().prefetch).toHaveBeenCalledWith('/about')
-//       })
-
-//       it('prefixes with a secondary locale', () => {
-//         invokeRouter((router) => router.prefetch('/about', { locale: 'de' }))
-//         expect(useNextRouter().prefetch).toHaveBeenCalledWith('/de/about')
-//       })
-//     })
-//   })
-
-//   describe('usePathname', () => {
-//     it('returns the correct pathname for the default locale', () => {
-//       mockCurrentLocale('en')
-//       mockLocation({ pathname: '/about' })
-
-//       renderPathname()
-//       screen.getByText('/about')
-//     })
-
-//     it('returns the correct pathname for a secondary locale', () => {
-//       mockCurrentLocale('de')
-//       mockLocation({ pathname: '/de/about' })
-
-//       renderPathname()
-//       screen.getByText('/about')
-//     })
-//   })
-// })
-
-// describe("localePrefix: 'as-needed', custom `prefixes`", () => {
-//   const { usePathname } = createNavigation({
-//     defaultLocale,
-//     locales,
-//     localePrefix: {
-//       mode: 'as-needed',
-//       prefixes: {
-//         en: '/english',
-//         de: '/deutsch',
-//       },
-//     },
-//   })
-//   const renderPathname = getRenderPathname(usePathname)
-
-//   // https://github.com/vercel/next.js/issues/73085
-//   it('is tolerant when a locale is used in the pathname for the default locale', () => {
-//     mockCurrentLocale('en')
-//     mockLocation({ pathname: '/en/about' })
-//     renderPathname()
-//     screen.getByText('/about')
-//   })
-
-//   it('is tolerant when a locale is used in the pathname for a non-default locale', () => {
-//     mockCurrentLocale('de')
-//     mockLocation({ pathname: '/de/about' })
-//     renderPathname()
-//     screen.getByText('/about')
-//   })
-// })
-
-// describe("localePrefix: 'as-needed', with `basePath` and `domains`", () => {
-//   const { useRouter } = createNavigation({
-//     locales,
-//     defaultLocale,
-//     domains,
-//     localePrefix: 'as-needed',
-//   })
-
-//   describe('useRouter', () => {
-//     const invokeRouter = getInvokeRouter(useRouter)
-
-//     it('can compute the correct pathname when on the default locale and not supplying a locale', () => {
-//       invokeRouter((router) => router.push('/test'))
-//       expect(useNextRouter().push).toHaveBeenCalledWith('/test')
-//     })
-
-//     it('can compute the correct pathname when on the default locale and supplying a secondary locale', () => {
-//       invokeRouter((router) => router.push('/test', { locale: 'ja' }))
-//       expect(useNextRouter().push).toHaveBeenCalledWith('/ja/test')
-//     })
-
-//     it('can compute the correct pathname when on a secondary locale and navigating to the default locale', () => {
-//       mockCurrentLocale('ja')
-//       invokeRouter((router) => router.push('/test', { locale: 'en' }))
-//       expect(useNextRouter().push).toHaveBeenCalledWith('/test')
-//     })
-//   })
-// })
-
-// describe("localePrefix: 'as-needed', with `domains`", () => {
-//   const { usePathname, useRouter } = createNavigation({
-//     locales,
-//     defaultLocale,
-//     domains,
-//     localePrefix: 'as-needed',
-//   })
-
-//   describe('useRouter', () => {
-//     const invokeRouter = getInvokeRouter(useRouter)
-
-//     describe.each(['push', 'replace'] as const)('`%s`', (method) => {
-//       it('does not prefix the default locale when on a domain with a matching defaultLocale', () => {
-//         mockCurrentLocale('en')
-//         mockLocation({ pathname: '/about', host: 'example.com' })
-//         invokeRouter((router) => router[method]('/about'))
-//         expect(useNextRouter()[method]).toHaveBeenCalledWith('/about')
-//       })
-
-//       it('does not prefix the default locale when on a domain with a different defaultLocale', () => {
-//         mockCurrentLocale('de')
-//         mockLocation({ pathname: '/about', host: 'example.de' })
-//         invokeRouter((router) => router[method]('/about'))
-//         expect(useNextRouter()[method]).toHaveBeenCalledWith('/about')
-//       })
-
-//       it('does not prefix the default locale when on an unknown domain', () => {
-//         const consoleSpy = vi.spyOn(console, 'error')
-//         mockCurrentLocale('en')
-//         mockLocation({ pathname: '/about', host: 'localhost:3000' })
-//         invokeRouter((router) => router[method]('/about'))
-//         expect(useNextRouter()[method]).toHaveBeenCalledWith('/about')
-//         expect(consoleSpy).not.toHaveBeenCalled()
-//         consoleSpy.mockRestore()
-//       })
-//     })
-//   })
-
-//   const renderPathname = getRenderPathname(usePathname)
-
-//   describe('usePathname', () => {
-//     it('returns the correct pathname for the default locale', () => {
-//       mockCurrentLocale('en')
-//       mockLocation({ pathname: '/about', host: 'example.com' })
-//       renderPathname()
-//       screen.getByText('/about')
-//     })
-
-//     it('returns the correct pathname for a secondary locale', () => {
-//       mockCurrentLocale('de')
-//       mockLocation({ pathname: '/de/about', host: 'example.com' })
-//       renderPathname()
-//       screen.getByText('/about')
-//     })
-
-//     it('returns the correct pathname for the default locale on a domain with a different defaultLocale', () => {
-//       mockCurrentLocale('de')
-//       mockLocation({ pathname: '/about', host: 'example.de' })
-//       renderPathname()
-//       screen.getByText('/about')
-//     })
-
-//     it('returns the correct pathname for a secondary locale on a domain with a different defaultLocale', () => {
-//       mockCurrentLocale('en')
-//       mockLocation({ pathname: '/en/about', host: 'example.de' })
-//       renderPathname()
-//       screen.getByText('/about')
-//     })
-//   })
-// })
-
-// describe("localePrefix: 'never'", () => {
-//   const { Link, usePathname, useRouter } = createNavigation({
-//     locales,
-//     defaultLocale,
-//     localePrefix: 'never',
-//   })
-
-//   function renderPathname() {
-//     function Component() {
-//       return usePathname()
-//     }
-//     render(<Component />)
-//   }
-
-//   describe('link', () => {
-//     it('keeps the cookie value in sync', () => {
-//       global.document.cookie = 'NEXT_LOCALE=en'
-//       render(
-//         <Link href='/' locale='de'>
-//           Test
-//         </Link>,
-//       )
-//       expect(document.cookie).toContain('NEXT_LOCALE=en')
-//       fireEvent.click(screen.getByRole('link', { name: 'Test' }))
-//       expect(document.cookie).toContain('NEXT_LOCALE=de')
-//     })
-
-//     it('updates the href when the query changes', () => {
-//       const { rerender } = render(<Link href={{ pathname: '/' }}>Test</Link>)
-//       expect(
-//         screen.getByRole('link', { name: 'Test' }).getAttribute('href'),
-//       ).toBe('/')
-//       rerender(
-//         <Link href={{ pathname: '/', query: { foo: 'bar' } }}>Test</Link>,
-//       )
-//       expect(
-//         screen.getByRole('link', { name: 'Test' }).getAttribute('href'),
-//       ).toBe('/?foo=bar')
-//     })
-//   })
-
-//   describe('useRouter', () => {
-//     const invokeRouter = getInvokeRouter(useRouter)
-
-//     it('leaves unrelated router functionality in place', () => {
-//       ;(['back', 'forward', 'refresh'] as const).forEach((method) => {
-//         invokeRouter((router) => router[method]())
-//         expect(useNextRouter()[method]).toHaveBeenCalled()
-//       })
-//     })
-
-//     describe.each(['push', 'replace'] as const)('`%s`', (method) => {
-//       it('does not prefix the default locale', () => {
-//         invokeRouter((router) => router[method]('/about'))
-//         expect(useNextRouter()[method]).toHaveBeenCalledWith('/about')
-//       })
-
-//       it('does not prefix a secondary locale', () => {
-//         invokeRouter((router) => router[method]('/about', { locale: 'de' }))
-//         expect(useNextRouter()[method]).toHaveBeenCalledWith('/about')
-//       })
-//     })
-
-//     it('keeps the cookie value in sync', () => {
-//       document.cookie = 'NEXT_LOCALE=en'
-
-//       invokeRouter((router) => router.push('/about', { locale: 'de' }))
-//       expect(document.cookie).toContain('NEXT_LOCALE=de')
-
-//       invokeRouter((router) => router.push('/test'))
-//       expect(document.cookie).toContain('NEXT_LOCALE=de')
-
-//       invokeRouter((router) => router.replace('/about', { locale: 'de' }))
-//       expect(document.cookie).toContain('NEXT_LOCALE=de')
-
-//       invokeRouter((router) =>
-//         router.prefetch('/about', {
-//           locale: 'ja',
-//           // @ts-expect-error -- Somehow only works via the enum (which is not exported)
-//           kind: 'auto',
-//         }),
-//       )
-//       expect(document.cookie).toContain('NEXT_LOCALE=ja')
-//     })
-
-//     describe('prefetch', () => {
-//       it('does not prefix the default locale', () => {
-//         invokeRouter((router) => router.prefetch('/about'))
-//         expect(useNextRouter().prefetch).toHaveBeenCalledWith('/about')
-//       })
-
-//       it('does not prefix a secondary locale', () => {
-//         invokeRouter((router) => router.prefetch('/about', { locale: 'de' }))
-//         expect(useNextRouter().prefetch).toHaveBeenCalledWith('/about')
-//       })
-//     })
-//   })
-
-//   describe('usePathname', () => {
-//     it('returns the correct pathname for the default locale', () => {
-//       mockCurrentLocale('en')
-//       mockLocation({ pathname: '/about' })
-
-//       renderPathname()
-//       screen.getByText('/about')
-//     })
-
-//     it('returns the correct pathname for a secondary locale', () => {
-//       mockCurrentLocale('de')
-//       mockLocation({ pathname: '/about' })
-
-//       renderPathname()
-//       screen.getByText('/about')
-//     })
-//   })
-// })
-
-// describe("localePrefix: 'never', with `basePath`", () => {
-//   const { useRouter } = createNavigation({
-//     locales,
-//     defaultLocale,
-//     localePrefix: 'never',
-//   })
-
-//   beforeEach(() => {
-//     mockLocation({ pathname: '/base/path/en' }, '/base/path')
-//   })
-
-//   describe('useRouter', () => {
-//     const invokeRouter = getInvokeRouter(useRouter)
-
-//     it('can push', () => {
-//       invokeRouter((router) => router.push('/test'))
-//       expect(useNextRouter().push).toHaveBeenCalledWith('/test')
-//     })
-
-//     it('can replace', () => {
-//       invokeRouter((router) => router.replace('/test'))
-//       expect(useNextRouter().replace).toHaveBeenCalledWith('/test')
-//     })
-
-//     it('can prefetch', () => {
-//       invokeRouter((router) => router.prefetch('/test'))
-//       expect(useNextRouter().prefetch).toHaveBeenCalledWith('/test')
-//     })
-//   })
-// })

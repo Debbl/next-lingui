@@ -7,7 +7,6 @@ export default defineConfig({
     routing: 'src/routing/index.ts',
     navigation: 'src/navigation/index.ts',
     cli: 'src/cli/index.ts',
-    hooks: 'src/hooks/index.ts',
   },
   sourcemap: true,
   dts: { sourcemap: true },
