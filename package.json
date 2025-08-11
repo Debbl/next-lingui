@@ -14,13 +14,30 @@
   "bugs": "https://github.com/Debbl/next-lingui/issues",
   "keywords": [],
   "exports": {
-    ".": "./dist/index.js",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
     "./macro": {
       "types": "./macro/index.d.ts",
       "default": "./macro/index.js"
     },
-    "./middleware": "./dist/middleware.js",
-    "./routing": "./dist/routing.js",
+    "./middleware": {
+      "types": "./dist/middleware.d.ts",
+      "default": "./dist/middleware.js"
+    },
+    "./routing": {
+      "types": "./dist/routing.d.ts",
+      "default": "./dist/routing.js"
+    },
+    "./navigation": {
+      "types": "./dist/navigation.d.ts",
+      "default": "./dist/navigation.js"
+    },
+    "./cli": {
+      "types": "./dist/cli.d.ts",
+      "default": "./dist/cli.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
@@ -33,7 +50,7 @@
   "scripts": {
     "dev": "pnpm build && node ./dist/index.cjs",
     "build": "tsdown",
-    "test": "vitest",
+    "test": "TZ=Europe/Berlin vitest",
     "release": "pnpm build && bumpp && pnpm publish",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
@@ -41,11 +58,9 @@
     "prepare": "simple-git-hooks"
   },
   "peerDependencies": {
-    "@lingui/babel-plugin-lingui-macro": ">=5.3.3",
-    "@lingui/cli": ">=5.3.3",
-    "@lingui/core": ">=5.3.3",
     "babel-plugin-macros": "2 || 3",
-    "next": ">=15"
+    "next": ">=15",
+    "react": ">=18"
   },
   "peerDependenciesMeta": {
     "@lingui/babel-plugin-lingui-macro": {
@@ -56,18 +71,27 @@
     }
   },
   "dependencies": {
-    "@lingui/conf": "^5.3.3"
+    "@lingui/babel-plugin-lingui-macro": "^5.3.3",
+    "@lingui/cli": "^5.3.3",
+    "@lingui/conf": "^5.3.3",
+    "@lingui/core": "^5.3.3",
+    "@lingui/react": "^5.3.3"
   },
   "devDependencies": {
     "@debbl/eslint-config": "^3.12.0",
+    "@testing-library/react": "^16.3.0",
     "@types/node": "^24.0.14",
+    "@types/react": "^19.1.9",
     "bumpp": "^10.2.0",
     "eslint": "^9.31.0",
+    "jsdom": "^26.1.0",
     "lint-staged": "^16.1.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "simple-git-hooks": "^2.13.0",
     "tsdown": "^0.12.9",
     "typescript": "^5.8.3",
-    "vitest": "^3.2.4"
+    "vitest": "3.0.8"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged"

@@ -1,0 +1,838 @@
+/* eslint-disable no-restricted-globals */
+/* eslint-disable unused-imports/no-unused-vars */
+/* eslint-disable unicorn/consistent-function-scoping */
+import { setupI18n } from '@lingui/core'
+import { useLingui } from '@lingui/react'
+import { render } from '@testing-library/react'
+import {
+  usePathname as useNextPathname,
+  useRouter as useNextRouter,
+} from 'next/navigation.js'
+import * as React from 'react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { useLocale } from '~/hooks/use-locale'
+import { createNavigation } from './create-navigation'
+import type { Locale } from '@lingui/core'
+import type { DomainsConfig, Pathnames } from '../routing'
+
+vi.mock('next/navigation')
+vi.mock('@lingui/react', async () => ({
+  ...(await vi.importActual('@lingui/react')),
+  useLingui: vi.fn(() => ({
+    i18n: {
+      locale: 'en',
+    },
+  })),
+}))
+
+function mockCurrentLocale(locale: Locale) {
+  vi.mocked(useLingui).mockImplementation(() => {
+    const i18n = setupI18n({
+      locale,
+    })
+
+    return {
+      _: i18n._,
+      i18n,
+    }
+  })
+}
+
+function mockLocation(
+  location: Partial<typeof window.location>,
+  basePath?: string,
+) {
+  delete (global.window as any).location
+  global.window = Object.create(window)
+  ;(global.window as any).location = location
+
+  if (location.pathname) {
+    const pathname = basePath
+      ? location.pathname.replace(basePath, '')
+      : location.pathname
+    vi.mocked(useNextPathname).mockReturnValue(pathname)
+  }
+}
+
+beforeEach(() => {
+  mockCurrentLocale('en')
+  mockLocation({ host: 'localhost:3000', pathname: '/en' })
+
+  const router = {
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+  }
+  vi.mocked(useNextRouter).mockImplementation(() => router)
+})
+
+const locales = ['en', 'de', 'ja'] as const
+const defaultLocale = 'en' as const
+
+const domains: DomainsConfig<typeof locales> = [
+  {
+    defaultLocale: 'en',
+    domain: 'example.com',
+    locales: ['en'],
+  },
+  {
+    defaultLocale: 'de',
+    domain: 'example.de',
+    locales: ['de', 'ja'],
+  },
+]
+
+const pathnames = {
+  '/': '/',
+  '/about': {
+    en: '/about',
+    de: '/ueber-uns',
+    ja: '/約',
+  },
+  '/news/[articleSlug]-[articleId]': {
+    en: '/news/[articleSlug]-[articleId]',
+    de: '/neuigkeiten/[articleSlug]-[articleId]',
+    ja: '/ニュース/[articleSlug]-[articleId]',
+  },
+  '/categories/[...parts]': {
+    en: '/categories/[...parts]',
+    de: '/kategorien/[...parts]',
+    ja: '/カテゴリ/[...parts]',
+  },
+  '/catch-all/[[...parts]]': '/catch-all/[[...parts]]',
+} satisfies Pathnames<typeof locales>
+
+function getRenderPathname<Return extends string>(usePathname: () => Return) {
+  return () => {
+    function Component() {
+      return usePathname()
+    }
+    render(<Component />)
+  }
+}
+
+function getInvokeRouter<Router>(useRouter: () => Router) {
+  return function invokeRouter(cb: (router: Router) => void) {
+    function Component() {
+      const router = useRouter()
+      cb(router)
+      return null
+    }
+    render(<Component />)
+  }
+}
+
+describe("localePrefix: 'always'", () => {
+  const { Link, usePathname, useRouter } = createNavigation({
+    locales,
+    defaultLocale,
+    localePrefix: 'always',
+  })
+
+  describe('link', () => {
+    it('can receive a ref', () => {
+      let ref
+
+      render(
+        <Link
+          ref={(node) => {
+            ref = node
+          }}
+          href='/test'
+        >
+          Test
+        </Link>,
+      )
+
+      expect(ref).toBeDefined()
+    })
+  })
+
+  describe('useRouter', () => {
+    const invokeRouter = getInvokeRouter(useRouter)
+
+    it('leaves unrelated router functionality in place', () => {
+      ;(['back', 'forward', 'refresh'] as const).forEach((method) => {
+        invokeRouter((router) => router[method]())
+        expect(useNextRouter()[method]).toHaveBeenCalled()
+      })
+    })
+
+    describe.each(['push', 'replace'] as const)('`%s`', (method) => {
+      it('prefixes with the default locale', () => {
+        invokeRouter((router) => router[method]('/about'))
+        expect(useNextRouter()[method]).toHaveBeenCalledWith('/en/about')
+      })
+
+      it('prefixes with a secondary locale', () => {
+        invokeRouter((router) => router[method]('/about', { locale: 'de' }))
+        expect(useNextRouter()[method]).toHaveBeenCalledWith('/de/about')
+      })
+
+      it('can use a locale from `useLocale`', () => {
+        function Component() {
+          const locale = useLocale()
+          const router = useRouter()
+          router.push('/about', { locale })
+          return null
+        }
+        render(<Component />)
+      })
+
+      it('passes through unknown options to the Next.js router', () => {
+        invokeRouter((router) => router[method]('/about', { scroll: true }))
+        expect(useNextRouter()[method]).toHaveBeenCalledWith('/en/about', {
+          scroll: true,
+        })
+      })
+
+      it('handles search params via a final string', () => {
+        invokeRouter((router) => router[method]('/test?foo=bar'))
+        expect(useNextRouter()[method]).toHaveBeenCalledWith('/en/test?foo=bar')
+      })
+
+      it('handles search params via an object', () => {
+        invokeRouter((router) =>
+          router[method]({
+            pathname: '/test',
+            query: { foo: 'bar' },
+          }),
+        )
+        expect(useNextRouter()[method]).toHaveBeenCalledWith('/en/test?foo=bar')
+      })
+
+      // it('passes through absolute urls', () => {
+      //   invokeRouter((router) => router[method]('https://example.com'))
+      //   expect(useNextRouter()[method]).toHaveBeenCalledWith(
+      //     'https://example.com',
+      //   )
+      // })
+
+      // it('passes through relative urls', () => {
+      //   invokeRouter((router) => router[method]('about'))
+      //   expect(useNextRouter()[method]).toHaveBeenCalledWith('about')
+      // })
+    })
+
+    // describe('prefetch', () => {
+    //   it('prefixes with the default locale', () => {
+    //     invokeRouter((router) => router.prefetch('/about'))
+    //     expect(useNextRouter().prefetch).toHaveBeenCalledWith('/en/about')
+    //   })
+
+    //   it('prefixes with a secondary locale', () => {
+    //     invokeRouter((router) =>
+    //       router.prefetch('/about', {
+    //         locale: 'de',
+    //         // @ts-expect-error -- Somehow only works via the enum (which is not exported)
+    //         kind: 'full',
+    //       }),
+    //     )
+    //     expect(useNextRouter().prefetch).toHaveBeenCalledWith('/de/about', {
+    //       kind: 'full',
+    //     })
+    //   })
+    // })
+  })
+
+  // describe('usePathname', () => {
+  //   const renderPathname = getRenderPathname(usePathname)
+
+  //   it('returns the correct pathname for the default locale', () => {
+  //     mockCurrentLocale('en')
+  //     mockLocation({ pathname: '/en/about' })
+
+  //     renderPathname()
+  //     screen.getByText('/about')
+  //   })
+
+  //   it('returns the correct pathname for a secondary locale', () => {
+  //     mockCurrentLocale('de')
+  //     mockLocation({ pathname: '/de/about' })
+
+  //     renderPathname()
+  //     screen.getByText('/about')
+  //   })
+  // })
+})
+
+// describe("localePrefix: 'always', with `localeCookie`", () => {
+//   const { Link, useRouter } = createNavigation({
+//     locales,
+//     defaultLocale,
+//     localePrefix: 'always',
+//     localeCookie: {
+//       maxAge: 60,
+//       domain: 'example.com',
+//       sameSite: 'strict',
+//       partitioned: true,
+//       path: '/nested',
+//       priority: 'high',
+//       secure: true,
+//     },
+//   })
+
+//   describe('link', () => {
+//     it('uses the provided cookie options', () => {
+//       global.document.cookie = 'NEXT_LOCALE=en'
+//       const cookieSpy = vi.spyOn(global.document, 'cookie', 'set')
+
+//       render(
+//         <Link href='/' locale='de'>
+//           Test
+//         </Link>,
+//       )
+//       fireEvent.click(screen.getByRole('link', { name: 'Test' }))
+
+//       expect(cookieSpy).toHaveBeenCalledWith(
+//         `${[
+//           'NEXT_LOCALE=de',
+//           'sameSite=strict',
+//           'max-age=60',
+//           'domain=example.com',
+//           'partitioned',
+//           'path=/nested',
+//           'priority=high',
+//           'secure',
+//         ].join(';')};`,
+//       )
+//       cookieSpy.mockRestore()
+//     })
+//   })
+
+//   describe('useRouter', () => {
+//     const invokeRouter = getInvokeRouter(useRouter)
+
+//     it('uses the provided cookie options', () => {
+//       const cookieSpy = vi.spyOn(global.document, 'cookie', 'set')
+
+//       invokeRouter((router) => router.push('/about', { locale: 'de' }))
+
+//       expect(cookieSpy).toHaveBeenCalledWith(
+//         `${[
+//           'NEXT_LOCALE=de',
+//           'sameSite=strict',
+//           'max-age=60',
+//           'domain=example.com',
+//           'partitioned',
+//           'path=/nested',
+//           'priority=high',
+//           'secure',
+//         ].join(';')};`,
+//       )
+//       cookieSpy.mockRestore()
+//     })
+//   })
+// })
+
+// describe("localePrefix: 'always', with `basePath`", () => {
+//   const { useRouter } = createNavigation({
+//     locales,
+//     defaultLocale,
+//     localePrefix: 'always',
+//   })
+
+//   beforeEach(() => {
+//     mockLocation({ pathname: '/base/path/en' }, '/base/path')
+//   })
+
+//   describe('useRouter', () => {
+//     const invokeRouter = getInvokeRouter(useRouter)
+
+//     it('can push', () => {
+//       invokeRouter((router) => router.push('/test'))
+//       expect(useNextRouter().push).toHaveBeenCalledWith('/en/test')
+//     })
+
+//     it('can replace', () => {
+//       invokeRouter((router) => router.replace('/test'))
+//       expect(useNextRouter().replace).toHaveBeenCalledWith('/en/test')
+//     })
+
+//     it('can prefetch', () => {
+//       invokeRouter((router) => router.prefetch('/test'))
+//       expect(useNextRouter().prefetch).toHaveBeenCalledWith('/en/test')
+//     })
+
+//     it('sets the right cookie', () => {
+//       const cookieSpy = vi.spyOn(global.document, 'cookie', 'set')
+//       invokeRouter((router) => router.push('/about', { locale: 'de' }))
+
+//       expect(cookieSpy).toHaveBeenCalledWith(
+//         `${['NEXT_LOCALE=de', 'sameSite=lax', 'path=/base/path'].join(';')};`,
+//       )
+//       cookieSpy.mockRestore()
+//     })
+//   })
+// })
+
+// describe("localePrefix: 'always', with `pathnames`", () => {
+//   const { usePathname, useRouter } = createNavigation({
+//     locales,
+//     defaultLocale,
+//     localePrefix: 'always',
+//     pathnames,
+//   })
+
+//   describe('useRouter', () => {
+//     const invokeRouter = getInvokeRouter(useRouter)
+
+//     describe.each(['push', 'replace'] as const)('`%s`', (method) => {
+//       it('localizes a pathname for the default locale', () => {
+//         invokeRouter((router) => router[method]('/about'))
+//         expect(useNextRouter()[method]).toHaveBeenCalledWith('/en/about')
+//       })
+
+//       it('localizes a pathname for a secondary locale', () => {
+//         invokeRouter((router) => router[method]('/about', { locale: 'de' }))
+//         expect(useNextRouter()[method]).toHaveBeenCalledWith('/de/ueber-uns')
+//       })
+
+//       it('handles pathname params', () => {
+//         invokeRouter((router) =>
+//           router[method]({
+//             pathname: '/news/[articleSlug]-[articleId]',
+//             params: {
+//               articleSlug: 'launch-party',
+//               articleId: '3',
+//             },
+//           }),
+//         )
+//         expect(useNextRouter()[method]).toHaveBeenCalledWith(
+//           '/en/news/launch-party-3',
+//         )
+//       })
+
+//       it('handles search params', () => {
+//         invokeRouter((router) =>
+//           router[method]({
+//             pathname: '/about',
+//             query: {
+//               foo: 'bar',
+//             },
+//           }),
+//         )
+//         expect(useNextRouter()[method]).toHaveBeenCalledWith(
+//           '/en/about?foo=bar',
+//         )
+//       })
+
+//       it('disallows unknown pathnames', () => {
+//         // @ts-expect-error -- Unknown pathname
+//         invokeRouter((router) => router[method]('/unknown'))
+
+//         // Still works
+//         expect(useNextRouter()[method]).toHaveBeenCalledWith('/en/unknown')
+//       })
+
+//       it('handles UTF-8 encoded pathnames', () => {
+//         invokeRouter((router) =>
+//           router[method](
+//             {
+//               pathname: '/news/[articleSlug]-[articleId]',
+//               params: {
+//                 articleId: 3,
+//                 articleSlug: 'launch-party',
+//               },
+//               query: {
+//                 foo: 'こんにちは',
+//               },
+//             },
+//             { locale: 'ja' },
+//           ),
+//         )
+//         expect(useNextRouter()[method]).toHaveBeenCalledWith(
+//           '/ja/%E3%83%8B%E3%83%A5%E3%83%BC%E3%82%B9/launch-party-3?foo=%E3%81%93%E3%82%93%E3%81%AB%E3%81%A1%E3%81%AF',
+//         )
+//       })
+//     })
+//   })
+
+//   describe('usePathname', () => {
+//     it('returns a typed pathname', () => {
+//       type Return = ReturnType<typeof usePathname>
+
+//       '/about' satisfies Return
+//       '/categories/[...parts]' satisfies Return
+
+//       // @ts-expect-error
+//       '/unknown' satisfies Return
+//     })
+//   })
+// })
+
+// describe("localePrefix: 'always', custom `prefixes`", () => {
+//   const { usePathname } = createNavigation({
+//     locales,
+//     localePrefix: {
+//       mode: 'always',
+//       prefixes: {
+//         en: '/uk',
+//       },
+//     },
+//   })
+//   const renderPathname = getRenderPathname(usePathname)
+
+//   describe('usePathname', () => {
+//     it('returns the correct pathname for a custom locale prefix', () => {
+//       mockCurrentLocale('en')
+//       mockLocation({ pathname: '/uk/about' })
+//       renderPathname()
+//       screen.getByText('/about')
+//     })
+//   })
+// })
+
+// describe("localePrefix: 'as-needed'", () => {
+//   const { usePathname, useRouter } = createNavigation({
+//     locales,
+//     defaultLocale,
+//     localePrefix: 'as-needed',
+//   })
+
+//   function renderPathname() {
+//     function Component() {
+//       return usePathname()
+//     }
+//     render(<Component />)
+//   }
+
+//   describe('useRouter', () => {
+//     const invokeRouter = getInvokeRouter(useRouter)
+
+//     it('leaves unrelated router functionality in place', () => {
+//       ;(['back', 'forward', 'refresh'] as const).forEach((method) => {
+//         invokeRouter((router) => router[method]())
+//         expect(useNextRouter()[method]).toHaveBeenCalled()
+//       })
+//     })
+
+//     describe.each(['push', 'replace'] as const)('`%s`', (method) => {
+//       it('does not prefix the default locale', () => {
+//         invokeRouter((router) => router[method]('/about'))
+//         expect(useNextRouter()[method]).toHaveBeenCalledWith('/about')
+//       })
+
+//       it('prefixes a secondary locale', () => {
+//         invokeRouter((router) => router[method]('/about', { locale: 'de' }))
+//         expect(useNextRouter()[method]).toHaveBeenCalledWith('/de/about')
+//       })
+
+//       it('does not prefix the default locale when being switched to', () => {
+//         invokeRouter((router) => router[method]('/about', { locale: 'en' }))
+//         expect(useNextRouter()[method]).toHaveBeenCalledWith('/about')
+//       })
+//     })
+
+//     describe('prefetch', () => {
+//       it('does not prefix with the default locale', () => {
+//         invokeRouter((router) => router.prefetch('/about'))
+//         expect(useNextRouter().prefetch).toHaveBeenCalledWith('/about')
+//       })
+
+//       it('prefixes with a secondary locale', () => {
+//         invokeRouter((router) => router.prefetch('/about', { locale: 'de' }))
+//         expect(useNextRouter().prefetch).toHaveBeenCalledWith('/de/about')
+//       })
+//     })
+//   })
+
+//   describe('usePathname', () => {
+//     it('returns the correct pathname for the default locale', () => {
+//       mockCurrentLocale('en')
+//       mockLocation({ pathname: '/about' })
+
+//       renderPathname()
+//       screen.getByText('/about')
+//     })
+
+//     it('returns the correct pathname for a secondary locale', () => {
+//       mockCurrentLocale('de')
+//       mockLocation({ pathname: '/de/about' })
+
+//       renderPathname()
+//       screen.getByText('/about')
+//     })
+//   })
+// })
+
+// describe("localePrefix: 'as-needed', custom `prefixes`", () => {
+//   const { usePathname } = createNavigation({
+//     defaultLocale,
+//     locales,
+//     localePrefix: {
+//       mode: 'as-needed',
+//       prefixes: {
+//         en: '/english',
+//         de: '/deutsch',
+//       },
+//     },
+//   })
+//   const renderPathname = getRenderPathname(usePathname)
+
+//   // https://github.com/vercel/next.js/issues/73085
+//   it('is tolerant when a locale is used in the pathname for the default locale', () => {
+//     mockCurrentLocale('en')
+//     mockLocation({ pathname: '/en/about' })
+//     renderPathname()
+//     screen.getByText('/about')
+//   })
+
+//   it('is tolerant when a locale is used in the pathname for a non-default locale', () => {
+//     mockCurrentLocale('de')
+//     mockLocation({ pathname: '/de/about' })
+//     renderPathname()
+//     screen.getByText('/about')
+//   })
+// })
+
+// describe("localePrefix: 'as-needed', with `basePath` and `domains`", () => {
+//   const { useRouter } = createNavigation({
+//     locales,
+//     defaultLocale,
+//     domains,
+//     localePrefix: 'as-needed',
+//   })
+
+//   describe('useRouter', () => {
+//     const invokeRouter = getInvokeRouter(useRouter)
+
+//     it('can compute the correct pathname when on the default locale and not supplying a locale', () => {
+//       invokeRouter((router) => router.push('/test'))
+//       expect(useNextRouter().push).toHaveBeenCalledWith('/test')
+//     })
+
+//     it('can compute the correct pathname when on the default locale and supplying a secondary locale', () => {
+//       invokeRouter((router) => router.push('/test', { locale: 'ja' }))
+//       expect(useNextRouter().push).toHaveBeenCalledWith('/ja/test')
+//     })
+
+//     it('can compute the correct pathname when on a secondary locale and navigating to the default locale', () => {
+//       mockCurrentLocale('ja')
+//       invokeRouter((router) => router.push('/test', { locale: 'en' }))
+//       expect(useNextRouter().push).toHaveBeenCalledWith('/test')
+//     })
+//   })
+// })
+
+// describe("localePrefix: 'as-needed', with `domains`", () => {
+//   const { usePathname, useRouter } = createNavigation({
+//     locales,
+//     defaultLocale,
+//     domains,
+//     localePrefix: 'as-needed',
+//   })
+
+//   describe('useRouter', () => {
+//     const invokeRouter = getInvokeRouter(useRouter)
+
+//     describe.each(['push', 'replace'] as const)('`%s`', (method) => {
+//       it('does not prefix the default locale when on a domain with a matching defaultLocale', () => {
+//         mockCurrentLocale('en')
+//         mockLocation({ pathname: '/about', host: 'example.com' })
+//         invokeRouter((router) => router[method]('/about'))
+//         expect(useNextRouter()[method]).toHaveBeenCalledWith('/about')
+//       })
+
+//       it('does not prefix the default locale when on a domain with a different defaultLocale', () => {
+//         mockCurrentLocale('de')
+//         mockLocation({ pathname: '/about', host: 'example.de' })
+//         invokeRouter((router) => router[method]('/about'))
+//         expect(useNextRouter()[method]).toHaveBeenCalledWith('/about')
+//       })
+
+//       it('does not prefix the default locale when on an unknown domain', () => {
+//         const consoleSpy = vi.spyOn(console, 'error')
+//         mockCurrentLocale('en')
+//         mockLocation({ pathname: '/about', host: 'localhost:3000' })
+//         invokeRouter((router) => router[method]('/about'))
+//         expect(useNextRouter()[method]).toHaveBeenCalledWith('/about')
+//         expect(consoleSpy).not.toHaveBeenCalled()
+//         consoleSpy.mockRestore()
+//       })
+//     })
+//   })
+
+//   const renderPathname = getRenderPathname(usePathname)
+
+//   describe('usePathname', () => {
+//     it('returns the correct pathname for the default locale', () => {
+//       mockCurrentLocale('en')
+//       mockLocation({ pathname: '/about', host: 'example.com' })
+//       renderPathname()
+//       screen.getByText('/about')
+//     })
+
+//     it('returns the correct pathname for a secondary locale', () => {
+//       mockCurrentLocale('de')
+//       mockLocation({ pathname: '/de/about', host: 'example.com' })
+//       renderPathname()
+//       screen.getByText('/about')
+//     })
+
+//     it('returns the correct pathname for the default locale on a domain with a different defaultLocale', () => {
+//       mockCurrentLocale('de')
+//       mockLocation({ pathname: '/about', host: 'example.de' })
+//       renderPathname()
+//       screen.getByText('/about')
+//     })
+
+//     it('returns the correct pathname for a secondary locale on a domain with a different defaultLocale', () => {
+//       mockCurrentLocale('en')
+//       mockLocation({ pathname: '/en/about', host: 'example.de' })
+//       renderPathname()
+//       screen.getByText('/about')
+//     })
+//   })
+// })
+
+// describe("localePrefix: 'never'", () => {
+//   const { Link, usePathname, useRouter } = createNavigation({
+//     locales,
+//     defaultLocale,
+//     localePrefix: 'never',
+//   })
+
+//   function renderPathname() {
+//     function Component() {
+//       return usePathname()
+//     }
+//     render(<Component />)
+//   }
+
+//   describe('link', () => {
+//     it('keeps the cookie value in sync', () => {
+//       global.document.cookie = 'NEXT_LOCALE=en'
+//       render(
+//         <Link href='/' locale='de'>
+//           Test
+//         </Link>,
+//       )
+//       expect(document.cookie).toContain('NEXT_LOCALE=en')
+//       fireEvent.click(screen.getByRole('link', { name: 'Test' }))
+//       expect(document.cookie).toContain('NEXT_LOCALE=de')
+//     })
+
+//     it('updates the href when the query changes', () => {
+//       const { rerender } = render(<Link href={{ pathname: '/' }}>Test</Link>)
+//       expect(
+//         screen.getByRole('link', { name: 'Test' }).getAttribute('href'),
+//       ).toBe('/')
+//       rerender(
+//         <Link href={{ pathname: '/', query: { foo: 'bar' } }}>Test</Link>,
+//       )
+//       expect(
+//         screen.getByRole('link', { name: 'Test' }).getAttribute('href'),
+//       ).toBe('/?foo=bar')
+//     })
+//   })
+
+//   describe('useRouter', () => {
+//     const invokeRouter = getInvokeRouter(useRouter)
+
+//     it('leaves unrelated router functionality in place', () => {
+//       ;(['back', 'forward', 'refresh'] as const).forEach((method) => {
+//         invokeRouter((router) => router[method]())
+//         expect(useNextRouter()[method]).toHaveBeenCalled()
+//       })
+//     })
+
+//     describe.each(['push', 'replace'] as const)('`%s`', (method) => {
+//       it('does not prefix the default locale', () => {
+//         invokeRouter((router) => router[method]('/about'))
+//         expect(useNextRouter()[method]).toHaveBeenCalledWith('/about')
+//       })
+
+//       it('does not prefix a secondary locale', () => {
+//         invokeRouter((router) => router[method]('/about', { locale: 'de' }))
+//         expect(useNextRouter()[method]).toHaveBeenCalledWith('/about')
+//       })
+//     })
+
+//     it('keeps the cookie value in sync', () => {
+//       document.cookie = 'NEXT_LOCALE=en'
+
+//       invokeRouter((router) => router.push('/about', { locale: 'de' }))
+//       expect(document.cookie).toContain('NEXT_LOCALE=de')
+
+//       invokeRouter((router) => router.push('/test'))
+//       expect(document.cookie).toContain('NEXT_LOCALE=de')
+
+//       invokeRouter((router) => router.replace('/about', { locale: 'de' }))
+//       expect(document.cookie).toContain('NEXT_LOCALE=de')
+
+//       invokeRouter((router) =>
+//         router.prefetch('/about', {
+//           locale: 'ja',
+//           // @ts-expect-error -- Somehow only works via the enum (which is not exported)
+//           kind: 'auto',
+//         }),
+//       )
+//       expect(document.cookie).toContain('NEXT_LOCALE=ja')
+//     })
+
+//     describe('prefetch', () => {
+//       it('does not prefix the default locale', () => {
+//         invokeRouter((router) => router.prefetch('/about'))
+//         expect(useNextRouter().prefetch).toHaveBeenCalledWith('/about')
+//       })
+
+//       it('does not prefix a secondary locale', () => {
+//         invokeRouter((router) => router.prefetch('/about', { locale: 'de' }))
+//         expect(useNextRouter().prefetch).toHaveBeenCalledWith('/about')
+//       })
+//     })
+//   })
+
+//   describe('usePathname', () => {
+//     it('returns the correct pathname for the default locale', () => {
+//       mockCurrentLocale('en')
+//       mockLocation({ pathname: '/about' })
+
+//       renderPathname()
+//       screen.getByText('/about')
+//     })
+
+//     it('returns the correct pathname for a secondary locale', () => {
+//       mockCurrentLocale('de')
+//       mockLocation({ pathname: '/about' })
+
+//       renderPathname()
+//       screen.getByText('/about')
+//     })
+//   })
+// })
+
+// describe("localePrefix: 'never', with `basePath`", () => {
+//   const { useRouter } = createNavigation({
+//     locales,
+//     defaultLocale,
+//     localePrefix: 'never',
+//   })
+
+//   beforeEach(() => {
+//     mockLocation({ pathname: '/base/path/en' }, '/base/path')
+//   })
+
+//   describe('useRouter', () => {
+//     const invokeRouter = getInvokeRouter(useRouter)
+
+//     it('can push', () => {
+//       invokeRouter((router) => router.push('/test'))
+//       expect(useNextRouter().push).toHaveBeenCalledWith('/test')
+//     })
+
+//     it('can replace', () => {
+//       invokeRouter((router) => router.replace('/test'))
+//       expect(useNextRouter().replace).toHaveBeenCalledWith('/test')
+//     })
+
+//     it('can prefetch', () => {
+//       invokeRouter((router) => router.prefetch('/test'))
+//       expect(useNextRouter().prefetch).toHaveBeenCalledWith('/test')
+//     })
+//   })
+// })
