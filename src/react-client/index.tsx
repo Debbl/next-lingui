@@ -1,1 +1,1 @@
-export { NextLinguiProvider, useLingui } from './next-lingui-provider'
+export const reactClient = 'react-client'

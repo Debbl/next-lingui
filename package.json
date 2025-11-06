@@ -2,7 +2,7 @@
   "name": "next-lingui",
   "type": "module",
   "version": "0.0.0",
-  "packageManager": "pnpm@10.14.0",
+  "packageManager": "pnpm@10.20.0",
   "description": "Next.js + Lingui",
   "author": "Brendan Dash <me@aiwan.run> (https://aiwan.run)",
   "license": "MIT",
@@ -15,28 +15,22 @@
   "keywords": [],
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./dist/index.react-client.d.ts",
+      "react-server": {
+        "default": "./dist/index.react-server.js"
+      },
+      "default": "./dist/index.react-client.js"
     },
-    "./macro": {
-      "types": "./macro/index.d.ts",
-      "default": "./macro/index.js"
+    "./server": {
+      "types": "./dist/server/react-server.d.ts",
+      "react-server": {
+        "default": "./dist/server/react-server.js"
+      },
+      "default": "./dist/server/react-client.js"
     },
-    "./middleware": {
-      "types": "./dist/middleware.d.ts",
-      "default": "./dist/middleware.js"
-    },
-    "./routing": {
-      "types": "./dist/routing.d.ts",
-      "default": "./dist/routing.js"
-    },
-    "./navigation": {
-      "types": "./dist/navigation.d.ts",
-      "default": "./dist/navigation.js"
-    },
-    "./cli": {
-      "types": "./dist/cli.d.ts",
-      "default": "./dist/cli.js"
+    "./plugin": {
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
     },
     "./package.json": "./package.json"
   },
@@ -71,28 +65,28 @@
     }
   },
   "dependencies": {
-    "@lingui/babel-plugin-lingui-macro": "^5.4.1",
-    "@lingui/cli": "^5.4.1",
-    "@lingui/conf": "^5.4.1",
-    "@lingui/core": "^5.4.1",
-    "@lingui/react": "^5.4.1",
+    "@lingui/babel-plugin-lingui-macro": "^5.5.2",
+    "@lingui/cli": "^5.5.2",
+    "@lingui/conf": "^5.5.2",
+    "@lingui/core": "^5.5.2",
+    "@lingui/react": "^5.5.2",
     "date-fns": "^4.1.0"
   },
   "devDependencies": {
-    "@debbl/eslint-config": "^3.12.1",
+    "@debbl/eslint-config": "^3.13.0",
     "@testing-library/react": "^16.3.0",
-    "@types/node": "^24.2.1",
-    "@types/react": "^19.1.9",
-    "@types/react-dom": "^19.1.7",
-    "bumpp": "^10.2.2",
-    "eslint": "^9.33.0",
-    "jsdom": "^26.1.0",
-    "lint-staged": "^16.1.5",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
+    "@types/node": "^24.10.0",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "bumpp": "^10.3.1",
+    "eslint": "^9.39.1",
+    "jsdom": "^27.1.0",
+    "lint-staged": "^16.2.6",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
     "simple-git-hooks": "^2.13.1",
-    "tsdown": "^0.14.0",
-    "typescript": "^5.9.2",
+    "tsdown": "^0.16.0",
+    "typescript": "^5.9.3",
     "vitest": "3.0.8"
   },
   "simple-git-hooks": {
