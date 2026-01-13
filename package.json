@@ -14,19 +14,23 @@
   "bugs": "https://github.com/Debbl/next-lingui/issues",
   "keywords": [],
   "exports": {
-    ".": {
-      "types": "./dist/index.react-client.d.ts",
-      "react-server": {
-        "default": "./dist/index.react-server.js"
-      },
-      "default": "./dist/index.react-client.js"
+    "./routing": {
+      "types": "./dist/routing.d.ts",
+      "default": "./dist/routing.js"
     },
-    "./server": {
-      "types": "./dist/server/react-server.d.ts",
-      "react-server": {
-        "default": "./dist/server/react-server.js"
+    "./middleware": {
+      "types": "./dist/middleware.d.ts",
+      "default": "./dist/middleware.js"
+    },
+    "./navigation": {
+      "types": "./dist/navigation.d.ts",
+      "react-client": {
+        "default": "./dist/navigation.react-client.js"
       },
-      "default": "./dist/server/react-client.js"
+      "react-server": {
+        "default": "./dist/navigation.react-server.js"
+      },
+      "default": "./dist/navigation.js"
     },
     "./plugin": {
       "types": "./dist/plugin.d.ts",

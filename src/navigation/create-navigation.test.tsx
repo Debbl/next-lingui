@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable no-restricted-globals */
 import { render, screen } from '@testing-library/react'
 import {
   permanentRedirect as nextPermanentRedirect,
