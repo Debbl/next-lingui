@@ -1,7 +1,6 @@
-import { I18nProvider } from '@lingui/react'
 import { render, screen } from '@testing-library/react'
 import { usePathname as useNextPathname } from 'next/navigation.js'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, it, vi } from 'vitest'
 import { useLocale } from '~/hooks/use-locale'
 import useBasePathname from './use-base-pathname'
 

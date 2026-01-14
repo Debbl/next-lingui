@@ -1,32 +1,32 @@
-import {render, screen} from '@testing-library/react';
-import {expect, it} from 'vitest';
-import IntlProvider from './IntlProvider.js';
-import useTimeZone from './useTimeZone.js';
+import { render, screen } from '@testing-library/react'
+import { expect, it } from 'vitest'
+import IntlProvider from './IntlProvider.js'
+import useTimeZone from './useTimeZone.js'
 
 it('returns the time zone when it is configured', () => {
   function Component() {
-    return <>{useTimeZone()}</>;
+    return <>{useTimeZone()}</>
   }
 
   render(
-    <IntlProvider locale="de" timeZone="Europe/Berlin">
+    <IntlProvider locale='de' timeZone='Europe/Berlin'>
       <Component />
-    </IntlProvider>
-  );
+    </IntlProvider>,
+  )
 
-  screen.getByText('Europe/Berlin');
-});
+  screen.getByText('Europe/Berlin')
+})
 
 it('returns undefined when no time zone is configured', () => {
   function Component() {
-    return <>{useTimeZone()}</>;
+    return <>{useTimeZone()}</>
   }
 
-  const {container} = render(
-    <IntlProvider locale="de">
+  const { container } = render(
+    <IntlProvider locale='de'>
       <Component />
-    </IntlProvider>
-  );
+    </IntlProvider>,
+  )
 
-  expect(container.textContent).toBe('');
-});
+  expect(container.textContent).toBe('')
+})

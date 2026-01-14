@@ -1,37 +1,37 @@
-import {render, screen} from '@testing-library/react';
-import {expect, it} from 'vitest';
-import IntlProvider from './IntlProvider.js';
-import useMessages from './useMessages.js';
+import { render, screen } from '@testing-library/react'
+import { expect, it } from 'vitest'
+import IntlProvider from './IntlProvider.js'
+import useMessages from './useMessages.js'
 
 function Component() {
-  const messages = useMessages();
+  const messages = useMessages()
   return (
     <>
       {JSON.stringify(messages)}
       {/* The returned value can be passed to the provider */}
-      <IntlProvider locale="de" messages={messages}>
+      <IntlProvider locale='de' messages={messages}>
         <p />
       </IntlProvider>
     </>
-  );
+  )
 }
 
 it('returns messages when they are configured', () => {
   render(
-    <IntlProvider locale="de" messages={{About: {title: 'Hello'}}}>
+    <IntlProvider locale='de' messages={{ About: { title: 'Hello' } }}>
       <Component />
-    </IntlProvider>
-  );
+    </IntlProvider>,
+  )
 
-  screen.getByText('{"About":{"title":"Hello"}}');
-});
+  screen.getByText('{"About":{"title":"Hello"}}')
+})
 
 it('throws when no messages are configured', () => {
   expect(() =>
     render(
-      <IntlProvider locale="de">
+      <IntlProvider locale='de'>
         <Component />
-      </IntlProvider>
-    )
-  ).toThrow('No messages found.');
-});
+      </IntlProvider>,
+    ),
+  ).toThrow('No messages found.')
+})

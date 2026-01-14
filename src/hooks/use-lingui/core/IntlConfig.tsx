@@ -1,34 +1,40 @@
-import type {Locale, Messages} from './AppConfig.js';
-import type Formats from './Formats.js';
-import type IntlError from './IntlError.js';
-import type TimeZone from './TimeZone.js';
-import type {DeepPartial} from './types.js';
+import type { Locale, Messages } from './AppConfig.js'
+import type Formats from './Formats.js'
+import type IntlError from './IntlError.js'
+import type TimeZone from './TimeZone.js'
+import type { DeepPartial } from './types.js'
 
 /**
  * Should be used for entry points that configure the library.
  */
 
-type IntlConfig = {
+interface IntlConfig {
   /** A valid Unicode locale tag (e.g. "en" or "en-GB"). */
-  locale: Locale;
-  /** Global formats can be provided to achieve consistent
-   * formatting across components. */
-  formats?: Formats | null;
+  locale: Locale
+  /**
+   * Global formats can be provided to achieve consistent
+   * formatting across components.
+   */
+  formats?: Formats | null
   /** A time zone as defined in [the tz database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) which will be applied when formatting dates and times. If this is absent, the user time zone will be used. You can override this by supplying an explicit time zone to `formatDateTime`. */
-  timeZone?: TimeZone;
-  /** This callback will be invoked when an error is encountered during
+  timeZone?: TimeZone
+  /**
+   * This callback will be invoked when an error is encountered during
    * resolving a message or formatting it. This defaults to `console.error` to
    * keep your app running. You can customize the handling by taking
-   * `error.code` into account. */
-  onError?(error: IntlError): void;
-  /** Will be called when a message couldn't be resolved or formatting it led to
+   * `error.code` into account.
+   */
+  onError?: (error: IntlError) => void
+  /**
+   * Will be called when a message couldn't be resolved or formatting it led to
    * an error. This defaults to `${namespace}.${key}` You can use this to
-   * customize what will be rendered in this case. */
-  getMessageFallback?(info: {
-    error: IntlError;
-    key: string;
-    namespace?: string;
-  }): string;
+   * customize what will be rendered in this case.
+   */
+  getMessageFallback?: (info: {
+    error: IntlError
+    key: string
+    namespace?: string
+  }) => string
   /**
    * Providing this value will have two effects:
    * 1. It will be used as the default for the `now` argument of
@@ -38,10 +44,10 @@ type IntlConfig = {
    *    the global `now` value will only be used for the initial render, but
    *    afterwards the current date will be returned continuously.
    */
-  now?: Date;
+  now?: Date
   /** All messages that will be available. */
-  messages?: DeepPartial<Messages> | null;
-};
+  messages?: DeepPartial<Messages> | null
+}
 
 /**
 /**
@@ -52,10 +58,10 @@ export type InitializedIntlConfig = Omit<
   IntlConfig,
   'formats' | 'messages' | 'onError' | 'getMessageFallback'
 > & {
-  formats?: NonNullable<IntlConfig['formats']>;
-  messages?: NonNullable<IntlConfig['messages']>;
-  onError: NonNullable<IntlConfig['onError']>;
-  getMessageFallback: NonNullable<IntlConfig['getMessageFallback']>;
-};
+  formats?: NonNullable<IntlConfig['formats']>
+  messages?: NonNullable<IntlConfig['messages']>
+  onError: NonNullable<IntlConfig['onError']>
+  getMessageFallback: NonNullable<IntlConfig['getMessageFallback']>
+}
 
-export default IntlConfig;
+export default IntlConfig

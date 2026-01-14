@@ -1,4 +1,4 @@
-import type {Locale} from './AppConfig.js';
+import type { Locale } from './AppConfig.js'
 
 /**
  * Checks if a locale exists in a list of locales.
@@ -7,7 +7,7 @@ import type {Locale} from './AppConfig.js';
  */
 export default function hasLocale<LocaleType extends Locale>(
   locales: ReadonlyArray<LocaleType>,
-  candidate: unknown
+  candidate: unknown,
 ): candidate is LocaleType {
-  return locales.includes(candidate as LocaleType);
+  return locales.includes(candidate as LocaleType)
 }

@@ -5,33 +5,33 @@ export default interface AppConfig {
 }
 
 export type Locale = AppConfig extends {
-  Locale: infer AppLocale;
+  Locale: infer AppLocale
 }
   ? AppLocale
-  : string;
+  : string
 
 export type FormatNames = AppConfig extends {
-  Formats: infer AppFormats;
+  Formats: infer AppFormats
 }
   ? {
-      dateTime: AppFormats extends {dateTime: infer AppDateTimeFormats}
+      dateTime: AppFormats extends { dateTime: infer AppDateTimeFormats }
         ? keyof AppDateTimeFormats
-        : string;
-      number: AppFormats extends {number: infer AppNumberFormats}
+        : string
+      number: AppFormats extends { number: infer AppNumberFormats }
         ? keyof AppNumberFormats
-        : string;
-      list: AppFormats extends {list: infer AppListFormats}
+        : string
+      list: AppFormats extends { list: infer AppListFormats }
         ? keyof AppListFormats
-        : string;
+        : string
     }
   : {
-      dateTime: string;
-      number: string;
-      list: string;
-    };
+      dateTime: string
+      number: string
+      list: string
+    }
 
 export type Messages = AppConfig extends {
-  Messages: infer AppMessages;
+  Messages: infer AppMessages
 }
   ? AppMessages
-  : Record<string, any>;
+  : Record<string, any>

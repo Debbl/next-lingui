@@ -1,125 +1,125 @@
-import {isValidElement} from 'react';
-import {renderToString} from 'react-dom/server';
-import {describe, expect, it, vi} from 'vitest';
-import type {Messages} from './AppConfig.js';
-import type IntlError from './IntlError.js';
-import IntlErrorCode from './IntlErrorCode.js';
-import createTranslator from './createTranslator.js';
+import { isValidElement } from 'react'
+import { renderToString } from 'react-dom/server'
+import { describe, expect, it, vi } from 'vitest'
+import createTranslator from './createTranslator.js'
+import IntlErrorCode from './IntlErrorCode.js'
+import type { Messages } from './AppConfig.js'
+import type IntlError from './IntlError.js'
 
 const messages = {
   Home: {
     title: 'Hello world!',
     param: 'Hello {param}',
     rich: '<b>Hello <i>{name}</i>!</b>',
-    markup: '<b>Hello <i>{name}</i>!</b>'
-  }
-} as const;
+    markup: '<b>Hello <i>{name}</i>!</b>',
+  },
+} as const
 
 it('can translate a message within a namespace', () => {
   const t = createTranslator({
     locale: 'en',
     namespace: 'Home',
-    messages
-  });
+    messages,
+  })
 
-  expect(t('title')).toBe('Hello world!');
-});
+  expect(t('title')).toBe('Hello world!')
+})
 
 it('can translate a message without a namespace', () => {
   const t = createTranslator({
     locale: 'en',
-    messages
-  });
-  expect(t('Home.title')).toBe('Hello world!');
-});
+    messages,
+  })
+  expect(t('Home.title')).toBe('Hello world!')
+})
 
 it('handles formatting errors', () => {
-  const onError = vi.fn();
+  const onError = vi.fn()
 
   const t = createTranslator({
     locale: 'en',
-    messages: {price: '{value}'},
-    onError
-  });
+    messages: { price: '{value}' },
+    onError,
+  })
 
   // @ts-expect-error
-  const result = t('price');
+  const result = t('price')
 
-  const error: IntlError = onError.mock.calls[0][0];
+  const error: IntlError = onError.mock.calls[0][0]
   expect(error.message).toBe(
-    'FORMATTING_ERROR: The intl string context variable "value" was not provided to the string "{value}"'
-  );
-  expect(error.code).toBe(IntlErrorCode.FORMATTING_ERROR);
+    'FORMATTING_ERROR: The intl string context variable "value" was not provided to the string "{value}"',
+  )
+  expect(error.code).toBe(IntlErrorCode.FORMATTING_ERROR)
 
-  expect(result).toBe('price');
-});
+  expect(result).toBe('price')
+})
 
 it('restricts boolean and date values as plain params', () => {
-  const onError = vi.fn();
+  const onError = vi.fn()
   const t = createTranslator({
     locale: 'en',
     namespace: 'Home',
     messages: messages as any,
-    onError
-  });
+    onError,
+  })
 
-  t('param', {param: new Date()});
+  t('param', { param: new Date() })
   // @ts-expect-error
-  t('param', {param: true});
-  expect(onError.mock.calls.length).toBe(2);
-});
+  t('param', { param: true })
+  expect(onError.mock.calls.length).toBe(2)
+})
 
 it('supports alphanumeric value names', () => {
   const t = createTranslator({
     locale: 'en',
-    messages: {label: '{val_u3}'}
-  });
+    messages: { label: '{val_u3}' },
+  })
 
-  const result = t('label', {val_u3: 'Hello'});
-  expect(result).toBe('Hello');
-});
+  const result = t('label', { val_u3: 'Hello' })
+  expect(result).toBe('Hello')
+})
 
 it('throws an error for non-alphanumeric value names', () => {
-  const onError = vi.fn();
+  const onError = vi.fn()
 
   const t = createTranslator({
     locale: 'en',
-    messages: {label: '{val-u3}'},
-    onError
-  });
+    messages: { label: '{val-u3}' },
+    onError,
+  })
 
-  t('label', {'val-u3': 'Hello'});
-  const error: IntlError = onError.mock.calls[0][0];
-  expect(error.code).toBe('INVALID_MESSAGE');
-});
+  t('label', { 'val-u3': 'Hello' })
+  const error: IntlError = onError.mock.calls[0][0]
+  expect(error.code).toBe('INVALID_MESSAGE')
+})
 
 it('can handle nested blocks in selects', () => {
   const t = createTranslator({
     locale: 'en',
     messages: {
       label:
-        '{foo, select, one {One: {one}} two {Two: {two}} other {Other: {other}}}'
-    }
-  });
+        '{foo, select, one {One: {one}} two {Two: {two}} other {Other: {other}}}',
+    },
+  })
   expect(
     t('label', {
       foo: 'one',
       one: 'One',
       two: 'Two',
-      other: 'Other'
-    })
-  ).toBe('One: One');
-});
+      other: 'Other',
+    }),
+  ).toBe('One: One')
+})
 
 it('can handle nested blocks in plurals', () => {
   const t = createTranslator({
     locale: 'en',
     messages: {
-      label: '{count, plural, one {One: {one}} other {Other: {other}}}'
-    }
-  });
-  expect(t('label', {count: 1, one: 'One', other: 'Other'})).toBe('One: One');
-});
+      label: '{count, plural, one {One: {one}} other {Other: {other}}}',
+    },
+  })
+  expect(t('label', { count: 1, one: 'One', other: 'Other' })).toBe('One: One')
+})
 
 describe('type safety', () => {
   describe('keys, strictly-typed', () => {
@@ -127,383 +127,383 @@ describe('type safety', () => {
       createTranslator({
         locale: 'en',
         messages,
-        namespace: 'Home'
-      });
-    });
+        namespace: 'Home',
+      })
+    })
 
     it('allows valid keys', () => {
       const t = createTranslator({
         locale: 'en',
         messages,
-        namespace: 'Home'
-      });
+        namespace: 'Home',
+      })
 
-      t('title');
-      t.has('title');
-      t.markup('title');
-      t.rich('title');
-    });
+      t('title')
+      t.has('title')
+      t.markup('title')
+      t.rich('title')
+    })
 
     it('allows an undefined namespace with a valid key', () => {
       const t = createTranslator({
         locale: 'en',
-        messages
-      });
-      t('Home.title');
-    });
+        messages,
+      })
+      t('Home.title')
+    })
 
     it('disallows an undefined namespace with an invalid key', () => {
       const t = createTranslator({
         locale: 'en',
-        messages
-      });
+        messages,
+      })
 
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
+      ;() => {
         // @ts-expect-error
-        t('unknown');
+        t('unknown')
         // @ts-expect-error
-        t.has('unknown');
+        t.has('unknown')
         // @ts-expect-error
-        t.markup('unknown');
+        t.markup('unknown')
         // @ts-expect-error
-        t.rich('unknown');
-      };
-    });
+        t.rich('unknown')
+      }
+    })
 
     it('disallows invalid namespaces', () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
+      ;() => {
         createTranslator<typeof messages>({
           locale: 'en',
           messages,
           // @ts-expect-error
-          namespace: 'unknown'
-        });
-      };
-    });
+          namespace: 'unknown',
+        })
+      }
+    })
 
     it('disallows invalid keys', () => {
       const t = createTranslator({
         locale: 'en',
         messages,
-        namespace: 'Home'
-      });
+        namespace: 'Home',
+      })
 
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
+      ;() => {
         // @ts-expect-error
-        t('unknown');
+        t('unknown')
         // @ts-expect-error
-        t.has('unknown');
+        t.has('unknown')
         // @ts-expect-error
-        t.markup('unknown');
+        t.markup('unknown')
         // @ts-expect-error
-        t.rich('unknown');
-      };
-    });
-  });
+        t.rich('unknown')
+      }
+    })
+  })
 
   describe('keys, untyped', () => {
     it('allows any namespace', () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
+      ;() => {
         createTranslator({
           locale: 'en',
           messages: messages as Messages,
-          namespace: 'unknown'
-        });
-      };
-    });
+          namespace: 'unknown',
+        })
+      }
+    })
 
     it('allows any key', () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
+      ;() => {
         const t = createTranslator({
           locale: 'en',
-          messages: messages as Messages
-        });
-        t('unknown');
-      };
-    });
-  });
+          messages: messages as Messages,
+        })
+        t('unknown')
+      }
+    })
+  })
 
   describe('params, strictly-typed', () => {
     function translateMessage<const T extends string>(msg: T) {
       return createTranslator({
         locale: 'en',
-        messages: {msg}
-      });
+        messages: { msg },
+      })
     }
 
     it('validates plain params', () => {
-      const t = translateMessage('Hello {name}');
+      const t = translateMessage('Hello {name}')
 
-      t('msg', {name: 'Jane'});
+      t('msg', { name: 'Jane' })
 
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
+      ;() => {
         // @ts-expect-error
-        t('msg', {unknown: 'Jane'});
+        t('msg', { unknown: 'Jane' })
         // @ts-expect-error
-        t('msg');
-      };
-    });
+        t('msg')
+      }
+    })
 
     it('restricts non-string values', () => {
-      const t = translateMessage('{param}');
+      const t = translateMessage('{param}')
 
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
+      ;() => {
         // @ts-expect-error -- should use {param, number} instead
-        t('msg', {param: 1.5});
+        t('msg', { param: 1.5 })
 
         // @ts-expect-error
-        t('msg', {param: new Date()});
+        t('msg', { param: new Date() })
 
         // @ts-expect-error
-        t('msg', {param: true});
-      };
-    });
+        t('msg', { param: true })
+      }
+    })
 
     it('can handle undefined values', () => {
-      const t = translateMessage('Hello {name}');
+      const t = translateMessage('Hello {name}')
 
       const obj = {
         name: 'Jane',
-        age: undefined
-      };
-      t('msg', obj);
-    });
+        age: undefined,
+      }
+      t('msg', obj)
+    })
 
     it('validates numbers', () => {
-      const t = translateMessage('Percentage: {value, number, percent}');
-      t('msg', {value: 1.5});
+      const t = translateMessage('Percentage: {value, number, percent}')
+      t('msg', { value: 1.5 })
 
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
+      ;() => {
         // @ts-expect-error
-        t('msg', {value: 'test'});
-      };
-    });
+        t('msg', { value: 'test' })
+      }
+    })
 
     it('validates big integers', () => {
-      const t = translateMessage('Big integer: {value, number}');
-      t('msg', {value: 123456789123456789123456n});
+      const t = translateMessage('Big integer: {value, number}')
+      t('msg', { value: 123456789123456789123456n })
 
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
+      ;() => {
         // @ts-expect-error
-        t('msg', {value: 'test'});
-      };
-    });
+        t('msg', { value: 'test' })
+      }
+    })
 
     it('validates dates', () => {
-      const t = translateMessage('Date: {date, date, full}');
-      t('msg', {date: new Date('2024-07-09T07:06:03.320Z')});
+      const t = translateMessage('Date: {date, date, full}')
+      t('msg', { date: new Date('2024-07-09T07:06:03.320Z') })
 
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
+      ;() => {
         // @ts-expect-error
-        t('msg', {date: '2024-07-09T07:06:03.320Z'});
-      };
-    });
+        t('msg', { date: '2024-07-09T07:06:03.320Z' })
+      }
+    })
 
     it('restricts numbers in dates', () => {
-      const t = translateMessage('Date: {date, date, full}');
+      const t = translateMessage('Date: {date, date, full}')
 
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
+      ;() => {
         // @ts-expect-error
-        t('msg', {date: 1.5});
-      };
-    });
+        t('msg', { date: 1.5 })
+      }
+    })
 
     it('validates cardinal plurals', () => {
       const t = translateMessage(
-        'You have {count, plural, =0 {no followers yet} =1 {one follower} other {# followers}}.'
-      );
+        'You have {count, plural, =0 {no followers yet} =1 {one follower} other {# followers}}.',
+      )
 
-      t('msg', {count: 0});
+      t('msg', { count: 0 })
 
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
+      ;() => {
         // @ts-expect-error
-        t('msg', {unknown: 1.5});
+        t('msg', { unknown: 1.5 })
         // @ts-expect-error
-        t('msg');
-      };
-    });
+        t('msg')
+      }
+    })
 
     it('validates ordinal plurals', () => {
       const t = translateMessage(
-        "It's your {year, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} birthday!"
-      );
+        "It's your {year, selectordinal, one {#st} two {#nd} few {#rd} other {#th}} birthday!",
+      )
 
-      t('msg', {year: 1});
+      t('msg', { year: 1 })
 
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
+      ;() => {
         // @ts-expect-error
-        t('msg', {unknown: 1});
+        t('msg', { unknown: 1 })
         // @ts-expect-error
-        t('msg');
-      };
-    });
+        t('msg')
+      }
+    })
 
     it('validates selects', () => {
       const t = translateMessage(
-        '{gender, select, female {She} male {He} other {They}} is online.'
-      );
+        '{gender, select, female {She} male {He} other {They}} is online.',
+      )
 
-      t('msg', {gender: 'female'});
+      t('msg', { gender: 'female' })
 
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
+      ;() => {
         // @ts-expect-error
-        t('msg', {unknown: 'female'});
+        t('msg', { unknown: 'female' })
         // @ts-expect-error
-        t('msg');
-      };
-    });
+        t('msg')
+      }
+    })
 
     it('validates nested selects', () => {
       const t = translateMessage(
-        '{foo, select, one {One: {one}} two {Two: {two}} other {Other: {other}}}'
-      );
+        '{foo, select, one {One: {one}} two {Two: {two}} other {Other: {other}}}',
+      )
 
       t('msg', {
         foo: 'one',
         one: 'One',
         two: 'Two',
-        other: 'Other'
-      });
-      t('msg', {foo: 'one', one: 'One'}); // Only `one` is required
-      t('msg', {foo: 'one', one: 'One', two: 'Two'}); // …but `two` is also allowed
-      t('msg', {foo: 'two', two: 'Two'});
+        other: 'Other',
+      })
+      t('msg', { foo: 'one', one: 'One' }) // Only `one` is required
+      t('msg', { foo: 'one', one: 'One', two: 'Two' }) // …but `two` is also allowed
+      t('msg', { foo: 'two', two: 'Two' })
 
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
+      ;() => {
         // @ts-expect-error
-        t('msg', {foo: 'unknown' as string, other: 'Other'});
+        t('msg', { foo: 'unknown' as string, other: 'Other' })
         // @ts-expect-error
-        t('msg', {unknown: 'one'});
+        t('msg', { unknown: 'one' })
         // @ts-expect-error
-        t('msg');
-      };
-    });
+        t('msg')
+      }
+    })
 
     it('restricts numbers in selects', () => {
       const t = translateMessage(
-        '{count, select, 0 {zero} 1 {one} other {other}}'
-      );
+        '{count, select, 0 {zero} 1 {one} other {other}}',
+      )
 
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
+      ;() => {
         // @ts-expect-error
-        t('msg', {count: 1.5});
-      };
-    });
+        t('msg', { count: 1.5 })
+      }
+    })
 
     it('restricts booleans in selects', () => {
-      const t = translateMessage('{bool, select, true {true} false {false}}');
+      const t = translateMessage('{bool, select, true {true} false {false}}')
 
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
+      ;() => {
         // @ts-expect-error
-        t('msg', {bool: true});
-      };
-    });
+        t('msg', { bool: true })
+      }
+    })
 
     it('validates escaped', () => {
       const t = translateMessage(
-        "Escape curly braces with single quotes (e.g. '{name')"
-      );
+        "Escape curly braces with single quotes (e.g. '{name')",
+      )
 
-      t('msg');
+      t('msg')
 
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
+      ;() => {
         // @ts-expect-error
-        t('msg', {name: 'Jane'});
-      };
-    });
+        t('msg', { name: 'Jane' })
+      }
+    })
 
     it('validates simple rich text', () => {
       const t = translateMessage(
-        'Please refer to <guidelines>the guidelines</guidelines>.'
-      );
+        'Please refer to <guidelines>the guidelines</guidelines>.',
+      )
 
-      t.rich('msg', {guidelines: (chunks) => <p>{chunks}</p>});
-      t.markup('msg', {guidelines: (chunks) => `<p>${chunks}</p>`});
+      t.rich('msg', { guidelines: (chunks) => <p>{chunks}</p> })
+      t.markup('msg', { guidelines: (chunks) => `<p>${chunks}</p>` })
 
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
+      ;() => {
         // @ts-expect-error
-        t.rich('msg', {guidelines: 'test'});
+        t.rich('msg', { guidelines: 'test' })
         // @ts-expect-error
-        t.rich('msg', {unknown: (chunks) => <p>{chunks}</p>});
+        t.rich('msg', { unknown: (chunks) => <p>{chunks}</p> })
         // @ts-expect-error
-        t.rich('msg', {unknown: 'test'});
+        t.rich('msg', { unknown: 'test' })
         // @ts-expect-error
-        t.rich('msg');
-      };
-    });
+        t.rich('msg')
+      }
+    })
 
     it('validates nested rich text', () => {
       const t = translateMessage(
-        'This is <important><very>very</very> important</important>'
-      );
+        'This is <important><very>very</very> important</important>',
+      )
 
       t.rich('msg', {
         important: (chunks) => <strong>{chunks}</strong>,
-        very: (chunks) => <i>{chunks}</i>
-      });
+        very: (chunks) => <i>{chunks}</i>,
+      })
       t.markup('msg', {
         important: (chunks) => `<strong>${chunks}</strong>`,
-        very: (chunks) => `<i>${chunks}</i>`
-      });
+        very: (chunks) => `<i>${chunks}</i>`,
+      })
 
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
+      ;() => {
         // @ts-expect-error
-        t.rich('msg', {important: (chunks) => <p>{chunks}</p>});
+        t.rich('msg', { important: (chunks) => <p>{chunks}</p> })
         // @ts-expect-error
-        t.rich('msg', {important: 'test', very: 'test'});
+        t.rich('msg', { important: 'test', very: 'test' })
         // @ts-expect-error
-        t.rich('msg', {unknown: 'test'});
+        t.rich('msg', { unknown: 'test' })
         // @ts-expect-error
-        t.rich('msg');
-      };
-    });
+        t.rich('msg')
+      }
+    })
 
     it('validates a complex message', () => {
       const t = translateMessage(
-        'Hello <user>{name}</user>, you have {count, plural, =0 {no followers} =1 {one follower} other {# followers ({count, number})}}.'
-      );
+        'Hello <user>{name}</user>, you have {count, plural, =0 {no followers} =1 {one follower} other {# followers ({count, number})}}.',
+      )
 
       t.rich('msg', {
         name: 'Jane',
         count: 2,
-        user: (chunks) => <p>{chunks}</p>
-      });
+        user: (chunks) => <p>{chunks}</p>,
+      })
 
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
+      ;() => {
         // @ts-expect-error
         t.rich('msg', {
           name: 'Jane',
-          user: (chunks) => <p>{chunks}</p>
-        });
+          user: (chunks) => <p>{chunks}</p>,
+        })
         t.rich('msg', {
           // @ts-expect-error
           user: 'Jane',
           // @ts-expect-error
           name: (chunks) => <p>{chunks}</p>,
-          count: 2
-        });
-      };
-    });
+          count: 2,
+        })
+      }
+    })
 
     describe('disallowed params', () => {
       const t = createTranslator({
@@ -521,181 +521,192 @@ describe('type safety', () => {
           simpleRichText:
             'Please refer to <guidelines>the guidelines</guidelines>.',
           nestedRichText:
-            'This is <important><very>very</very> important</important>'
-        }
-      });
+            'This is <important><very>very</very> important</important>',
+        },
+      })
 
       it("doesn't allow params for `has`", () => {
-        t.has('simpleParam');
-        t.has('pluralMessage');
-        t.has('ordinalMessage');
-        t.has('selectMessage');
-        t.has('escapedParam');
-        t.has('simpleRichText');
-        t.has('nestedRichText');
+        t.has('simpleParam')
+        t.has('pluralMessage')
+        t.has('ordinalMessage')
+        t.has('selectMessage')
+        t.has('escapedParam')
+        t.has('simpleRichText')
+        t.has('nestedRichText')
 
         // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        () => {
+        ;() => {
           // @ts-expect-error
-          t.has('simpleParam', {name: 'Jane'});
+          t.has('simpleParam', { name: 'Jane' })
           // @ts-expect-error
-          t.has('pluralMessage', {count: 0});
+          t.has('pluralMessage', { count: 0 })
           // @ts-expect-error
-          t.has('ordinalMessage', {year: 1});
+          t.has('ordinalMessage', { year: 1 })
           // @ts-expect-error
-          t.has('selectMessage', {gender: 'female'});
+          t.has('selectMessage', { gender: 'female' })
           // @ts-expect-error
-          t.has('simpleRichText', {guidelines: (chunks) => <p>{chunks}</p>});
+          t.has('simpleRichText', { guidelines: (chunks) => <p>{chunks}</p> })
           // @ts-expect-error
           t.has('nestedRichText', {
-            important: (chunks: any) => <strong>{chunks}</strong>
-          });
-        };
-      });
+            important: (chunks: any) => <strong>{chunks}</strong>,
+          })
+        }
+      })
 
       it("doesn't allow params for `raw`", () => {
-        t.raw('simpleParam');
-        t.raw('pluralMessage');
-        t.raw('ordinalMessage');
-        t.raw('selectMessage');
-        t.raw('escapedParam');
-        t.raw('simpleRichText');
-        t.raw('nestedRichText');
+        t.raw('simpleParam')
+        t.raw('pluralMessage')
+        t.raw('ordinalMessage')
+        t.raw('selectMessage')
+        t.raw('escapedParam')
+        t.raw('simpleRichText')
+        t.raw('nestedRichText')
 
         // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        () => {
+        ;() => {
           // @ts-expect-error
-          t.raw('simpleParam', {name: 'Jane'});
+          t.raw('simpleParam', { name: 'Jane' })
           // @ts-expect-error
-          t.raw('pluralMessage', {count: 0});
+          t.raw('pluralMessage', { count: 0 })
           // @ts-expect-error
-          t.raw('ordinalMessage', {year: 1});
+          t.raw('ordinalMessage', { year: 1 })
           // @ts-expect-error
-          t.raw('selectMessage', {gender: 'female'});
+          t.raw('selectMessage', { gender: 'female' })
           // @ts-expect-error
-          t.raw('simpleRichText', {guidelines: (chunks) => <p>{chunks}</p>});
+          t.raw('simpleRichText', { guidelines: (chunks) => <p>{chunks}</p> })
           // @ts-expect-error
           t.raw('nestedRichText', {
-            important: (chunks: any) => <strong>{chunks}</strong>
-          });
-        };
-      });
-    });
-  });
+            important: (chunks: any) => <strong>{chunks}</strong>,
+          })
+        }
+      })
+    })
+  })
 
   describe('params, untyped', () => {
     it('allows passing no values', () => {
       const t = createTranslator({
         locale: 'en',
-        messages: messages as Messages
-      });
+        messages: messages as Messages,
+      })
 
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
-        t('param');
-        t.rich('param');
-        t.markup('param');
-        t.raw('param');
-        t.has('param');
-      };
-    });
+      ;() => {
+        t('param')
+        t.rich('param')
+        t.markup('param')
+        t.raw('param')
+        t.has('param')
+      }
+    })
 
     it('allows passing any values', () => {
       const t = createTranslator({
         locale: 'en',
-        messages: messages as Messages
-      });
+        messages: messages as Messages,
+      })
 
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
-        t('param', {unknown: 'Jane'});
-        t.rich('param', {unknown: 'Jane', p: (chunks) => <p>{chunks}</p>});
-        t.markup('param', {unknown: 'Jane', p: (chunks) => `<p>${chunks}</p>`});
-      };
-    });
+      ;() => {
+        t('param', { unknown: 'Jane' })
+        t.rich('param', { unknown: 'Jane', p: (chunks) => <p>{chunks}</p> })
+        t.markup('param', {
+          unknown: 'Jane',
+          p: (chunks) => `<p>${chunks}</p>`,
+        })
+      }
+    })
 
     it('limits values where relevant', () => {
       const t = createTranslator({
         locale: 'en',
-        messages: messages as Messages
-      });
+        messages: messages as Messages,
+      })
 
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      () => {
+      ;() => {
         // @ts-expect-error
-        t('param', {p: (chunks) => <p>{chunks}</p>});
+        t('param', { p: (chunks) => <p>{chunks}</p> })
         // @ts-expect-error
-        t('param', {p: (chunks) => `<p>${chunks}</p>`});
+        t('param', { p: (chunks) => `<p>${chunks}</p>` })
 
         // @ts-expect-error
-        t.markup('param', {unknown: 'Jane', p: (chunks) => <p>{chunks}</p>});
+        t.markup('param', { unknown: 'Jane', p: (chunks) => <p>{chunks}</p> })
 
         // @ts-expect-error
-        t.raw('param', {unknown: 'Jane'});
+        t.raw('param', { unknown: 'Jane' })
         // @ts-expect-error
-        t.has('param', {unknown: 'Jane'});
-      };
-    });
-  });
-});
+        t.has('param', { unknown: 'Jane' })
+      }
+    })
+  })
+})
 
 describe('numbers in messages', () => {
   it('can pass an inline format', () => {
     const t = createTranslator({
       locale: 'en',
-      messages: {label: '{count, number, precise}'}
-    });
+      messages: { label: '{count, number, precise}' },
+    })
     expect(
-      t('label', {count: 1.5}, {number: {precise: {minimumFractionDigits: 5}}})
-    ).toBe('1.50000');
-  });
+      t(
+        'label',
+        { count: 1.5 },
+        { number: { precise: { minimumFractionDigits: 5 } } },
+      ),
+    ).toBe('1.50000')
+  })
 
   it('can merge an inline format with global formats', () => {
     const t = createTranslator({
       locale: 'en',
-      messages: {label: '{count, number, precise} {count, number, integer}'},
-      formats: {number: {precise: {minimumFractionDigits: 5}}}
-    });
+      messages: { label: '{count, number, precise} {count, number, integer}' },
+      formats: { number: { precise: { minimumFractionDigits: 5 } } },
+    })
     expect(
-      t('label', {count: 1.5}, {number: {integer: {minimumFractionDigits: 0}}})
-    ).toBe('1.50000 2');
-  });
-});
+      t(
+        'label',
+        { count: 1.5 },
+        { number: { integer: { minimumFractionDigits: 0 } } },
+      ),
+    ).toBe('1.50000 2')
+  })
+})
 
 describe('big integers in messages', () => {
   it('can pass an inline format', () => {
     const t = createTranslator({
       locale: 'en',
-      messages: {label: '{count, number, coarse}'}
-    });
+      messages: { label: '{count, number, coarse}' },
+    })
     expect(
       t(
         'label',
-        {count: 123456789123456789123456n},
-        {number: {coarse: {maximumSignificantDigits: 3}}}
-      )
-    ).toBe('123,000,000,000,000,000,000,000');
-  });
+        { count: 123456789123456789123456n },
+        { number: { coarse: { maximumSignificantDigits: 3 } } },
+      ),
+    ).toBe('123,000,000,000,000,000,000,000')
+  })
 
   it('can merge an inline format with global formats', () => {
     const t = createTranslator({
       locale: 'en',
-      messages: {label: '{count, number, coarse} {count, number, precise}'},
-      formats: {number: {coarse: {maximumSignificantDigits: 3}}}
-    });
+      messages: { label: '{count, number, coarse} {count, number, precise}' },
+      formats: { number: { coarse: { maximumSignificantDigits: 3 } } },
+    })
     expect(
       t(
         'label',
-        {count: 123456789123456789123456n},
+        { count: 123456789123456789123456n },
         {
           number: {
-            precise: {maximumSignificantDigits: 21}
-          }
-        }
-      )
-    ).toBe('123,000,000,000,000,000,000,000 123,456,789,123,456,789,123,000');
-  });
-});
+            precise: { maximumSignificantDigits: 21 },
+          },
+        },
+      ),
+    ).toBe('123,000,000,000,000,000,000,000 123,456,789,123,456,789,123,000')
+  })
+})
 
 describe('dates in messages', () => {
   it.each([
@@ -784,101 +795,101 @@ describe('dates in messages', () => {
     ['yyyyMMMd', 'Jul 9, 2024'],
     [
       'GGGGyyyyMMMMEdhmszzzz',
-      'Tue, July 9, 2024 Anno Domini at 9:06:03 AM Central European Summer Time'
-    ]
+      'Tue, July 9, 2024 Anno Domini at 9:06:03 AM Central European Summer Time',
+    ],
   ])('%s: %s', (value, expected, dateString = '2024-07-09T07:06:03.320Z') => {
-    const date = new Date(dateString);
+    const date = new Date(dateString)
     const t = createTranslator({
       locale: 'en',
-      messages: {date: `{date, date, ::${value}}`}
-    });
-    expect(t('date', {date})).toBe(expected);
-  });
+      messages: { date: `{date, date, ::${value}}` },
+    })
+    expect(t('date', { date })).toBe(expected)
+  })
 
   it('can set a time zone in a built-in default format', () => {
     const t = createTranslator({
       locale: 'en',
-      messages: {date: `{date, time, full}`},
-      timeZone: 'Asia/Kolkata'
-    });
-    expect(t('date', {date: new Date('2023-12-31T18:30:00.000Z')})).toBe(
-      '12:00:00 AM GMT+5:30'
-    );
-  });
-});
+      messages: { date: `{date, time, full}` },
+      timeZone: 'Asia/Kolkata',
+    })
+    expect(t('date', { date: new Date('2023-12-31T18:30:00.000Z') })).toBe(
+      '12:00:00 AM GMT+5:30',
+    )
+  })
+})
 
 describe('t.rich', () => {
   it('can translate a message to a ReactNode', () => {
     const t = createTranslator({
       locale: 'en',
       namespace: 'Home',
-      messages
-    });
+      messages,
+    })
 
     const result = t.rich('rich', {
       name: 'world',
       b: (chunks) => <b>{chunks}</b>,
-      i: (chunks) => <i>{chunks}</i>
-    });
+      i: (chunks) => <i>{chunks}</i>,
+    })
 
-    expect(isValidElement(result)).toBe(true);
-    expect(renderToString(result as any)).toBe('<b>Hello <i>world</i>!</b>');
-  });
-});
+    expect(isValidElement(result)).toBe(true)
+    expect(renderToString(result as any)).toBe('<b>Hello <i>world</i>!</b>')
+  })
+})
 
 describe('t.markup', () => {
   it('can translate a message', () => {
     const t = createTranslator({
       locale: 'en',
       namespace: 'Home',
-      messages
-    });
+      messages,
+    })
 
     expect(
       t.markup('markup', {
         name: 'world',
         b: (chunks) => `<b>${chunks}</b>`,
-        i: (chunks) => `<i>${chunks}</i>`
-      })
-    ).toBe('<b>Hello <i>world</i>!</b>');
-  });
+        i: (chunks) => `<i>${chunks}</i>`,
+      }),
+    ).toBe('<b>Hello <i>world</i>!</b>')
+  })
 
   it('handles errors when React components are provided', () => {
-    const onError = vi.fn();
+    const onError = vi.fn()
 
     const t = createTranslator({
       locale: 'en',
       namespace: 'Home',
       messages,
-      onError
-    });
+      onError,
+    })
 
     const result = t.markup('markup', {
       name: 'world',
       // @ts-expect-error Intentionally broken call site
       b: (chunks) => <b>{chunks}</b>,
       // @ts-expect-error Intentionally broken call site
-      i: (chunks) => <i>{chunks}</i>
-    });
+      i: (chunks) => <i>{chunks}</i>,
+    })
 
-    expect(onError).toHaveBeenCalledTimes(1);
-    const error: IntlError = onError.mock.calls[0][0];
-    expect(error.code).toBe(IntlErrorCode.FORMATTING_ERROR);
+    expect(onError).toHaveBeenCalledTimes(1)
+    const error: IntlError = onError.mock.calls[0][0]
+    expect(error.code).toBe(IntlErrorCode.FORMATTING_ERROR)
     expect(error.message).toBe(
-      "FORMATTING_ERROR: `t.markup` only accepts functions for formatting that receive and return strings.\n\nE.g. t.markup('markup', {b: (chunks) => `<b>${chunks}</b>`})"
-    );
-    expect(result).toBe('Home.markup');
-  });
-});
+      "FORMATTING_ERROR: `t.markup` only accepts functions for formatting that receive and return strings.\n\nE.g. t.markup('markup', {b: (chunks) => `<b>${chunks}</b>`})",
+    )
+    expect(result).toBe('Home.markup')
+  })
+})
 
 describe('t.raw', () => {
   it('can retrieve a message', () => {
     const t = createTranslator({
       locale: 'en',
       namespace: 'Home',
-      messages
-    });
+      messages,
+    })
 
-    expect(t.raw('rich')).toBe('<b>Hello <i>{name}</i>!</b>');
-  });
-});
+    expect(t.raw('rich')).toBe('<b>Hello <i>{name}</i>!</b>')
+  })
+})

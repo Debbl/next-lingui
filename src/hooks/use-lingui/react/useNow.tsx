@@ -1,34 +1,34 @@
-import {useEffect, useState} from 'react';
-import useIntlContext from './useIntlContext.js';
+import { useEffect, useState } from 'react'
+import useIntlContext from './useIntlContext.js'
 
-type Options = {
-  updateInterval?: number;
-};
+interface Options {
+  updateInterval?: number
+}
 
 function getNow() {
-  return new Date();
+  return new Date()
 }
 
 /**
  * @see https://next-intl.dev/docs/usage/dates-times#relative-times-usenow
  */
 export default function useNow(options?: Options) {
-  const updateInterval = options?.updateInterval;
+  const updateInterval = options?.updateInterval
 
-  const {now: globalNow} = useIntlContext();
-  const [now, setNow] = useState(globalNow || getNow());
+  const { now: globalNow } = useIntlContext()
+  const [now, setNow] = useState(globalNow || getNow())
 
   useEffect(() => {
-    if (!updateInterval) return;
+    if (!updateInterval) return
 
     const intervalId = setInterval(() => {
-      setNow(getNow());
-    }, updateInterval);
+      setNow(getNow())
+    }, updateInterval)
 
     return () => {
-      clearInterval(intervalId);
-    };
-  }, [globalNow, updateInterval]);
+      clearInterval(intervalId)
+    }
+  }, [globalNow, updateInterval])
 
-  return updateInterval == null && globalNow ? globalNow : now;
+  return updateInterval == null && globalNow ? globalNow : now
 }

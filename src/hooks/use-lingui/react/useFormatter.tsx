@@ -1,6 +1,6 @@
-import {useMemo} from 'react';
-import createFormatter from '../core/createFormatter.js';
-import useIntlContext from './useIntlContext.js';
+import { useMemo } from 'react'
+import createFormatter from '../core/createFormatter.js'
+import useIntlContext from './useIntlContext.js'
 
 export default function useFormatter(): ReturnType<typeof createFormatter> {
   const {
@@ -9,8 +9,8 @@ export default function useFormatter(): ReturnType<typeof createFormatter> {
     locale,
     now: globalNow,
     onError,
-    timeZone
-  } = useIntlContext();
+    timeZone,
+  } = useIntlContext()
 
   return useMemo(
     () =>
@@ -20,8 +20,8 @@ export default function useFormatter(): ReturnType<typeof createFormatter> {
         now: globalNow,
         onError,
         timeZone,
-        _formatters: formatters
+        _formatters: formatters,
       }),
-    [formats, formatters, globalNow, locale, onError, timeZone]
-  );
+    [formats, formatters, globalNow, locale, onError, timeZone],
+  )
 }

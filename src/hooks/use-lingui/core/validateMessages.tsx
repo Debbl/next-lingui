@@ -1,37 +1,36 @@
-import type AbstractIntlMessages from './AbstractIntlMessages.js';
-import IntlError from './IntlError.js';
-import IntlErrorCode from './IntlErrorCode.js';
-import joinPath from './joinPath.js';
+import IntlError from './IntlError.js'
+import IntlErrorCode from './IntlErrorCode.js'
+import joinPath from './joinPath.js'
+import type AbstractIntlMessages from './AbstractIntlMessages.js'
 
 function validateMessagesSegment(
   messages: AbstractIntlMessages,
   invalidKeyLabels: Array<string>,
-  parentPath?: string
+  parentPath?: string,
 ) {
   Object.entries(messages).forEach(([key, messageOrMessages]) => {
     if (key.includes('.')) {
-      let keyLabel = key;
-      if (parentPath) keyLabel += ` (at ${parentPath})`;
-      invalidKeyLabels.push(keyLabel);
+      let keyLabel = key
+      if (parentPath) keyLabel += ` (at ${parentPath})`
+      invalidKeyLabels.push(keyLabel)
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (messageOrMessages != null && typeof messageOrMessages === 'object') {
       validateMessagesSegment(
         messageOrMessages,
         invalidKeyLabels,
-        joinPath(parentPath, key)
-      );
+        joinPath(parentPath, key),
+      )
     }
-  });
+  })
 }
 
 export default function validateMessages(
   messages: AbstractIntlMessages,
-  onError: (error: IntlError) => void
+  onError: (error: IntlError) => void,
 ) {
-  const invalidKeyLabels: Array<string> = [];
-  validateMessagesSegment(messages, invalidKeyLabels);
+  const invalidKeyLabels: Array<string> = []
+  validateMessagesSegment(messages, invalidKeyLabels)
 
   if (invalidKeyLabels.length > 0) {
     onError(
@@ -73,8 +72,8 @@ const output = Object.entries(input).reduce(
 //   }
 // }
 `
-          : undefined
-      )
-    );
+          : undefined,
+      ),
+    )
   }
 }

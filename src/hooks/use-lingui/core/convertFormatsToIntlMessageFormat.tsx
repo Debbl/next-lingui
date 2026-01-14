@@ -1,9 +1,7 @@
-import {
-  type Formats as IntlFormats,
-  IntlMessageFormat
-} from 'intl-messageformat';
-import type Formats from './Formats.js';
-import type TimeZone from './TimeZone.js';
+import { IntlMessageFormat } from 'intl-messageformat'
+import type { Formats as IntlFormats } from 'intl-messageformat'
+import type Formats from './Formats.js'
+import type TimeZone from './TimeZone.js'
 
 /**
  * `intl-messageformat` uses separate keys for `date` and `time`, but there's
@@ -15,49 +13,49 @@ import type TimeZone from './TimeZone.js';
 export default function convertFormatsToIntlMessageFormat(
   globalFormats?: Formats,
   inlineFormats?: Formats,
-  timeZone?: TimeZone
+  timeZone?: TimeZone,
 ): Partial<IntlFormats> {
   const mfDateDefaults = IntlMessageFormat.formats.date as NonNullable<
     Formats['dateTime']
-  >;
+  >
   const mfTimeDefaults = IntlMessageFormat.formats.time as NonNullable<
     Formats['dateTime']
-  >;
+  >
 
   const dateTimeFormats = {
     ...globalFormats?.dateTime,
-    ...inlineFormats?.dateTime
-  };
+    ...inlineFormats?.dateTime,
+  }
 
   const allFormats = {
     date: {
       ...mfDateDefaults,
-      ...dateTimeFormats
+      ...dateTimeFormats,
     },
     time: {
       ...mfTimeDefaults,
-      ...dateTimeFormats
+      ...dateTimeFormats,
     },
     number: {
       ...globalFormats?.number,
-      ...inlineFormats?.number
-    }
+      ...inlineFormats?.number,
+    },
     // (list is not supported in ICU messages)
-  };
+  }
 
   if (timeZone) {
     // The only way to set a time zone with `intl-messageformat` is to merge it into the formats
     // https://github.com/formatjs/formatjs/blob/8256c5271505cf2606e48e3c97ecdd16ede4f1b5/packages/intl/src/message.ts#L15
-    ['date', 'time'].forEach((property) => {
-      const formats = allFormats[property as keyof typeof allFormats];
+    ;['date', 'time'].forEach((property) => {
+      const formats = allFormats[property as keyof typeof allFormats]
       for (const [key, value] of Object.entries(formats)) {
         formats[key] = {
           timeZone,
-          ...value
-        };
+          ...value,
+        }
       }
-    });
+    })
   }
 
-  return allFormats;
+  return allFormats
 }

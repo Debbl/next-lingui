@@ -1,21 +1,21 @@
-import {useMemo} from 'react';
-import type AbstractIntlMessages from '../core/AbstractIntlMessages.js';
-import type {NestedKeyOf} from '../core/MessageKeys.js';
-import createBaseTranslator from '../core/createBaseTranslator.js';
-import resolveNamespace from '../core/resolveNamespace.js';
-import {IntlError, IntlErrorCode} from '../core.js';
-import useIntlContext from './useIntlContext.js';
+import { useMemo } from 'react'
+import { IntlError, IntlErrorCode } from '../core.js'
+import createBaseTranslator from '../core/createBaseTranslator.js'
+import resolveNamespace from '../core/resolveNamespace.js'
+import useIntlContext from './useIntlContext.js'
+import type AbstractIntlMessages from '../core/AbstractIntlMessages.js'
+import type { NestedKeyOf } from '../core/MessageKeys.js'
 
-let hasWarnedForMissingTimezone = false;
-const isServer = typeof window === 'undefined';
+let hasWarnedForMissingTimezone = false
+const isServer = typeof window === 'undefined'
 
 export default function useTranslationsImpl<
   Messages extends AbstractIntlMessages,
-  NestedKey extends NestedKeyOf<Messages>
+  NestedKey extends NestedKeyOf<Messages>,
 >(
   allMessagesPrefixed: Messages,
   namespacePrefixed: NestedKey,
-  namespacePrefix: string
+  namespacePrefix: string,
 ) {
   const {
     cache,
@@ -24,28 +24,28 @@ export default function useTranslationsImpl<
     getMessageFallback,
     locale,
     onError,
-    timeZone
-  } = useIntlContext();
+    timeZone,
+  } = useIntlContext()
 
   // The `namespacePrefix` is part of the type system.
   // See the comment in the hook invocation.
-  const allMessages = allMessagesPrefixed[namespacePrefix] as Messages;
+  const allMessages = allMessagesPrefixed[namespacePrefix] as Messages
   const namespace = resolveNamespace(
     namespacePrefixed,
-    namespacePrefix
-  ) as NestedKey;
+    namespacePrefix,
+  ) as NestedKey
 
   if (!timeZone && !hasWarnedForMissingTimezone && isServer) {
     // eslint-disable-next-line react-compiler/react-compiler
-    hasWarnedForMissingTimezone = true;
+    hasWarnedForMissingTimezone = true
     onError(
       new IntlError(
         IntlErrorCode.ENVIRONMENT_FALLBACK,
         process.env.NODE_ENV !== 'production'
           ? `There is no \`timeZone\` configured, this can lead to markup mismatches caused by environment differences. Consider adding a global default: https://next-intl.dev/docs/configuration#time-zone`
-          : undefined
-      )
-    );
+          : undefined,
+      ),
+    )
   }
 
   const translate = useMemo(
@@ -59,7 +59,7 @@ export default function useTranslationsImpl<
         onError,
         formats: globalFormats,
         locale,
-        timeZone
+        timeZone,
       }),
     [
       cache,
@@ -70,9 +70,9 @@ export default function useTranslationsImpl<
       onError,
       globalFormats,
       locale,
-      timeZone
-    ]
-  );
+      timeZone,
+    ],
+  )
 
-  return translate;
+  return translate
 }

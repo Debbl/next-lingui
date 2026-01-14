@@ -1,8 +1,8 @@
-import type {Messages} from '../core/AppConfig.js';
-import type {NamespaceKeys, NestedKeyOf} from '../core/MessageKeys.js';
-import type createTranslator from '../core/createTranslator.js';
-import useIntlContext from './useIntlContext.js';
-import useTranslationsImpl from './useTranslationsImpl.js';
+import useIntlContext from './useIntlContext.js'
+import useTranslationsImpl from './useTranslationsImpl.js'
+import type { Messages } from '../core/AppConfig.js'
+import type createTranslator from '../core/createTranslator.js'
+import type { NamespaceKeys, NestedKeyOf } from '../core/MessageKeys.js'
 
 /**
  * Translates messages from the given namespace by using the ICU syntax.
@@ -13,24 +13,24 @@ import useTranslationsImpl from './useTranslationsImpl.js';
  * (e.g. `namespace.Component`).
  */
 export default function useTranslations<
-  NestedKey extends NamespaceKeys<Messages, NestedKeyOf<Messages>> = never
+  NestedKey extends NamespaceKeys<Messages, NestedKeyOf<Messages>> = never,
 >(
-  namespace?: NestedKey
+  namespace?: NestedKey,
 ): ReturnType<typeof createTranslator<Messages, NestedKey>> {
-  const context = useIntlContext();
-  const messages = context.messages as Messages;
+  const context = useIntlContext()
+  const messages = context.messages as Messages
 
   // We have to wrap the actual hook so the type inference for the optional
   // namespace works correctly. See https://stackoverflow.com/a/71529575/343045
   // The prefix ("!") is arbitrary.
   // @ts-expect-error Use the explicit annotation instead
   return useTranslationsImpl<
-    {'!': Messages},
+    { '!': Messages },
     [NestedKey] extends [never] ? '!' : `!.${NestedKey}`
   >(
-    {'!': messages},
+    { '!': messages },
     // @ts-expect-error
     namespace ? `!.${namespace}` : '!',
-    '!'
-  );
+    '!',
+  )
 }

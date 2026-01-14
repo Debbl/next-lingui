@@ -1,19 +1,19 @@
-import type IntlErrorCode from './IntlErrorCode.js';
+import type IntlErrorCode from './IntlErrorCode.js'
 
 export default class IntlError extends Error {
-  public readonly code: IntlErrorCode;
-  public readonly originalMessage: string | undefined;
+  public readonly code: IntlErrorCode
+  public readonly originalMessage: string | undefined
 
   constructor(code: IntlErrorCode, originalMessage?: string) {
-    let message: string = code;
+    let message: string = code
     if (originalMessage) {
-      message += ': ' + originalMessage;
+      message += `: ${originalMessage}`
     }
-    super(message);
+    super(message)
 
-    this.code = code;
+    this.code = code
     if (originalMessage) {
-      this.originalMessage = originalMessage;
+      this.originalMessage = originalMessage
     }
   }
 }

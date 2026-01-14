@@ -1,33 +1,33 @@
-import {parseISO} from 'date-fns';
-import {describe, expect, it} from 'vitest';
-import createFormatter from './createFormatter.js';
+import { parseISO } from 'date-fns'
+import { describe, expect, it } from 'vitest'
+import createFormatter from './createFormatter.js'
 
 describe('dateTime', () => {
   it('formats a date and time', () => {
     const formatter = createFormatter({
       locale: 'en',
-      timeZone: 'Europe/Berlin'
-    });
+      timeZone: 'Europe/Berlin',
+    })
     expect(
       formatter.dateTime(parseISO('2020-11-20T10:36:01.516Z'), {
-        dateStyle: 'medium'
-      })
-    ).toBe('Nov 20, 2020');
-  });
+        dateStyle: 'medium',
+      }),
+    ).toBe('Nov 20, 2020')
+  })
 
   it('allows to override a time zone', () => {
     const formatter = createFormatter({
       locale: 'en',
-      timeZone: 'Europe/Berlin'
-    });
+      timeZone: 'Europe/Berlin',
+    })
     expect(
       formatter.dateTime(parseISO('2020-11-20T10:36:01.516Z'), {
         timeStyle: 'medium',
         dateStyle: 'medium',
-        timeZone: 'America/New_York'
-      })
-    ).toBe('Nov 20, 2020, 5:36:01 AM');
-  });
+        timeZone: 'America/New_York',
+      }),
+    ).toBe('Nov 20, 2020, 5:36:01 AM')
+  })
 
   it('can combine a global format with an override', () => {
     const formatter = createFormatter({
@@ -37,60 +37,60 @@ describe('dateTime', () => {
         dateTime: {
           short: {
             dateStyle: 'short',
-            timeStyle: 'short'
-          }
-        }
-      }
-    });
+            timeStyle: 'short',
+          },
+        },
+      },
+    })
     expect(
       formatter.dateTime(parseISO('2020-11-20T10:36:01.516Z'), 'short', {
-        timeZone: 'America/New_York'
-      })
-    ).toBe('11/20/20, 5:36 AM');
-  });
-});
+        timeZone: 'America/New_York',
+      }),
+    ).toBe('11/20/20, 5:36 AM')
+  })
+})
 
 describe('number', () => {
   it('formats a number', () => {
     const formatter = createFormatter({
       locale: 'en',
-      timeZone: 'Europe/Berlin'
-    });
-    expect(formatter.number(123456)).toBe('123,456');
-  });
+      timeZone: 'Europe/Berlin',
+    })
+    expect(formatter.number(123456)).toBe('123,456')
+  })
 
   it('formats a bigint', () => {
     const formatter = createFormatter({
       locale: 'en',
-      timeZone: 'Europe/Berlin'
-    });
+      timeZone: 'Europe/Berlin',
+    })
     expect(formatter.number(123456789123456789n)).toBe(
-      '123,456,789,123,456,789'
-    );
-  });
+      '123,456,789,123,456,789',
+    )
+  })
 
   it('formats a number as currency', () => {
     const formatter = createFormatter({
       locale: 'en',
-      timeZone: 'Europe/Berlin'
-    });
+      timeZone: 'Europe/Berlin',
+    })
     expect(
-      formatter.number(123456.789, {style: 'currency', currency: 'USD'})
-    ).toBe('$123,456.79');
-  });
+      formatter.number(123456.789, { style: 'currency', currency: 'USD' }),
+    ).toBe('$123,456.79')
+  })
 
   it('formats a bigint as currency', () => {
     const formatter = createFormatter({
       locale: 'en',
-      timeZone: 'Europe/Berlin'
-    });
+      timeZone: 'Europe/Berlin',
+    })
     expect(
       formatter.number(123456789123456789n, {
         style: 'currency',
-        currency: 'USD'
-      })
-    ).toBe('$123,456,789,123,456,789.00');
-  });
+        currency: 'USD',
+      }),
+    ).toBe('$123,456,789,123,456,789.00')
+  })
 
   it('can combine a global format with an override', () => {
     const formatter = createFormatter({
@@ -101,102 +101,102 @@ describe('number', () => {
           price: {
             style: 'currency',
             minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          }
-        }
-      }
-    });
-    expect(formatter.number(123456.789, 'price', {currency: 'EUR'})).toBe(
-      '€123,456.79'
-    );
-  });
-});
+            maximumFractionDigits: 2,
+          },
+        },
+      },
+    })
+    expect(formatter.number(123456.789, 'price', { currency: 'EUR' })).toBe(
+      '€123,456.79',
+    )
+  })
+})
 
 describe('relativeTime', () => {
   it('formats a relative time with the second unit', () => {
     const formatter = createFormatter({
       locale: 'en',
-      timeZone: 'Europe/Berlin'
-    });
+      timeZone: 'Europe/Berlin',
+    })
     expect(
       formatter.relativeTime(
         parseISO('2020-11-20T00:00:00.000Z'),
-        parseISO('2020-11-20T00:00:10.000Z')
-      )
-    ).toBe('10 seconds ago');
-  });
+        parseISO('2020-11-20T00:00:10.000Z'),
+      ),
+    ).toBe('10 seconds ago')
+  })
 
   it('formats a relative time with the minute unit', () => {
     const formatter = createFormatter({
       locale: 'en',
-      timeZone: 'Europe/Berlin'
-    });
+      timeZone: 'Europe/Berlin',
+    })
     expect(
       formatter.relativeTime(
         parseISO('2020-11-20T00:00:00.000Z'),
-        parseISO('2020-11-20T00:01:10.000Z')
-      )
-    ).toBe('1 minute ago');
-  });
+        parseISO('2020-11-20T00:01:10.000Z'),
+      ),
+    ).toBe('1 minute ago')
+  })
 
   it('formats a relative time with the hour unit', () => {
     const formatter = createFormatter({
       locale: 'en',
-      timeZone: 'Europe/Berlin'
-    });
+      timeZone: 'Europe/Berlin',
+    })
     expect(
       formatter.relativeTime(
         parseISO('2020-11-20T10:36:01.516Z'),
-        parseISO('2020-11-20T12:30:01.516Z')
-      )
-    ).toBe('2 hours ago');
-  });
+        parseISO('2020-11-20T12:30:01.516Z'),
+      ),
+    ).toBe('2 hours ago')
+  })
 
   it('formats a relative time with the day unit', () => {
     const formatter = createFormatter({
       locale: 'en',
-      timeZone: 'Europe/Berlin'
-    });
+      timeZone: 'Europe/Berlin',
+    })
     expect(
       formatter.relativeTime(
         parseISO('2020-11-20T00:00:00.000Z'),
-        parseISO('2020-11-22T00:10:00.000Z')
-      )
-    ).toBe('2 days ago');
-  });
+        parseISO('2020-11-22T00:10:00.000Z'),
+      ),
+    ).toBe('2 days ago')
+  })
 
   it('formats a relative time with the month unit', () => {
     const formatter = createFormatter({
       locale: 'en',
-      timeZone: 'Europe/Berlin'
-    });
+      timeZone: 'Europe/Berlin',
+    })
     expect(
       formatter.relativeTime(
         parseISO('2022-11-01T00:00:00.000Z'),
-        parseISO('2023-01-01T00:00:00.000Z')
-      )
-    ).toBe('2 months ago');
-  });
+        parseISO('2023-01-01T00:00:00.000Z'),
+      ),
+    ).toBe('2 months ago')
+  })
 
   it('formats a relative time with the year unit', () => {
     const formatter = createFormatter({
       locale: 'en',
-      timeZone: 'Europe/Berlin'
-    });
+      timeZone: 'Europe/Berlin',
+    })
     expect(
       formatter.relativeTime(
         parseISO('2022-01-01T00:00:00.000Z'),
-        parseISO('2024-01-01T00:00:00.000Z')
-      )
-    ).toBe('2 years ago');
-  });
+        parseISO('2024-01-01T00:00:00.000Z'),
+      ),
+    ).toBe('2 years ago')
+  })
 
   describe('numeric representation', () => {
     const formatter = createFormatter({
       locale: 'en',
-      timeZone: 'Europe/Berlin'
-    });
-    const now = new Date('2024-01-09T15:00:00.000Z');
+      timeZone: 'Europe/Berlin',
+    })
+    const now = new Date('2024-01-09T15:00:00.000Z')
 
     it.each([
       ['2022-07-10T15:00:00.000Z', '2 years ago'],
@@ -247,86 +247,86 @@ describe('relativeTime', () => {
       ['2025-07-11T00:00:00.000Z', 'in 2 years'],
       ['2026-01-09T00:00:00.000Z', 'in 2 years'],
       ['2026-07-09T00:00:00.000Z', 'in 2 years'],
-      ['2026-07-11T00:00:00.000Z', 'in 3 years']
+      ['2026-07-11T00:00:00.000Z', 'in 3 years'],
     ])('%s: %s', (value, expected) => {
-      expect(formatter.relativeTime(parseISO(value), now)).toBe(expected);
-    });
-  });
+      expect(formatter.relativeTime(parseISO(value), now)).toBe(expected)
+    })
+  })
 
   it('supports the future relative time', () => {
     const formatter = createFormatter({
       locale: 'en',
-      timeZone: 'Europe/Berlin'
-    });
+      timeZone: 'Europe/Berlin',
+    })
     expect(
       formatter.relativeTime(
         parseISO('2024-01-01T00:00:00.000Z'),
-        parseISO('2022-01-01T00:00:00.000Z')
-      )
-    ).toBe('in 2 years');
-  });
+        parseISO('2022-01-01T00:00:00.000Z'),
+      ),
+    ).toBe('in 2 years')
+  })
 
   it('formats a relative time with a different style', () => {
     const formatter = createFormatter({
       locale: 'en',
-      timeZone: 'Europe/Berlin'
-    });
+      timeZone: 'Europe/Berlin',
+    })
     expect(
       formatter.relativeTime(parseISO('2020-03-20T08:30:00.000Z'), {
         now: parseISO('2020-11-22T10:36:00.000Z'),
-        style: 'narrow'
-      })
-    ).toBe('8mo ago');
-  });
+        style: 'narrow',
+      }),
+    ).toBe('8mo ago')
+  })
 
   it('formats a relative time with options', () => {
     const formatter = createFormatter({
       locale: 'en',
-      timeZone: 'Europe/Berlin'
-    });
+      timeZone: 'Europe/Berlin',
+    })
     expect(
       formatter.relativeTime(parseISO('2020-03-20T08:30:00.000Z'), {
         now: parseISO('2020-11-22T10:36:00.000Z'),
         unit: 'day',
         numberingSystem: 'arab',
-        style: 'narrow'
-      })
-    ).toBe('٢٤٧d ago');
-  });
+        style: 'narrow',
+      }),
+    ).toBe('٢٤٧d ago')
+  })
 
   it('supports the quarter unit', () => {
     const formatter = createFormatter({
       locale: 'en',
-      timeZone: 'Europe/Berlin'
-    });
+      timeZone: 'Europe/Berlin',
+    })
     expect(
       formatter.relativeTime(parseISO('2020-01-01T00:00:00.000Z'), {
         now: parseISO('2020-11-01T01:00:00.000Z'),
-        unit: 'quarter'
-      })
-    ).toBe('3 quarters ago');
-  });
+        unit: 'quarter',
+      }),
+    ).toBe('3 quarters ago')
+  })
 
   it('formats a relative time with a globally defined `now`', () => {
     const formatter = createFormatter({
       locale: 'en',
       now: parseISO('2020-11-20T01:00:00.000Z'),
-      timeZone: 'Europe/Berlin'
-    });
+      timeZone: 'Europe/Berlin',
+    })
     expect(
       formatter.relativeTime(parseISO('2020-11-22T00:00:00.000Z'), {
-        unit: 'day'
-      })
-    ).toBe('in 2 days');
-  });
-});
+        unit: 'day',
+      }),
+    ).toBe('in 2 days')
+  })
+})
 
 describe('dateTimeRange', () => {
   it('formats a date range', () => {
     const formatter = createFormatter({
       locale: 'en',
-      timeZone: 'Europe/Berlin'
-    });
+      timeZone: 'Europe/Berlin',
+    })
     expect(
       formatter.dateTimeRange(
         new Date(2007, 0, 10, 10, 0, 0),
@@ -335,10 +335,10 @@ describe('dateTimeRange', () => {
           weekday: 'long',
           year: 'numeric',
           month: 'long',
-          day: 'numeric'
-        }
-      )
-    ).toBe('Wednesday, January 10, 2007 – Thursday, January 10, 2008');
+          day: 'numeric',
+        },
+      ),
+    ).toBe('Wednesday, January 10, 2007 – Thursday, January 10, 2008')
 
     expect(
       formatter.dateTimeRange(
@@ -349,33 +349,33 @@ describe('dateTimeRange', () => {
           month: 'numeric',
           day: 'numeric',
           hour: 'numeric',
-          minute: 'numeric'
-        }
-      )
+          minute: 'numeric',
+        },
+      ),
     )
       // 1 hour more given that the timezone is Europe/Berlin and the date is in UTC
-      .toBe('1/10/06, 11:00 AM – 12:00 PM');
-  });
+      .toBe('1/10/06, 11:00 AM – 12:00 PM')
+  })
 
   it('returns a reasonable fallback if an invalid format is provided', () => {
     const formatter = createFormatter({
       locale: 'en',
-      timeZone: 'Europe/Berlin'
-    });
+      timeZone: 'Europe/Berlin',
+    })
     expect(
       formatter.dateTimeRange(
         new Date(2007, 0, 10, 10, 0, 0),
         new Date(2008, 0, 10, 11, 0, 0),
-        'unknown'
-      )
-    ).toBe('1/10/2007 – 1/10/2008');
-  });
+        'unknown',
+      ),
+    ).toBe('1/10/2007 – 1/10/2008')
+  })
 
   it('allows to override the time zone', () => {
     const formatter = createFormatter({
       locale: 'en',
-      timeZone: 'Europe/Berlin'
-    });
+      timeZone: 'Europe/Berlin',
+    })
     expect(
       formatter.dateTimeRange(
         new Date(2007, 0, 10, 10, 0, 0),
@@ -383,11 +383,11 @@ describe('dateTimeRange', () => {
         {
           timeStyle: 'medium',
           dateStyle: 'medium',
-          timeZone: 'America/New_York'
-        }
-      )
-    ).toBe('Jan 10, 2007, 4:00:00 AM – Jan 10, 2008, 5:00:00 AM');
-  });
+          timeZone: 'America/New_York',
+        },
+      ),
+    ).toBe('Jan 10, 2007, 4:00:00 AM – Jan 10, 2008, 5:00:00 AM')
+  })
 
   it('can combine a global format with an override', () => {
     const formatter = createFormatter({
@@ -397,46 +397,46 @@ describe('dateTimeRange', () => {
         dateTime: {
           short: {
             dateStyle: 'short',
-            timeStyle: 'short'
-          }
-        }
-      }
-    });
+            timeStyle: 'short',
+          },
+        },
+      },
+    })
     expect(
       formatter.dateTimeRange(
         new Date(2007, 0, 10, 10, 0, 0),
         new Date(2008, 0, 10, 11, 0, 0),
         'short',
         {
-          timeZone: 'America/New_York'
-        }
-      )
-    ).toBe('1/10/07, 4:00 AM – 1/10/08, 5:00 AM');
-  });
-});
+          timeZone: 'America/New_York',
+        },
+      ),
+    ).toBe('1/10/07, 4:00 AM – 1/10/08, 5:00 AM')
+  })
+})
 
 describe('list', () => {
   it('formats a list', () => {
     const formatter = createFormatter({
       locale: 'en',
-      timeZone: 'Europe/Berlin'
-    });
+      timeZone: 'Europe/Berlin',
+    })
     expect(
-      formatter.list(['apple', 'banana', 'orange'], {type: 'disjunction'})
-    ).toBe('apple, banana, or orange');
-  });
+      formatter.list(['apple', 'banana', 'orange'], { type: 'disjunction' }),
+    ).toBe('apple, banana, or orange')
+  })
 
   it('formats a set', () => {
     const formatter = createFormatter({
       locale: 'en',
-      timeZone: 'Europe/Berlin'
-    });
+      timeZone: 'Europe/Berlin',
+    })
     expect(
       formatter.list(new Set(['apple', 'banana', 'orange']), {
-        type: 'disjunction'
-      })
-    ).toBe('apple, banana, or orange');
-  });
+        type: 'disjunction',
+      }),
+    ).toBe('apple, banana, or orange')
+  })
 
   it('can combine a global format with an override', () => {
     const formatter = createFormatter({
@@ -444,15 +444,15 @@ describe('list', () => {
       formats: {
         list: {
           short: {
-            type: 'disjunction'
-          }
-        }
-      }
-    });
+            type: 'disjunction',
+          },
+        },
+      },
+    })
     expect(
       formatter.list(['apple', 'banana', 'orange'], 'short', {
-        type: 'conjunction'
-      })
-    ).toBe('apple, banana, and orange');
-  });
-});
+        type: 'conjunction',
+      }),
+    ).toBe('apple, banana, and orange')
+  })
+})

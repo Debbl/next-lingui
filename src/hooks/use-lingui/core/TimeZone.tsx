@@ -420,6 +420,6 @@ type TimeZone =
   | 'W-SU'
   | 'WET'
   | 'Zulu'
-  | (string & {});
+  | (string & {})
 
-export default TimeZone;
+export default TimeZone

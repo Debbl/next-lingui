@@ -4,9 +4,9 @@
  */
 export default function resolveNamespace(
   namespace: string,
-  namespacePrefix: string
+  namespacePrefix: string,
 ) {
   return namespace === namespacePrefix
     ? undefined
-    : namespace.slice((namespacePrefix + '.').length);
+    : namespace.slice(`${namespacePrefix}.`.length)
 }

@@ -1,98 +1,98 @@
-import {fireEvent, render, screen} from '@testing-library/react';
-import {memo, useState} from 'react';
-import {expect, it, vi} from 'vitest';
-import IntlProvider from './IntlProvider.js';
-import useNow from './useNow.js';
-import useTranslations from './useTranslations.js';
+import { fireEvent, render, screen } from '@testing-library/react'
+import { memo, useState } from 'react'
+import { expect, it, vi } from 'vitest'
+import IntlProvider from './IntlProvider.js'
+import useNow from './useNow.js'
+import useTranslations from './useTranslations.js'
 
 it("doesn't re-render context consumers unnecessarily", () => {
-  const messages = {StaticText: {hello: 'Hello!'}};
+  const messages = { StaticText: { hello: 'Hello!' } }
 
-  let numCounterRenders = 0;
+  let numCounterRenders = 0
   function Counter() {
-    const [count, setCount] = useState(0);
-    numCounterRenders++;
+    const [count, setCount] = useState(0)
+    numCounterRenders++
 
     return (
       <>
-        <button onClick={() => setCount(count + 1)} type="button">
+        <button onClick={() => setCount(count + 1)} type='button'>
           Increment
         </button>
         <p>Count: {count}</p>
-        <IntlProvider locale="en" messages={messages}>
+        <IntlProvider locale='en' messages={messages}>
           <StaticText />
         </IntlProvider>
       </>
-    );
+    )
   }
 
   // `memo` is required on this component, as otherwise
   // React doesn't bail out of rendering it.
-  let numStaticTextRenders = 0;
+  let numStaticTextRenders = 0
   const StaticText = memo(() => {
-    const t = useTranslations('StaticText');
-    numStaticTextRenders++;
-    return t('hello');
-  });
-  StaticText.displayName = 'StaticText';
+    const t = useTranslations('StaticText')
+    numStaticTextRenders++
+    return t('hello')
+  })
+  StaticText.displayName = 'StaticText'
 
-  render(<Counter />);
-  screen.getByText('Count: 0');
-  expect(numCounterRenders).toBe(1);
-  expect(numStaticTextRenders).toBe(1);
-  fireEvent.click(screen.getByText('Increment'));
-  screen.getByText('Count: 1');
-  expect(numCounterRenders).toBe(2);
-  expect(numStaticTextRenders).toBe(1);
-});
+  render(<Counter />)
+  screen.getByText('Count: 0')
+  expect(numCounterRenders).toBe(1)
+  expect(numStaticTextRenders).toBe(1)
+  fireEvent.click(screen.getByText('Increment'))
+  screen.getByText('Count: 1')
+  expect(numCounterRenders).toBe(2)
+  expect(numStaticTextRenders).toBe(1)
+})
 
 it('keeps a consistent context value that does not trigger unnecessary re-renders', () => {
-  const messages = {StaticText: {hello: 'Hello!'}};
+  const messages = { StaticText: { hello: 'Hello!' } }
 
-  let numCounterRenders = 0;
+  let numCounterRenders = 0
   function Counter() {
-    const [count, setCount] = useState(0);
-    numCounterRenders++;
+    const [count, setCount] = useState(0)
+    numCounterRenders++
 
     return (
       <>
-        <button onClick={() => setCount(count + 1)} type="button">
+        <button onClick={() => setCount(count + 1)} type='button'>
           Increment
         </button>
         <p>Count: {count}</p>
-        <IntlProvider locale="en" messages={messages}>
+        <IntlProvider locale='en' messages={messages}>
           <StaticText />
         </IntlProvider>
       </>
-    );
+    )
   }
 
-  let numStaticTextRenders = 0;
+  let numStaticTextRenders = 0
   const StaticText = memo(() => {
-    const t = useTranslations('StaticText');
-    numStaticTextRenders++;
-    return t('hello');
-  });
-  StaticText.displayName = 'StaticText';
+    const t = useTranslations('StaticText')
+    numStaticTextRenders++
+    return t('hello')
+  })
+  StaticText.displayName = 'StaticText'
 
-  render(<Counter />);
-  screen.getByText('Count: 0');
-  expect(numCounterRenders).toBe(1);
-  expect(numStaticTextRenders).toBe(1);
-  fireEvent.click(screen.getByText('Increment'));
-  screen.getByText('Count: 1');
-  expect(numCounterRenders).toBe(2);
-  expect(numStaticTextRenders).toBe(1);
-});
+  render(<Counter />)
+  screen.getByText('Count: 0')
+  expect(numCounterRenders).toBe(1)
+  expect(numStaticTextRenders).toBe(1)
+  fireEvent.click(screen.getByText('Increment'))
+  screen.getByText('Count: 1')
+  expect(numCounterRenders).toBe(2)
+  expect(numStaticTextRenders).toBe(1)
+})
 
 it('passes on configuration in nested providers', () => {
-  const onError = vi.fn();
+  const onError = vi.fn()
 
   function Component() {
-    const now = useNow();
-    const t = useTranslations();
-    t('unknown');
-    return t('now', {now});
+    const now = useNow()
+    const t = useTranslations()
+    t('unknown')
+    return t('now', { now })
   }
 
   render(
@@ -104,70 +104,70 @@ it('passes on configuration in nested providers', () => {
             month: 'short',
             day: 'numeric',
             hour: 'numeric',
-            minute: 'numeric'
-          }
-        }
+            minute: 'numeric',
+          },
+        },
       }}
-      locale="en"
-      messages={{now: 'Now: {now, date, short}'}}
+      locale='en'
+      messages={{ now: 'Now: {now, date, short}' }}
       now={new Date('2021-01-01T00:00:00Z')}
       // (timeZone is undefined)
     >
       <IntlProvider
-        locale="en" // Ideally wouldn't have to specify, but not too bad
+        locale='en' // Ideally wouldn't have to specify, but not too bad
         onError={onError}
-        timeZone="Europe/Vienna"
+        timeZone='Europe/Vienna'
       >
         <Component />
       </IntlProvider>
-    </IntlProvider>
-  );
+    </IntlProvider>,
+  )
 
-  screen.getByText('Now: Jan 1, 2021, 1:00 AM');
-  expect(onError.mock.calls.length).toBe(1);
-});
+  screen.getByText('Now: Jan 1, 2021, 1:00 AM')
+  expect(onError.mock.calls.length).toBe(1)
+})
 
 it('does not merge messages in nested providers', () => {
   // This is important because the locale can change
   // and the messages from a previous locale should
   // not leak into the new locale.
 
-  const onError = vi.fn();
+  const onError = vi.fn()
 
   function Component() {
-    const t = useTranslations();
-    return t('hello');
+    const t = useTranslations()
+    return t('hello')
   }
 
   render(
-    <IntlProvider locale="en" messages={{hello: 'Hello!'}} onError={onError}>
-      <IntlProvider locale="de" messages={{bye: 'Tschüss!'}}>
+    <IntlProvider locale='en' messages={{ hello: 'Hello!' }} onError={onError}>
+      <IntlProvider locale='de' messages={{ bye: 'Tschüss!' }}>
         <Component />
       </IntlProvider>
-    </IntlProvider>
-  );
+    </IntlProvider>,
+  )
 
-  expect(onError.mock.calls.length).toBe(1);
-});
+  expect(onError.mock.calls.length).toBe(1)
+})
 
 it('can opt-out of messages inheritance', () => {
-  const onError = vi.fn();
+  const onError = vi.fn()
 
   function Component() {
-    const t = useTranslations();
-    return <span>{t('hello')}</span>;
+    const t = useTranslations()
+    return <span>{t('hello')}</span>
   }
 
   render(
-    <IntlProvider locale="en" messages={{hello: 'Hey!'}} onError={onError}>
+    <IntlProvider locale='en' messages={{ hello: 'Hey!' }} onError={onError}>
       <Component />
-      <IntlProvider locale="en" messages={null}>
+      <IntlProvider locale='en' messages={null}>
         <Component />
       </IntlProvider>
-    </IntlProvider>
-  );
+    </IntlProvider>,
+  )
 
-  screen.getByText('Hey!');
-  screen.getByText('hello');
-  expect(onError.mock.calls.length).toBe(1);
-});
+  screen.getByText('Hey!')
+  screen.getByText('hello')
+  expect(onError.mock.calls.length).toBe(1)
+})

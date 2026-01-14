@@ -1,5 +1,5 @@
-import type IntlError from './IntlError.js';
-import joinPath from './joinPath.js';
+import joinPath from './joinPath.js'
+import type IntlError from './IntlError.js'
 
 /**
  * Contains defaults that are used for all entry points into the core.
@@ -7,13 +7,13 @@ import joinPath from './joinPath.js';
  */
 
 export function defaultGetMessageFallback(props: {
-  error: IntlError;
-  key: string;
-  namespace?: string;
+  error: IntlError
+  key: string
+  namespace?: string
 }) {
-  return joinPath(props.namespace, props.key);
+  return joinPath(props.namespace, props.key)
 }
 
 export function defaultOnError(error: IntlError) {
-  console.error(error);
+  console.error(error)
 }

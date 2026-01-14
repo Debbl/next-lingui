@@ -13,10 +13,5 @@
     }
   ],
   "typescript.tsdk": "node_modules/typescript/lib",
-  "cSpell.words": [
-    "esbuild",
-    "lingui",
-    "serwist",
-    "tsdown"
-  ]
+  "cSpell.words": ["esbuild", "lingui", "serwist", "tsdown"]
 }

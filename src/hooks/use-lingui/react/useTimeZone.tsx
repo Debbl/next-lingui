@@ -1,5 +1,5 @@
-import useIntlContext from './useIntlContext.js';
+import useIntlContext from './useIntlContext.js'
 
 export default function useTimeZone() {
-  return useIntlContext().timeZone;
+  return useIntlContext().timeZone
 }

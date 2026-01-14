@@ -1,6 +1,6 @@
-import type IntlConfig from './IntlConfig.js';
-import {defaultGetMessageFallback, defaultOnError} from './defaults.js';
-import validateMessages from './validateMessages.js';
+import { defaultGetMessageFallback, defaultOnError } from './defaults.js'
+import validateMessages from './validateMessages.js'
+import type IntlConfig from './IntlConfig.js'
 
 /**
  * Enhances the incoming props with defaults.
@@ -8,15 +8,15 @@ import validateMessages from './validateMessages.js';
 export default function initializeConfig<
   // This is a generic to allow for stricter typing. E.g.
   // the RSC integration always provides a `now` value.
-  Props extends IntlConfig
->({formats, getMessageFallback, messages, onError, ...rest}: Props) {
-  const finalOnError = onError || defaultOnError;
+  Props extends IntlConfig,
+>({ formats, getMessageFallback, messages, onError, ...rest }: Props) {
+  const finalOnError = onError || defaultOnError
   const finalGetMessageFallback =
-    getMessageFallback || defaultGetMessageFallback;
+    getMessageFallback || defaultGetMessageFallback
 
   if (process.env.NODE_ENV !== 'production') {
     if (messages) {
-      validateMessages(messages, finalOnError);
+      validateMessages(messages, finalOnError)
     }
   }
 
@@ -29,6 +29,6 @@ export default function initializeConfig<
       | NonNullable<IntlConfig['messages']>
       | undefined,
     onError: finalOnError,
-    getMessageFallback: finalGetMessageFallback
-  };
+    getMessageFallback: finalGetMessageFallback,
+  }
 }

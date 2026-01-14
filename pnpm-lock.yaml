@@ -36,6 +36,9 @@ importers:
       '@debbl/eslint-config':
         specifier: ^3.13.0
         version: 3.13.0(@types/eslint@8.56.10)(@typescript-eslint/utils@8.46.3(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(eslint-config-prettier@10.1.8(eslint@9.39.2(jiti@2.6.1)))(eslint-import-resolver-node@0.3.9)(eslint@9.39.2(jiti@2.6.1))(tailwindcss@4.1.16)(typescript@5.9.3)(vitest@3.0.8(@types/debug@4.1.12)(@types/node@25.0.8)(jiti@2.6.1)(jsdom@27.4.0)(lightningcss@1.30.2)(yaml@2.8.2))
+      '@lingui/swc-plugin':
+        specifier: ^5.10.1
+        version: 5.10.1(@lingui/core@5.5.2(@lingui/babel-plugin-lingui-macro@5.5.2(babel-plugin-macros@3.1.0)(typescript@5.9.3))(babel-plugin-macros@3.1.0))
       '@testing-library/react':
         specifier: ^16.3.1
         version: 16.3.1(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -874,6 +877,18 @@ packages:
       '@lingui/babel-plugin-lingui-macro':
         optional: true
       babel-plugin-macros:
+        optional: true
+
+  '@lingui/swc-plugin@5.10.1':
+    resolution: {integrity: sha512-3356mrBKeh+0H1JZzkkA3x0mMUHvkcPZB7QWIKcEZ7zYy+szOhth+4wbcufmOxNxmRdZnlGdVtg7BKZ/sb0ODw==}
+    peerDependencies:
+      '@lingui/core': '5'
+      '@swc/core': '*'
+      next: '*'
+    peerDependenciesMeta:
+      '@swc/core':
+        optional: true
+      next:
         optional: true
 
   '@messageformat/parser@5.1.1':
@@ -5851,6 +5866,10 @@ snapshots:
     optionalDependencies:
       '@lingui/babel-plugin-lingui-macro': 5.5.2(babel-plugin-macros@3.1.0)(typescript@5.9.3)
       babel-plugin-macros: 3.1.0
+
+  '@lingui/swc-plugin@5.10.1(@lingui/core@5.5.2(@lingui/babel-plugin-lingui-macro@5.5.2(babel-plugin-macros@3.1.0)(typescript@5.9.3))(babel-plugin-macros@3.1.0))':
+    dependencies:
+      '@lingui/core': 5.5.2(@lingui/babel-plugin-lingui-macro@5.5.2(babel-plugin-macros@3.1.0)(typescript@5.9.3))(babel-plugin-macros@3.1.0)
 
   '@messageformat/parser@5.1.1':
     dependencies:

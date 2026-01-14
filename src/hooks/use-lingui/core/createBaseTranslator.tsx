@@ -1,153 +1,152 @@
-import {IntlMessageFormat} from 'intl-messageformat';
-import {type ReactNode, cloneElement, isValidElement} from 'react';
-import type AbstractIntlMessages from './AbstractIntlMessages.js';
-import type {Locale} from './AppConfig.js';
-import type Formats from './Formats.js';
-import type {InitializedIntlConfig} from './IntlConfig.js';
-import IntlError from './IntlError.js';
-import IntlErrorCode from './IntlErrorCode.js';
-import type {MessageKeys, NestedKeyOf, NestedValueOf} from './MessageKeys.js';
+import { IntlMessageFormat } from 'intl-messageformat'
+import { cloneElement, isValidElement } from 'react'
+import convertFormatsToIntlMessageFormat from './convertFormatsToIntlMessageFormat.js'
+import { defaultGetMessageFallback, defaultOnError } from './defaults.js'
+import { memoFn } from './formatters.js'
+import IntlError from './IntlError.js'
+import IntlErrorCode from './IntlErrorCode.js'
+import joinPath from './joinPath.js'
+import type { ReactNode } from 'react'
+import type AbstractIntlMessages from './AbstractIntlMessages.js'
+import type { Locale } from './AppConfig.js'
+import type Formats from './Formats.js'
+import type {
+  Formatters,
+  IntlCache,
+  IntlFormatters,
+  MessageFormatter,
+} from './formatters.js'
+import type { InitializedIntlConfig } from './IntlConfig.js'
+import type { MessageKeys, NestedKeyOf, NestedValueOf } from './MessageKeys.js'
 import type {
   MarkupTranslationValues,
   RichTranslationValues,
-  TranslationValues
-} from './TranslationValues.js';
-import convertFormatsToIntlMessageFormat from './convertFormatsToIntlMessageFormat.js';
-import {defaultGetMessageFallback, defaultOnError} from './defaults.js';
-import {
-  type Formatters,
-  type IntlCache,
-  type IntlFormatters,
-  type MessageFormatter,
-  memoFn
-} from './formatters.js';
-import joinPath from './joinPath.js';
+  TranslationValues,
+} from './TranslationValues.js'
 
 // Placed here for improved tree shaking. Somehow when this is placed in
 // `formatters.tsx`, then it can't be shaken off from `next-intl`.
 function createMessageFormatter(
   cache: IntlCache,
-  intlFormatters: IntlFormatters
+  intlFormatters: IntlFormatters,
 ): MessageFormatter {
   const getMessageFormat = memoFn(
     (...args: ConstructorParameters<typeof IntlMessageFormat>) =>
       new IntlMessageFormat(args[0], args[1], args[2], {
         formatters: intlFormatters,
-        ...args[3]
+        ...args[3],
       }),
-    cache.message
-  );
+    cache.message,
+  )
 
-  return getMessageFormat;
+  return getMessageFormat
 }
 
 function resolvePath(
   locale: Locale,
   messages: AbstractIntlMessages | undefined,
   key: string,
-  namespace?: string
+  namespace?: string,
 ) {
-  const fullKey = joinPath(namespace, key);
+  const fullKey = joinPath(namespace, key)
 
   if (!messages) {
     throw new Error(
       process.env.NODE_ENV !== 'production'
         ? `No messages available at \`${namespace}\`.`
-        : fullKey
-    );
+        : fullKey,
+    )
   }
 
-  let message = messages;
+  let message = messages
 
   key.split('.').forEach((part) => {
-    const next = (message as any)[part];
+    const next = (message as any)[part]
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (part == null || next == null) {
       throw new Error(
         process.env.NODE_ENV !== 'production'
           ? `Could not resolve \`${fullKey}\` in messages for locale \`${locale}\`.`
-          : fullKey + ` (${locale})`
-      );
+          : `${fullKey} (${locale})`,
+      )
     }
 
-    message = next;
-  });
+    message = next
+  })
 
-  return message;
+  return message
 }
 
 function prepareTranslationValues(values: RichTranslationValues) {
   // Workaround for https://github.com/formatjs/formatjs/issues/1467
-  const transformedValues: RichTranslationValues = {};
+  const transformedValues: RichTranslationValues = {}
   Object.keys(values).forEach((key) => {
-    let index = 0;
-    const value = values[key];
+    let index = 0
+    const value = values[key]
 
-    let transformed;
+    let transformed
     if (typeof value === 'function') {
       transformed = (chunks: ReactNode) => {
-        const result = value(chunks);
+        const result = value(chunks)
 
         return isValidElement(result)
-          ? cloneElement(result, {key: key + index++})
-          : result;
-      };
+          ? cloneElement(result, { key: key + index++ })
+          : result
+      }
     } else {
-      transformed = value;
+      transformed = value
     }
 
-    transformedValues[key] = transformed;
-  });
+    transformedValues[key] = transformed
+  })
 
-  return transformedValues;
+  return transformedValues
 }
 
 function getMessagesOrError<Messages extends AbstractIntlMessages>(
   locale: Locale,
   messages?: Messages,
   namespace?: string,
-  onError: (error: IntlError) => void = defaultOnError
+  onError: (error: IntlError) => void = defaultOnError,
 ) {
   try {
     if (!messages) {
       throw new Error(
         process.env.NODE_ENV !== 'production'
           ? `No messages were configured.`
-          : undefined
-      );
+          : undefined,
+      )
     }
 
     const retrievedMessages = namespace
       ? resolvePath(locale, messages, namespace)
-      : messages;
+      : messages
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!retrievedMessages) {
       throw new Error(
         process.env.NODE_ENV !== 'production'
           ? `No messages for namespace \`${namespace}\` found.`
-          : namespace
-      );
+          : namespace,
+      )
     }
 
-    return retrievedMessages;
+    return retrievedMessages
   } catch (error) {
     const intlError = new IntlError(
       IntlErrorCode.MISSING_MESSAGE,
-      (error as Error).message
-    );
-    onError(intlError);
-    return intlError;
+      (error as Error).message,
+    )
+    onError(intlError)
+    return intlError
   }
 }
 
 export type CreateBaseTranslatorProps<Messages> = InitializedIntlConfig & {
-  cache: IntlCache;
-  formatters: Formatters;
-  namespace?: string;
-  messagesOrError: Messages | IntlError;
-};
+  cache: IntlCache
+  formatters: Formatters
+  namespace?: string
+  messagesOrError: Messages | IntlError
+}
 
 function getPlainMessage(candidate: string, values?: unknown) {
   // To improve runtime performance, only compile message if:
@@ -160,29 +159,29 @@ function getPlainMessage(candidate: string, values?: unknown) {
       (process.env.NODE_ENV !== 'production' && /<|{/.test(candidate))
       ? undefined // Compile
       : candidate // Don't compile
-  );
+  )
 }
 
 export default function createBaseTranslator<
   Messages extends AbstractIntlMessages,
-  NestedKey extends NestedKeyOf<Messages>
+  NestedKey extends NestedKeyOf<Messages>,
 >(config: Omit<CreateBaseTranslatorProps<Messages>, 'messagesOrError'>) {
   const messagesOrError = getMessagesOrError(
     config.locale,
     config.messages,
     config.namespace,
-    config.onError
-  ) as Messages | IntlError;
+    config.onError,
+  ) as Messages | IntlError
 
   return createBaseTranslatorImpl<Messages, NestedKey>({
     ...config,
-    messagesOrError
-  });
+    messagesOrError,
+  })
 }
 
 function createBaseTranslatorImpl<
   Messages extends AbstractIntlMessages,
-  NestedKey extends NestedKeyOf<Messages>
+  NestedKey extends NestedKeyOf<Messages>,
 >({
   cache,
   formats: globalFormats,
@@ -192,18 +191,18 @@ function createBaseTranslatorImpl<
   messagesOrError,
   namespace,
   onError,
-  timeZone
+  timeZone,
 }: CreateBaseTranslatorProps<Messages>) {
-  const hasMessagesError = messagesOrError instanceof IntlError;
+  const hasMessagesError = messagesOrError instanceof IntlError
 
   function getFallbackFromErrorAndNotify(
     key: string,
     code: IntlErrorCode,
-    message?: string
+    message?: string,
   ) {
-    const error = new IntlError(code, message);
-    onError(error);
-    return getMessageFallback({error, key, namespace});
+    const error = new IntlError(code, message)
+    onError(error)
+    return getMessageFallback({ error, key, namespace })
   }
 
   function translateBaseFn(
@@ -212,62 +211,62 @@ function createBaseTranslatorImpl<
     /** Key value pairs for values to interpolate into the message. */
     values?: RichTranslationValues,
     /** Provide custom formats for numbers, dates and times. */
-    formats?: Formats
+    formats?: Formats,
   ): ReactNode {
     if (hasMessagesError) {
       // We have already warned about this during render
       return getMessageFallback({
         error: messagesOrError,
         key,
-        namespace
-      });
+        namespace,
+      })
     }
-    const messages = messagesOrError;
+    const messages = messagesOrError
 
-    let message;
+    let message
     try {
-      message = resolvePath(locale, messages, key, namespace);
+      message = resolvePath(locale, messages, key, namespace)
     } catch (error) {
       return getFallbackFromErrorAndNotify(
         key,
         IntlErrorCode.MISSING_MESSAGE,
-        (error as Error).message
-      );
+        (error as Error).message,
+      )
     }
 
     if (typeof message === 'object') {
-      let code, errorMessage;
+      let code, errorMessage
       if (Array.isArray(message)) {
-        code = IntlErrorCode.INVALID_MESSAGE;
+        code = IntlErrorCode.INVALID_MESSAGE
         if (process.env.NODE_ENV !== 'production') {
           errorMessage = `Message at \`${joinPath(
             namespace,
-            key
-          )}\` resolved to an array, but only strings are supported. See https://next-intl.dev/docs/usage/messages#arrays-of-messages`;
+            key,
+          )}\` resolved to an array, but only strings are supported. See https://next-intl.dev/docs/usage/messages#arrays-of-messages`
         }
       } else {
-        code = IntlErrorCode.INSUFFICIENT_PATH;
+        code = IntlErrorCode.INSUFFICIENT_PATH
         if (process.env.NODE_ENV !== 'production') {
           errorMessage = `Message at \`${joinPath(
             namespace,
-            key
-          )}\` resolved to an object, but only strings are supported. Use a \`.\` to retrieve nested messages. See https://next-intl.dev/docs/usage/messages#structuring-messages`;
+            key,
+          )}\` resolved to an object, but only strings are supported. Use a \`.\` to retrieve nested messages. See https://next-intl.dev/docs/usage/messages#structuring-messages`
         }
       }
 
-      return getFallbackFromErrorAndNotify(key, code, errorMessage);
+      return getFallbackFromErrorAndNotify(key, code, errorMessage)
     }
 
-    let messageFormat: IntlMessageFormat;
+    let messageFormat: IntlMessageFormat
 
     // Hot path that avoids creating an `IntlMessageFormat` instance
-    const plainMessage = getPlainMessage(message as string, values);
-    if (plainMessage) return plainMessage;
+    const plainMessage = getPlainMessage(message as string, values)
+    if (plainMessage) return plainMessage
 
     // Lazy init the message formatter for better tree
     // shaking in case message formatting is not used.
     if (!formatters.getMessageFormat) {
-      formatters.getMessageFormat = createMessageFormatter(cache, formatters);
+      formatters.getMessageFormat = createMessageFormatter(cache, formatters)
     }
 
     try {
@@ -282,14 +281,14 @@ function createBaseTranslatorImpl<
               // Workaround for https://github.com/formatjs/formatjs/issues/4279
               return formatters.getDateTimeFormat(locales, {
                 timeZone,
-                ...options
-              });
-            }
-          }
-        }
-      );
+                ...options,
+              })
+            },
+          },
+        },
+      )
     } catch (error) {
-      const thrownError = error as Error;
+      const thrownError = error as Error
       return getFallbackFromErrorAndNotify(
         key,
         IntlErrorCode.INVALID_MESSAGE,
@@ -298,8 +297,8 @@ function createBaseTranslatorImpl<
               ('originalMessage' in thrownError
                 ? ` (${thrownError.originalMessage})`
                 : '')
-          : thrownError.message
-      );
+          : thrownError.message,
+      )
     }
 
     try {
@@ -308,8 +307,8 @@ function createBaseTranslatorImpl<
         // for rich text elements since a recent minor update. This
         // needs to be evaluated in detail, possibly also in regards
         // to be able to format to parts.
-        values ? prepareTranslationValues(values) : values
-      );
+        values ? prepareTranslationValues(values) : values,
+      )
 
       if (formattedMessage == null) {
         throw new Error(
@@ -317,8 +316,8 @@ function createBaseTranslatorImpl<
             ? `Unable to format \`${key}\` in ${
                 namespace ? `namespace \`${namespace}\`` : 'messages'
               }`
-            : undefined
-        );
+            : undefined,
+        )
       }
 
       // Limit the function signature to return strings or React elements
@@ -327,13 +326,13 @@ function createBaseTranslatorImpl<
         Array.isArray(formattedMessage) ||
         typeof formattedMessage === 'string'
         ? formattedMessage
-        : String(formattedMessage);
+        : String(formattedMessage)
     } catch (error) {
       return getFallbackFromErrorAndNotify(
         key,
         IntlErrorCode.FORMATTING_ERROR,
-        (error as Error).message
-      );
+        (error as Error).message,
+      )
     }
   }
 
@@ -341,16 +340,16 @@ function createBaseTranslatorImpl<
     TargetKey extends MessageKeys<
       NestedValueOf<Messages, NestedKey>,
       NestedKeyOf<NestedValueOf<Messages, NestedKey>>
-    >
+    >,
   >(
     /** Use a dot to indicate a level of nesting (e.g. `namespace.nestedLabel`). */
     key: TargetKey,
     /** Key value pairs for values to interpolate into the message. */
     values?: TranslationValues,
     /** Provide custom formats for numbers, dates and times. */
-    formats?: Formats
+    formats?: Formats,
   ): string {
-    const result = translateBaseFn(key, values, formats);
+    const result = translateBaseFn(key, values, formats)
 
     if (typeof result !== 'string') {
       return getFallbackFromErrorAndNotify(
@@ -360,80 +359,80 @@ function createBaseTranslatorImpl<
           ? `The message \`${key}\` in ${
               namespace ? `namespace \`${namespace}\`` : 'messages'
             } didn't resolve to a string. If you want to format rich text, use \`t.rich\` instead.`
-          : undefined
-      );
+          : undefined,
+      )
     }
 
-    return result;
+    return result
   }
 
-  translateFn.rich = translateBaseFn;
+  translateFn.rich = translateBaseFn
 
   // Augment `translateBaseFn` to return plain strings
   translateFn.markup = (
     key: Parameters<typeof translateBaseFn>[0],
     /** Key value pairs for values to interpolate into the message. */
     values: MarkupTranslationValues,
-    formats?: Parameters<typeof translateBaseFn>[2]
+    formats?: Parameters<typeof translateBaseFn>[2],
   ): string => {
     const result = translateBaseFn(
       key,
       // @ts-expect-error -- `MarkupTranslationValues` is practically a sub type
       // of `RichTranslationValues` but TypeScript isn't smart enough here.
       values,
-      formats
-    );
+      formats,
+    )
 
     if (process.env.NODE_ENV !== 'production' && typeof result !== 'string') {
       const error = new IntlError(
         IntlErrorCode.FORMATTING_ERROR,
-        "`t.markup` only accepts functions for formatting that receive and return strings.\n\nE.g. t.markup('markup', {b: (chunks) => `<b>${chunks}</b>`})"
-      );
+        "`t.markup` only accepts functions for formatting that receive and return strings.\n\nE.g. t.markup('markup', {b: (chunks) => `<b>${chunks}</b>`})",
+      )
 
-      onError(error);
-      return getMessageFallback({error, key, namespace});
+      onError(error)
+      return getMessageFallback({ error, key, namespace })
     }
 
-    return result as string;
-  };
+    return result as string
+  }
 
   translateFn.raw = (
     /** Use a dot to indicate a level of nesting (e.g. `namespace.nestedLabel`). */
-    key: string
+    key: string,
   ): any => {
     if (hasMessagesError) {
       // We have already warned about this during render
       return getMessageFallback({
         error: messagesOrError,
         key,
-        namespace
-      });
+        namespace,
+      })
     }
-    const messages = messagesOrError;
+    const messages = messagesOrError
 
     try {
-      return resolvePath(locale, messages, key, namespace);
+      return resolvePath(locale, messages, key, namespace)
     } catch (error) {
       return getFallbackFromErrorAndNotify(
         key,
         IntlErrorCode.MISSING_MESSAGE,
-        (error as Error).message
-      );
+        (error as Error).message,
+      )
     }
-  };
+  }
 
   translateFn.has = (key: string): boolean => {
     if (hasMessagesError) {
-      return false;
+      return false
     }
 
     try {
-      resolvePath(locale, messagesOrError, key, namespace);
-      return true;
+      resolvePath(locale, messagesOrError, key, namespace)
+      return true
     } catch {
-      return false;
+      return false
     }
-  };
+  }
 
-  return translateFn;
+  return translateFn
 }

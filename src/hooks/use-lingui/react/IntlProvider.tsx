@@ -1,16 +1,14 @@
-import {type ReactNode, useContext, useMemo} from 'react';
-import type IntlConfig from '../core/IntlConfig.js';
-import {
-  type Formatters,
-  createCache,
-  createIntlFormatters
-} from '../core/formatters.js';
-import initializeConfig from '../core/initializeConfig.js';
-import IntlContext from './IntlContext.js';
+import { useContext, useMemo } from 'react'
+import { createCache, createIntlFormatters } from '../core/formatters.js'
+import initializeConfig from '../core/initializeConfig.js'
+import IntlContext from './IntlContext.js'
+import type { ReactNode } from 'react'
+import type { Formatters } from '../core/formatters.js'
+import type IntlConfig from '../core/IntlConfig.js'
 
 type Props = IntlConfig & {
-  children: ReactNode;
-};
+  children: ReactNode
+}
 
 export default function IntlProvider({
   children,
@@ -20,22 +18,22 @@ export default function IntlProvider({
   messages,
   now,
   onError,
-  timeZone
+  timeZone,
 }: Props) {
-  const prevContext = useContext(IntlContext);
+  const prevContext = useContext(IntlContext)
 
   // The formatter cache is released when the locale changes. For
   // long-running apps with a persistent `IntlProvider` at the root,
   // this can reduce the memory footprint (e.g. in React Native).
   const cache = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    locale;
-    return prevContext?.cache || createCache();
-  }, [locale, prevContext?.cache]);
+    locale
+    return prevContext?.cache || createCache()
+  }, [locale, prevContext?.cache])
   const formatters: Formatters = useMemo(
     () => prevContext?.formatters || createIntlFormatters(cache),
-    [cache, prevContext?.formatters]
-  );
+    [cache, prevContext?.formatters],
+  )
 
   // Memoizing this value helps to avoid triggering a re-render of all
   // context consumers in case the configuration didn't change. However,
@@ -55,10 +53,10 @@ export default function IntlProvider({
         messages: messages === undefined ? prevContext?.messages : messages,
         now: now || prevContext?.now,
         onError: onError || prevContext?.onError,
-        timeZone: timeZone || prevContext?.timeZone
+        timeZone: timeZone || prevContext?.timeZone,
       }),
       formatters,
-      cache
+      cache,
     }),
     [
       cache,
@@ -70,9 +68,9 @@ export default function IntlProvider({
       now,
       onError,
       prevContext,
-      timeZone
-    ]
-  );
+      timeZone,
+    ],
+  )
 
-  return <IntlContext.Provider value={value}>{children}</IntlContext.Provider>;
+  return <IntlContext.Provider value={value}>{children}</IntlContext.Provider>
 }
