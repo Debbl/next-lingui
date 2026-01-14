@@ -1,12 +1,3 @@
-import {
-  getLocalePrefix,
-  getLocalizedTemplate,
-  getSortedPathnames,
-  isLocalizableHref,
-  matchesPathname,
-  normalizeTrailingSlash,
-  prefixPathname,
-} from '../../shared/utils.js'
 import type { ParsedUrlQueryInput } from 'node:querystring'
 import type { UrlObject } from 'node:url'
 import type { Locale } from '@lingui/core'
@@ -335,4 +326,83 @@ export function validateReceivedConfig<
   ) {
     throw new Error("`localePrefix: 'as-needed' requires a `defaultLocale`.")
   }
+}
+
+// Helper functions
+export function getLocalePrefix(locale: string, localePrefix: any): string {
+  if (
+    localePrefix &&
+    typeof localePrefix === 'object' &&
+    localePrefix.prefixes
+  ) {
+    return localePrefix.prefixes[locale] || `/${locale}`
+  }
+  return `/${locale}`
+}
+
+export function getLocalizedTemplate(
+  pathnameConfig:
+    | string
+    | Record<string, string>
+    | Partial<Record<string, string>>,
+  locale: string,
+  fallback: string | number,
+): string {
+  if (typeof pathnameConfig === 'string') {
+    return pathnameConfig
+  }
+  return (pathnameConfig as Record<string, string>)[locale] || String(fallback)
+}
+
+export function getSortedPathnames(pathnames: string[]): string[] {
+  return pathnames.sort((a, b) => {
+    const aSegments = a.split('/').length
+    const bSegments = b.split('/').length
+    return bSegments - aSegments || b.length - a.length
+  })
+}
+
+export function isLocalizableHref(href: unknown): boolean {
+  if (typeof href === 'string') {
+    return href.startsWith('/') && !href.startsWith('//')
+  }
+  if (typeof href === 'object' && href !== null && 'pathname' in href) {
+    return isLocalizableHref(href.pathname)
+  }
+  return false
+}
+
+export function matchesPathname(template: string, pathname: string): boolean {
+  const templateRegex = template
+    .replace(/\[{1,2}\.\.\..+?\]{1,2}/g, '.*')
+    .replace(/\[.+?\]/g, '[^/]+')
+  return new RegExp(`^${templateRegex}$`).test(pathname)
+}
+
+export function normalizeTrailingSlash(pathname: string): string {
+  return pathname.endsWith('/') && pathname !== '/'
+    ? pathname.slice(0, -1)
+    : pathname
+}
+
+export function prefixPathname(prefix: string, pathname: string): string {
+  return normalizeTrailingSlash(prefix + pathname)
+}
+
+export function hasPathnamePrefixed(prefix: string, pathname: string): boolean {
+  return pathname.startsWith(`${prefix}/`) || pathname === prefix
+}
+
+export function unprefixPathname(pathname: string, prefix: string): string {
+  return pathname === prefix
+    ? '/'
+    : pathname.replace(new RegExp(`^${prefix}`), '') || '/'
+}
+
+export function getLocaleAsPrefix(locale: string): string {
+  return `/${locale}`
+}
+
+export function isPromise<T>(value: T | Promise<T>): value is Promise<T> {
+  return value instanceof Promise
 }

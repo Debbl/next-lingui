@@ -2,10 +2,9 @@ import {
   permanentRedirect as nextPermanentRedirect,
   redirect as nextRedirect,
 } from 'next/navigation.js'
-import { forwardRef } from 'react'
-import use from '~/shared/use'
+import { forwardRef, use } from 'react'
 import { receiveRoutingConfig } from '../../routing/config.js'
-import { isLocalizableHref, isPromise } from '../../shared/utils.jsx'
+import { isLocalizableHref, isPromise } from '../shared/utils.jsx'
 import BaseLink from './base-link.jsx'
 import {
   applyPathnamePrefix,
@@ -26,7 +25,7 @@ import type {
   Locales,
   Pathnames,
 } from '../../routing/types.js'
-import type { ParametersExceptFirst, Prettify } from '../../shared/types.js'
+import type { ParametersExceptFirst, Prettify } from './types.js'
 import type {
   HrefOrHrefWithParams,
   HrefOrUrlObjectWithParams,
@@ -96,7 +95,6 @@ export default function createSharedNavigationFns<
       pathname = href
     }
 
-    // @ts-expect-error -- This is ok
     const isLocalizable = isLocalizableHref(href)
 
     const localePromiseOrValue = getLocale()

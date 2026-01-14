@@ -84,7 +84,9 @@ function formatElements(
 
         // format children for pair tags
         // unpaired tags might have children if it's a component passed as a variable
-        children ? formatElements(children, elements) : element.props.children,
+        children
+          ? formatElements(children, elements)
+          : (element.props as any).children,
       ),
     )
 
@@ -115,8 +117,12 @@ function getElements(
 
   const [paired, children, unpaired, after] = parts.slice(0, 4)
 
-  const triple = [paired || unpaired, children || '', after] as const
-  return [triple].concat(getElements(parts.slice(4, parts.length)))
+  const triple: readonly [string | undefined, string, string | undefined] = [
+    paired || unpaired,
+    children || '',
+    after,
+  ] as const
+  return [triple, ...getElements(parts.slice(4, parts.length))]
 }
 
 export { formatElements }

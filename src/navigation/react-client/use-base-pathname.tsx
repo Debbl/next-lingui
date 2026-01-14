@@ -6,7 +6,7 @@ import {
   getLocalePrefix,
   hasPathnamePrefixed,
   unprefixPathname,
-} from '../../shared/utils.js'
+} from '../shared/utils.js'
 import type {
   LocalePrefixConfigVerbose,
   LocalePrefixMode,
