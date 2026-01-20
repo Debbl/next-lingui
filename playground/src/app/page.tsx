@@ -1,5 +1,6 @@
 import { ThemeSwitcher } from '~/components/theme-switcher'
 import Counter from './components/counter'
+import * as motion from 'motion/react-m'
 
 export default function Home() {
   return (

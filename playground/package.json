@@ -1,5 +1,5 @@
 {
-  "name": "starter-next-app",
+  "name": "playground",
   "type": "module",
   "version": "0.0.0",
   "private": true,
@@ -13,8 +13,8 @@
     "url": "https://github.com/Debbl/starter-next-app.git"
   },
   "scripts": {
-    "dev": "next dev --webpack",
-    "build": "next build --webpack",
+    "dev": "next dev",
+    "build": "next build",
     "build:analyze": "ANALYZE=true next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
@@ -43,6 +43,7 @@
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "babel-plugin-react-compiler": "^1.0.0",
+    "baseline-browser-mapping": "^2.9.15",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
     "postcss": "^8.5.6",
