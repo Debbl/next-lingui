@@ -1,6 +1,8 @@
-import { ThemeSwitcher } from '~/components/theme-switcher'
-import Counter from './components/counter'
+'use client'
+import { Trans } from '@lingui/react/macro'
 import * as motion from 'motion/react-m'
+import { ThemeSwitcher } from '~/components/theme-switcher'
+import Counter from '../components/counter'
 
 export default function Home() {
   return (
@@ -12,6 +14,7 @@ export default function Home() {
       <Counter />
 
       <ThemeSwitcher />
+      <Trans>hi</Trans>
     </main>
   )
 }

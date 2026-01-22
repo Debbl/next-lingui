@@ -12,3 +12,7 @@ msgstr ""
 "Last-Translator: \n"
 "Language-Team: \n"
 "Plural-Forms: \n"
+
+#: src/app/page.tsx:16
+msgid "hi"
+msgstr "hi"

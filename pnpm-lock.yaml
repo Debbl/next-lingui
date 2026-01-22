@@ -87,6 +87,9 @@ importers:
       '@debbl/ahooks':
         specifier: ^0.4.1
         version: 0.4.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@lingui/react':
+        specifier: ^5.5.2
+        version: 5.5.2(@lingui/babel-plugin-lingui-macro@5.5.2(babel-plugin-macros@3.1.0)(typescript@5.9.3))(babel-plugin-macros@3.1.0)(react@19.2.3)
       '@serwist/next':
         specifier: ^9.2.1
         version: 9.2.1(next@16.0.1(@babel/core@7.28.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@5.9.3)
@@ -102,6 +105,9 @@ importers:
       next:
         specifier: ^16.0.1
         version: 16.0.1(@babel/core@7.28.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      next-lingui:
+        specifier: workspace:*
+        version: link:..
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -124,6 +130,9 @@ importers:
       '@debbl/eslint-config':
         specifier: ^3.13.0
         version: 3.13.0(@types/eslint@8.56.10)(@typescript-eslint/utils@8.46.3(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(eslint-config-prettier@10.1.8(eslint@9.39.2(jiti@2.6.1)))(eslint-import-resolver-node@0.3.9)(eslint@9.39.2(jiti@2.6.1))(tailwindcss@4.1.16)(typescript@5.9.3)(vitest@3.0.8(@types/debug@4.1.12)(@types/node@24.10.0)(jiti@2.6.1)(jsdom@27.4.0)(lightningcss@1.30.2)(yaml@2.8.2))
+      '@lingui/swc-plugin':
+        specifier: 5.8.0
+        version: 5.8.0(@lingui/core@5.5.2(@lingui/babel-plugin-lingui-macro@5.5.2(babel-plugin-macros@3.1.0)(typescript@5.9.3))(babel-plugin-macros@3.1.0))(next@16.0.1(@babel/core@7.28.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))
       '@next/bundle-analyzer':
         specifier: ^16.0.0
         version: 16.0.1
@@ -880,6 +889,18 @@ packages:
 
   '@lingui/swc-plugin@5.10.1':
     resolution: {integrity: sha512-3356mrBKeh+0H1JZzkkA3x0mMUHvkcPZB7QWIKcEZ7zYy+szOhth+4wbcufmOxNxmRdZnlGdVtg7BKZ/sb0ODw==}
+    peerDependencies:
+      '@lingui/core': '5'
+      '@swc/core': '*'
+      next: '*'
+    peerDependenciesMeta:
+      '@swc/core':
+        optional: true
+      next:
+        optional: true
+
+  '@lingui/swc-plugin@5.8.0':
+    resolution: {integrity: sha512-hznAiPKWswHZxCkrTh3oc4zWJuaz7jTbSD1Msj95Zajze0mlDGVQmBmQvln8IlmvI2aVmqtfLUSa/I2F+3B3Jw==}
     peerDependencies:
       '@lingui/core': '5'
       '@swc/core': '*'
@@ -5753,6 +5774,12 @@ snapshots:
       babel-plugin-macros: 3.1.0
 
   '@lingui/swc-plugin@5.10.1(@lingui/core@5.5.2(@lingui/babel-plugin-lingui-macro@5.5.2(babel-plugin-macros@3.1.0)(typescript@5.9.3))(babel-plugin-macros@3.1.0))(next@16.0.1(@babel/core@7.28.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))':
+    dependencies:
+      '@lingui/core': 5.5.2(@lingui/babel-plugin-lingui-macro@5.5.2(babel-plugin-macros@3.1.0)(typescript@5.9.3))(babel-plugin-macros@3.1.0)
+    optionalDependencies:
+      next: 16.0.1(@babel/core@7.28.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+
+  '@lingui/swc-plugin@5.8.0(@lingui/core@5.5.2(@lingui/babel-plugin-lingui-macro@5.5.2(babel-plugin-macros@3.1.0)(typescript@5.9.3))(babel-plugin-macros@3.1.0))(next@16.0.1(@babel/core@7.28.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))':
     dependencies:
       '@lingui/core': 5.5.2(@lingui/babel-plugin-lingui-macro@5.5.2(babel-plugin-macros@3.1.0)(typescript@5.9.3))(babel-plugin-macros@3.1.0)
     optionalDependencies:

@@ -9,6 +9,9 @@ const withBundleAnalyzer = bundleAnalyzer({
 const nextConfig: NextConfig = {
   output: 'export',
   reactCompiler: true,
+  experimental: {
+    swcPlugins: [['@lingui/swc-plugin', {}]],
+  },
 }
 
 export default [withBundleAnalyzer].reduce(

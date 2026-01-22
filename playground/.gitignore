@@ -37,6 +37,7 @@ next-env.d.ts
 
 # locales
 src/locales/**/*.js
+src/locales/**/*.json
 
 # Serwist
 public/sw*
