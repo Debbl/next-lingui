@@ -3,7 +3,6 @@ import {
   redirect as nextRedirect
 } from 'next/navigation.js';
 import {type ComponentProps, forwardRef} from 'react';
-import type {Locale} from 'use-intl';
 import {
   type RoutingConfigLocalizedNavigation,
   type RoutingConfigSharedNavigation,
@@ -15,7 +14,7 @@ import type {
   Locales,
   Pathnames
 } from '../../routing/types.js';
-import type {ParametersExceptFirst, Prettify} from '../../shared/types.js';
+import type {Locale,ParametersExceptFirst,Prettify} from '../../shared/types.js';
 import use from '../../shared/use.js';
 import {isLocalizableHref, isPromise} from '../../shared/utils.js';
 import BaseLink from './BaseLink.js';

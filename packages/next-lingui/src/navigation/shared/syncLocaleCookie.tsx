@@ -1,5 +1,5 @@
-import type {Locale} from 'use-intl';
 import type {InitializedLocaleCookieConfig} from '../../routing/config.js';
+import type {Locale} from '../../shared/types.js';
 import {getBasePath} from './utils.js';
 
 /**

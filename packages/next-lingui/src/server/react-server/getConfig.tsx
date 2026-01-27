@@ -1,11 +1,5 @@
 import {cache} from 'react';
-import {
-  type IntlConfig,
-  type Locale,
-  _createCache,
-  _createIntlFormatters,
-  initializeConfig
-} from 'use-intl/core';
+import type {LinguiConfig, Locale} from '../../shared/types.js';
 import {isPromise} from '../../shared/utils.js';
 import {getRequestLocale} from './RequestLocale.js';
 import createRequestConfig from './createRequestConfig.js';
@@ -70,26 +64,32 @@ See also: https://next-intl.dev/docs/usage/configuration#i18n-request
 }
 const receiveRuntimeConfig = cache(receiveRuntimeConfigImpl);
 
-const getFormatters = cache(_createIntlFormatters);
-const getCache = cache(_createCache);
+function initializeLinguiConfig(config: LinguiConfig): LinguiConfig {
+  return {
+    locale: config.locale,
+    messages: config.messages,
+    now: config.now,
+    timeZone: config.timeZone,
+    formats: config.formats,
+    onError: config.onError || ((error) => {
+      if (process.env.NODE_ENV !== 'production') {
+        console.error(error);
+      }
+    }),
+    getMessageFallback: config.getMessageFallback || (({id}) => id)
+  };
+}
 
-async function getConfigImpl(localeOverride?: Locale): Promise<{
-  locale: IntlConfig['locale'];
-  formats?: NonNullable<IntlConfig['formats']>;
-  timeZone: NonNullable<IntlConfig['timeZone']>;
-  onError: NonNullable<IntlConfig['onError']>;
-  getMessageFallback: NonNullable<IntlConfig['getMessageFallback']>;
-  messages?: NonNullable<IntlConfig['messages']>;
-  now?: NonNullable<IntlConfig['now']>;
-  _formatters: ReturnType<typeof _createIntlFormatters>;
-}> {
+async function getConfigImpl(localeOverride?: Locale): Promise<LinguiConfig> {
   const runtimeConfig = await receiveRuntimeConfig(
     createRequestConfig,
     localeOverride
   );
+  
+  const initializedConfig = initializeLinguiConfig(runtimeConfig);
+  
   return {
-    ...initializeConfig(runtimeConfig),
-    _formatters: getFormatters(getCache()),
+    ...initializedConfig,
     timeZone: runtimeConfig.timeZone || getDefaultTimeZone()
   };
 }

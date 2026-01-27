@@ -1,4 +1,3 @@
-import type {Locale} from 'use-intl';
 import type {
   DomainConfig,
   DomainsConfig,
@@ -7,6 +6,7 @@ import type {
   Locales,
   Pathnames
 } from '../routing/types.js';
+import type {Locale} from '../shared/types.js';
 import {
   getLocalePrefix,
   getLocalizedTemplate,

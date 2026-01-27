@@ -1,4 +1,4 @@
-import type {Locale} from 'use-intl';
+import type {Locale} from '../../shared/types.js';
 import getConfigNow from './getConfigNow.js';
 import getDefaultNow from './getDefaultNow.js';
 

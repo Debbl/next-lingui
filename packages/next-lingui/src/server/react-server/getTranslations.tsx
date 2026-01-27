@@ -1,11 +1,5 @@
 import {cache} from 'react';
-import type {
-  Locale,
-  Messages,
-  NamespaceKeys,
-  NestedKeyOf,
-  createTranslator
-} from 'use-intl/core';
+import type {Locale} from '../../shared/types.js';
 import getConfig from './getConfig.js';
 import getServerTranslator from './getServerTranslator.js';
 
@@ -13,24 +7,21 @@ import getServerTranslator from './getServerTranslator.js';
 // We need to define these with function overloads, otherwise TypeScript
 // messes up the return type.
 
+// Translation function type
+type TranslationFn = (id: string, values?: Record<string, any>) => string;
+
 // Call signature 1: `getTranslations(namespace)`
-function getTranslations<
-  NestedKey extends NamespaceKeys<Messages, NestedKeyOf<Messages>> = never
->(
-  namespace?: NestedKey
-): Promise<ReturnType<typeof createTranslator<Messages, NestedKey>>>;
+function getTranslations(namespace?: string): Promise<TranslationFn>;
 // Call signature 2: `getTranslations({locale, namespace})`
-function getTranslations<
-  NestedKey extends NamespaceKeys<Messages, NestedKeyOf<Messages>> = never
->(opts?: {
+function getTranslations(opts?: {
   locale: Locale;
-  namespace?: NestedKey;
-}): Promise<ReturnType<typeof createTranslator<Messages, NestedKey>>>;
+  namespace?: string;
+}): Promise<TranslationFn>;
 // Implementation
-async function getTranslations<
-  NestedKey extends NamespaceKeys<Messages, NestedKeyOf<Messages>> = never
->(namespaceOrOpts?: NestedKey | {locale: Locale; namespace?: NestedKey}) {
-  let namespace: NestedKey | undefined;
+async function getTranslations(
+  namespaceOrOpts?: string | {locale: Locale; namespace?: string}
+) {
+  let namespace: string | undefined;
   let locale: Locale | undefined;
 
   if (typeof namespaceOrOpts === 'string') {

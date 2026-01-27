@@ -1,6 +1,5 @@
 import type {ParsedUrlQueryInput} from 'node:querystring';
 import type {UrlObject} from 'url';
-import type {Locale} from 'use-intl';
 import type {ResolvedRoutingConfig} from '../../routing/config.js';
 import type {
   DomainsConfig,
@@ -8,6 +7,7 @@ import type {
   Locales,
   Pathnames
 } from '../../routing/types.js';
+import type {Locale} from '../../shared/types.js';
 import {
   getLocalePrefix,
   getLocalizedTemplate,

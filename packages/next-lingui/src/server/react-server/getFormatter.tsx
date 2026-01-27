@@ -1,5 +1,5 @@
 import {cache} from 'react';
-import type {Locale, createFormatter} from 'use-intl/core';
+import type {Locale} from '../../shared/types.js';
 import getConfig from './getConfig.js';
 import getServerFormatter from './getServerFormatter.js';
 
@@ -17,6 +17,6 @@ const getFormatterCached = cache(getFormatterCachedImpl);
  */
 export default async function getFormatter(opts?: {
   locale?: Locale;
-}): Promise<ReturnType<typeof createFormatter>> {
+}): Promise<ReturnType<typeof getServerFormatter>> {
   return getFormatterCached(opts?.locale);
 }

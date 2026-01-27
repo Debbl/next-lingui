@@ -1,11 +1,11 @@
 import {usePathname as useNextPathname} from 'next/navigation.js';
 import {useMemo} from 'react';
-import {useLocale} from 'use-intl';
 import type {
   LocalePrefixConfigVerbose,
   LocalePrefixMode,
   Locales
 } from '../../routing/types.js';
+import {useLingui} from '../../shared/LinguiProvider.js';
 import {
   getLocaleAsPrefix,
   getLocalePrefix,
@@ -33,7 +33,8 @@ export default function useBasePathname<
     typeof useNextPathname
   > | null;
 
-  const locale = useLocale();
+  const {i18n} = useLingui();
+  const locale = i18n.locale;
 
   return useMemo(() => {
     if (!pathname) return pathname;

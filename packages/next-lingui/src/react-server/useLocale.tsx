@@ -1,7 +1,7 @@
-import type {useLocale as useLocaleType} from 'use-intl';
+import type {Locale} from '../shared/types.js';
 import useConfig from './useConfig.js';
 
-export default function useLocale(): ReturnType<typeof useLocaleType> {
+export default function useLocale(): Locale {
   const config = useConfig('useLocale');
   return config.locale;
 }

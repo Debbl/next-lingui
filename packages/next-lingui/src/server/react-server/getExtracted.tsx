@@ -1,5 +1,5 @@
 import {cache} from 'react';
-import type {Locale} from 'use-intl/core';
+import type {Locale} from '../../shared/types.js';
 import getConfig from './getConfig.js';
 import getServerExtractor from './getServerExtractor.js';
 

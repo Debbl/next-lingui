@@ -1,7 +1,7 @@
 import {headers} from 'next/headers.js';
 import {cache} from 'react';
-import type {Locale} from 'use-intl';
 import {HEADER_LOCALE_NAME} from '../../shared/constants.js';
+import type {Locale} from '../../shared/types.js';
 import {isPromise} from '../../shared/utils.js';
 import {getCachedRequestLocale} from './RequestLocaleCache.js';
 

@@ -9,8 +9,9 @@ import {
   type Ref,
   forwardRef
 } from 'react';
-import {type Locale, useLocale} from 'use-intl';
 import type {InitializedLocaleCookieConfig} from '../../routing/config.js';
+import {useLingui} from '../../shared/LinguiProvider.js';
+import type {Locale} from '../../shared/types.js';
 import syncLocaleCookie from './syncLocaleCookie.js';
 
 type NextLinkProps = Omit<ComponentProps<'a'>, keyof LinkProps> &
@@ -25,7 +26,8 @@ function BaseLink(
   {href, locale, localeCookie, onClick, prefetch, ...rest}: Props,
   ref: Ref<HTMLAnchorElement>
 ) {
-  const curLocale = useLocale();
+  const {i18n} = useLingui();
+  const curLocale = i18n.locale;
   const isChangingLocale = locale != null && locale !== curLocale;
 
   // The types aren't entirely correct here. Outside of Next.js

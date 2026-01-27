@@ -1,8 +1,8 @@
+import { NextLinguiClientProvider } from 'next-lingui'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { allMessages } from '~/lib/i18n'
 import { cn } from '~/lib/utils'
 import { Providers } from '~/providers'
-import { LinguiClientProvider } from '~/providers/lingui-client-provider'
 import linguiConfig from '../../../lingui.config'
 import type { Metadata } from 'next'
 
@@ -64,9 +64,12 @@ export default async function Layout({
       suppressHydrationWarning
     >
       <body>
-        <LinguiClientProvider locale={locale} messages={allMessages[locale]}>
+        <NextLinguiClientProvider
+          locale={locale}
+          messages={allMessages[locale]}
+        >
           <Providers>{children}</Providers>
-        </LinguiClientProvider>
+        </NextLinguiClientProvider>
       </body>
     </html>
   )

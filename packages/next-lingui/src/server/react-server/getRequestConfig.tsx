@@ -1,10 +1,10 @@
-import type {IntlConfig, Locale} from 'use-intl/core';
+import type {LinguiConfig, Locale} from '../../shared/types.js';
 
-export type RequestConfig = Omit<IntlConfig, 'locale'> & {
+export type RequestConfig = Omit<LinguiConfig, 'locale'> & {
   /**
    * @see https://next-intl.dev/docs/usage/configuration#i18n-request
    **/
-  locale: IntlConfig['locale'];
+  locale: LinguiConfig['locale'];
 };
 
 export type GetRequestConfigParams = {

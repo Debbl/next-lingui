@@ -1,5 +1,5 @@
 import {cache} from 'react';
-import type {Locale} from 'use-intl';
+import type {Locale} from '../../shared/types.js';
 
 // See https://github.com/vercel/next.js/discussions/58862
 function getCacheImpl() {

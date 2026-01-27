@@ -1,7 +1,6 @@
 import {match} from '@formatjs/intl-localematcher';
 import Negotiator from 'negotiator';
 import type {RequestCookies} from 'next/dist/server/web/spec-extension/cookies.js';
-import type {Locale} from 'use-intl';
 import type {ResolvedRoutingConfig} from '../routing/config.js';
 import type {
   DomainConfig,
@@ -10,6 +9,7 @@ import type {
   Locales,
   Pathnames
 } from '../routing/types.js';
+import type {Locale} from '../shared/types.js';
 import {getHost, getPathnameMatch, isLocaleSupportedOnDomain} from './utils.js';
 
 function findDomainFromHost<AppLocales extends Locales>(

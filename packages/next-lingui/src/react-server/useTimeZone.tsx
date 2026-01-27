@@ -1,7 +1,6 @@
-import type {useTimeZone as useTimeZoneType} from 'use-intl';
 import useConfig from './useConfig.js';
 
-export default function useTimeZone(): ReturnType<typeof useTimeZoneType> {
+export default function useTimeZone(): string | undefined {
   const config = useConfig('useTimeZone');
   return config.timeZone;
 }

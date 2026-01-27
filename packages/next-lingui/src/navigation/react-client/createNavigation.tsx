@@ -3,7 +3,6 @@ import {
   useRouter as useNextRouter
 } from 'next/navigation.js';
 import {useMemo} from 'react';
-import {type Locale, useLocale} from 'use-intl';
 import type {
   RoutingConfigLocalizedNavigation,
   RoutingConfigSharedNavigation
@@ -14,6 +13,8 @@ import type {
   Locales,
   Pathnames
 } from '../../routing/types.js';
+import {useLingui} from '../../shared/LinguiProvider.js';
+import type {Locale} from '../../shared/types.js';
 import createSharedNavigationFns from '../shared/createSharedNavigationFns.js';
 import syncLocaleCookie from '../shared/syncLocaleCookie.js';
 import {getRoute} from '../shared/utils.js';
@@ -40,6 +41,12 @@ export default function createNavigation<
         AppDomains
       >
 ) {
+  // Create a useLocale hook that uses Lingui
+  function useLocale() {
+    const {i18n} = useLingui();
+    return i18n.locale;
+  }
+
   const {Link, config, getPathname, ...redirects} = createSharedNavigationFns(
     useLocale,
     routing
