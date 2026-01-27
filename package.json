@@ -1,7 +1,8 @@
 {
-  "name": "next-lingui",
+  "name": "next-lingui-monorepo",
   "type": "module",
   "version": "0.0.0",
+  "private": true,
   "packageManager": "pnpm@10.28.0",
   "description": "Next.js + Lingui",
   "author": "Brendan Dash <me@aiwan.run> (https://aiwan.run)",
