@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.0.0",
   "private": true,
-  "packageManager": "pnpm@10.28.0",
+  "packageManager": "pnpm@10.30.2",
   "description": "Next.js + Lingui",
   "author": "Brendan Dash <me@aiwan.run> (https://aiwan.run)",
   "license": "MIT",
@@ -14,89 +14,22 @@
   },
   "bugs": "https://github.com/Debbl/next-lingui/issues",
   "keywords": [],
-  "exports": {
-    ".": {
-      "types": "./dist/index.react-client.d.ts",
-      "react-server": "./dist/index.react-server.js",
-      "default": "./dist/index.react-client.js"
-    },
-    "./server": {
-      "types": "./dist/server/react-server.d.ts",
-      "react-server": "./dist/server/react-server.js",
-      "default": "./dist/server/react-client.js"
-    },
-    "./react/macro": {
-      "types": "./dist/react/macro.d.ts",
-      "default": "./dist/react/macro.js"
-    },
-    "./routing": {
-      "types": "./dist/routing.d.ts",
-      "default": "./dist/routing.js"
-    },
-    "./middleware": {
-      "types": "./dist/middleware.d.ts",
-      "default": "./dist/middleware.js"
-    },
-    "./plugin": {
-      "types": "./dist/plugin.d.ts",
-      "default": "./dist/plugin.js"
-    },
-    "./package.json": "./package.json"
-  },
-  "main": "./dist/index.react-client.js",
-  "module": "./dist/index.react-client.js",
-  "types": "./dist/index.react-client.d.ts",
-  "files": [
-    "dist",
-    "src"
-  ],
   "scripts": {
-    "dev": "pnpm build && node ./dist/index.cjs",
-    "build": "tsdown",
-    "test": "TZ=Europe/Berlin vitest",
-    "release": "pnpm build && bumpp && pnpm publish",
+    "dev": "pnpm dev --filter=packages/next-lingui",
+    "build": "pnpm --filter next-lingui build",
+    "test": "vitest",
+    "release": "pnpm build && bumpp -r",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepare": "simple-git-hooks"
   },
-  "peerDependencies": {
-    "@lingui/swc-plugin": "^5.10.1",
-    "babel-plugin-macros": "2 || 3",
-    "next": ">=15",
-    "react": ">=18"
-  },
-  "peerDependenciesMeta": {
-    "@lingui/babel-plugin-lingui-macro": {
-      "optional": true
-    },
-    "babel-plugin-macros": {
-      "optional": true
-    }
-  },
-  "dependencies": {
-    "@lingui/babel-plugin-lingui-macro": "^5.5.2",
-    "@lingui/cli": "^5.5.2",
-    "@lingui/conf": "^5.7.0",
-    "@lingui/core": "^5.5.2",
-    "@lingui/react": "^5.5.2",
-    "date-fns": "^4.1.0"
-  },
   "devDependencies": {
-    "@debbl/eslint-config": "^3.13.0",
-    "@lingui/swc-plugin": "^5.10.1",
-    "@testing-library/react": "^16.3.1",
-    "@types/node": "^25.0.8",
-    "@types/react": "^19.2.8",
-    "@types/react-dom": "^19.2.3",
-    "bumpp": "^10.4.0",
-    "eslint": "^9.39.2",
-    "jsdom": "^27.4.0",
+    "@debbl/eslint-config": "^3.15.2",
+    "bumpp": "^10.4.1",
+    "eslint": "^9.39.3",
     "lint-staged": "^16.2.7",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
     "simple-git-hooks": "^2.13.1",
-    "tsdown": "^0.19.0",
     "typescript": "^5.9.3",
     "vitest": "3.0.8"
   },
