@@ -7,7 +7,7 @@ vi.mock('./getDefaultNow.tsx', () => ({
   default: vi.fn(() => new Date())
 }));
 
-vi.mock('next-intl/config', () => ({
+vi.mock('next-lingui/config', () => ({
   default: async () =>
     (
       (await vi.importActual('../../../src/server/react-server')) as any

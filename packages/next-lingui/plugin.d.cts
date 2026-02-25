@@ -1,3 +1,3 @@
-import createNextIntlPlugin from './dist/types/plugin.ts';
+import createNextLinguiPlugin from './dist/types/plugin.ts';
 
-export = createNextIntlPlugin;
+export = createNextLinguiPlugin;

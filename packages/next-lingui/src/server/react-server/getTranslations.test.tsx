@@ -5,7 +5,7 @@ import getTranslations from './getTranslations.js';
 vi.mock('react');
 vi.mock('use-intl/core');
 
-vi.mock('next-intl/config', () => ({
+vi.mock('next-lingui/config', () => ({
   default: async () =>
     (
       (await vi.importActual('../../../src/server/react-server')) as any

@@ -1,13 +1,13 @@
 import { NextLinguiClientProvider } from 'next-lingui'
 import { Geist, Geist_Mono } from 'next/font/google'
+import { routing } from '~/i18n/routing'
 import { allMessages } from '~/lib/i18n'
 import { cn } from '~/lib/utils'
 import { Providers } from '~/providers'
-import linguiConfig from '../../../lingui.config'
 import type { Metadata } from 'next'
 
 export async function generateStaticParams() {
-  return linguiConfig.locales.map((locale) => ({ locale }))
+  return routing.locales.map((locale) => ({ locale }))
 }
 
 export const metadata: Metadata = {

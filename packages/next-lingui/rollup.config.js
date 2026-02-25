@@ -29,19 +29,16 @@ export default [
 
       middleware: 'src/middleware.tsx',
       routing: 'src/routing.tsx',
+      conf: 'src/conf.tsx',
       plugin: 'src/plugin.tsx',
       config: 'src/config.tsx',
-      extractor: 'src/extractor.tsx',
-      'extractor/extractionLoader': 'src/plugin/extractor/extractionLoader.tsx',
-      'extractor/catalogLoader': 'src/plugin/catalog/catalogLoader.tsx'
+      extractor: 'src/extractor.tsx'
     },
     external: [
       ...Object.keys(pkg.dependencies),
       ...Object.keys(pkg.peerDependencies),
       'react/jsx-runtime',
-      'next-lingui/config',
-      'use-intl/core',
-      'use-intl/react'
+      'next-lingui/config'
     ],
     output: {
       preserveModules: true

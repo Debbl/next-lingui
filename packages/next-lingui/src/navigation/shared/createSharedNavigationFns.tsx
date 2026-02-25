@@ -70,11 +70,11 @@ export default function createSharedNavigationFns<
       ComponentProps<typeof BaseLink>,
       'href' | 'localePrefix' | 'unprefixed' | 'defaultLocale' | 'localeCookie'
     > & {
-      /** @see https://next-intl.dev/docs/routing/navigation#link */
+      /** @see https://next-lingui.dev/docs/routing/navigation#link */
       href: [AppPathnames] extends [never]
         ? ComponentProps<typeof BaseLink>['href']
         : HrefOrUrlObjectWithParams<Pathname>;
-      /** @see https://next-intl.dev/docs/routing/navigation#link */
+      /** @see https://next-lingui.dev/docs/routing/navigation#link */
       locale?: Locale;
     }
   >;
@@ -127,7 +127,7 @@ export default function createSharedNavigationFns<
   const LinkWithRef = forwardRef(Link);
 
   function getPathname(args: {
-    /** @see https://next-intl.dev/docs/routing/navigation#getpathname */
+    /** @see https://next-lingui.dev/docs/routing/navigation#getpathname */
     href: [AppPathnames] extends [never]
       ? string | {pathname: string; query?: QueryParams}
       : HrefOrHrefWithParams<keyof AppPathnames>;
@@ -164,7 +164,7 @@ export default function createSharedNavigationFns<
   function getRedirectFn(
     fn: typeof nextRedirect | typeof nextPermanentRedirect
   ) {
-    /** @see https://next-intl.dev/docs/routing/navigation#redirect */
+    /** @see https://next-lingui.dev/docs/routing/navigation#redirect */
     return function redirectFn(
       args: Parameters<typeof getPathname>[0],
       ...rest: ParametersExceptFirst<typeof nextRedirect>

@@ -15,9 +15,19 @@
   "bugs": "https://github.com/Debbl/next-lingui/issues",
   "keywords": [],
   "exports": {
-    "./macro": {
-      "types": "./dist/macro/index.d.ts",
-      "default": "./dist/macro/index.js"
+    ".": {
+      "types": "./dist/index.react-client.d.ts",
+      "react-server": "./dist/index.react-server.js",
+      "default": "./dist/index.react-client.js"
+    },
+    "./server": {
+      "types": "./dist/server/react-server.d.ts",
+      "react-server": "./dist/server/react-server.js",
+      "default": "./dist/server/react-client.js"
+    },
+    "./react/macro": {
+      "types": "./dist/react/macro.d.ts",
+      "default": "./dist/react/macro.js"
     },
     "./routing": {
       "types": "./dist/routing.d.ts",
@@ -27,25 +37,15 @@
       "types": "./dist/middleware.d.ts",
       "default": "./dist/middleware.js"
     },
-    "./navigation": {
-      "types": "./dist/navigation.d.ts",
-      "react-client": {
-        "default": "./dist/navigation.react-client.js"
-      },
-      "react-server": {
-        "default": "./dist/navigation.react-server.js"
-      },
-      "default": "./dist/navigation.js"
-    },
     "./plugin": {
       "types": "./dist/plugin.d.ts",
       "default": "./dist/plugin.js"
     },
     "./package.json": "./package.json"
   },
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.react-client.js",
+  "module": "./dist/index.react-client.js",
+  "types": "./dist/index.react-client.d.ts",
   "files": [
     "dist",
     "src"

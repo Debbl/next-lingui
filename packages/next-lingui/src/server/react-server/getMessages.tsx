@@ -7,7 +7,7 @@ export function getMessagesFromConfig(
 ): Messages {
   if (!config.messages) {
     throw new Error(
-      'No messages found. Have you configured them correctly? See https://next-intl.dev/docs/configuration#messages'
+      'No messages found. Have you configured them correctly? See https://next-lingui.dev/docs/configuration#messages'
     );
   }
   return config.messages;

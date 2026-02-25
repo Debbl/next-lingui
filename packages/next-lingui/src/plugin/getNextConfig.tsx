@@ -1,16 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import type {NextConfig} from 'next';
-import type {
-  TurbopackLoaderOptions,
-  TurbopackRuleConfigCollection,
-  TurbopackRuleConfigItem
-} from 'next/dist/server/config-shared.js';
-import type {Configuration} from 'webpack';
-import {getFormatExtension} from '../extractor/format/index.js';
-import SourceFileFilter from '../extractor/source/SourceFileFilter.js';
-import type {CatalogLoaderConfig, ExtractorConfig} from '../extractor/types.js';
-import {hasStableTurboConfig, isNextJs16OrHigher} from './nextFlags.js';
+import {hasStableTurboConfig} from './nextFlags.js';
 import type {PluginConfig} from './types.js';
 import {throwError} from './utils.js';
 
@@ -23,45 +14,85 @@ function withExtensions(localPath: string) {
   ];
 }
 
-function resolveI18nPath(providedPath?: string, cwd?: string) {
-  function resolvePath(pathname: string) {
-    const parts = [];
-    if (cwd) parts.push(cwd);
-    parts.push(pathname);
-    return path.resolve(...parts);
-  }
+function resolvePath(pathname: string, cwd?: string) {
+  const parts = [];
+  if (cwd) parts.push(cwd);
+  parts.push(pathname);
+  return path.resolve(...parts);
+}
 
-  function pathExists(pathname: string) {
-    return fs.existsSync(resolvePath(pathname));
-  }
+function pathExists(pathname: string, cwd?: string) {
+  return fs.existsSync(resolvePath(pathname, cwd));
+}
 
+function resolveRequestConfigPath(providedPath?: string, cwd?: string) {
   if (providedPath) {
-    if (!pathExists(providedPath)) {
+    if (!pathExists(providedPath, cwd)) {
       throwError(
-        `Could not find i18n config at ${providedPath}, please provide a valid path.`
+        `Could not find request config at ${providedPath}, please provide a valid path.`
       );
     }
     return providedPath;
-  } else {
-    for (const candidate of [
-      ...withExtensions('./i18n/request'),
-      ...withExtensions('./src/i18n/request')
-    ]) {
-      if (pathExists(candidate)) {
-        return candidate;
-      }
-    }
-
-    throwError(
-      `Could not locate request configuration module.\n\nThis path is supported by default: ./(src/)i18n/request.{js,jsx,ts,tsx}\n\nAlternatively, you can specify a custom location in your Next.js config:\n\nconst withNextIntl = createNextIntlPlugin(
-
-Alternatively, you can specify a custom location in your Next.js config:
-
-const withNextIntl = createNextIntlPlugin(
-  './path/to/i18n/request.tsx'
-);`
-    );
   }
+
+  for (const candidate of [
+    ...withExtensions('./i18n/request'),
+    ...withExtensions('./src/i18n/request')
+  ]) {
+    if (pathExists(candidate, cwd)) {
+      return candidate;
+    }
+  }
+
+  throwError(
+    `Could not locate request configuration module.\n\nSupported defaults:\n- ./(src/)i18n/request.{js,jsx,ts,tsx}\n\nOr specify it explicitly in your Next.js config:\n\nconst withNextLingui = createNextLinguiPlugin('./path/to/i18n/request.ts');`
+  );
+}
+
+function resolveLinguiConfigPath(providedPath?: string, cwd?: string) {
+  const candidates = [
+    './lingui.config.ts',
+    './lingui.config.js',
+    './lingui.config.mjs',
+    './lingui.config.cjs',
+    './src/lingui.config.ts',
+    './src/lingui.config.js',
+    './src/lingui.config.mjs',
+    './src/lingui.config.cjs'
+  ];
+
+  if (providedPath) {
+    if (!pathExists(providedPath, cwd)) {
+      throwError(
+        `Could not find Lingui config at ${providedPath}, please provide a valid path.`
+      );
+    }
+    return providedPath;
+  }
+
+  for (const candidate of candidates) {
+    if (pathExists(candidate, cwd)) {
+      return candidate;
+    }
+  }
+
+  return undefined;
+}
+
+function withLinguiSwcPlugin(
+  swcPlugins: Array<[string, Record<string, unknown>]> | undefined,
+  swcPluginOptions?: Record<string, unknown>
+) {
+  const normalized = [...(swcPlugins ?? [])];
+  const hasLinguiPlugin = normalized.some(
+    (entry) => Array.isArray(entry) && entry[0] === '@lingui/swc-plugin'
+  );
+
+  if (!hasLinguiPlugin) {
+    normalized.unshift(['@lingui/swc-plugin', swcPluginOptions ?? {}]);
+  }
+
+  return normalized;
 }
 
 export default function getNextConfig(
@@ -69,59 +100,9 @@ export default function getNextConfig(
   nextConfig?: NextConfig
 ) {
   const useTurbo = process.env.TURBOPACK != null;
-  const nextIntlConfig: Partial<NextConfig> = {};
+  const nextLinguiConfig: Partial<NextConfig> = {};
 
-  function getExtractMessagesLoaderConfig() {
-    const experimental = pluginConfig.experimental!;
-    if (!experimental.srcPath || !pluginConfig.experimental?.messages) {
-      throwError(
-        '`srcPath` and `messages` are required when using `extractor`.'
-      );
-    }
-    return {
-      loader: 'next-intl/extractor/extractionLoader',
-      options: {
-        srcPath: experimental.srcPath,
-        sourceLocale: experimental.extract!.sourceLocale,
-        messages: pluginConfig.experimental.messages
-      } satisfies ExtractorConfig as TurbopackLoaderOptions
-    };
-  }
-
-  function getCatalogLoaderConfig() {
-    return {
-      loader: 'next-intl/extractor/catalogLoader',
-      options: {
-        messages: pluginConfig.experimental!.messages!
-      } satisfies CatalogLoaderConfig as TurbopackLoaderOptions
-    };
-  }
-
-  function getTurboRules() {
-    return (
-      nextConfig?.turbopack?.rules ||
-      // @ts-expect-error -- For Next.js <16
-      nextConfig?.experimental?.turbo?.rules ||
-      {}
-    );
-  }
-
-  function addTurboRule(
-    rules: Record<string, TurbopackRuleConfigCollection>,
-    glob: string,
-    rule: TurbopackRuleConfigItem
-  ) {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (rules[glob]) {
-      if (Array.isArray(rules[glob])) {
-        rules[glob].push(rule);
-      } else {
-        rules[glob] = [rules[glob], rule];
-      }
-    } else {
-      rules[glob] = rule;
-    }
-  }
+  const linguiConfigPath = resolveLinguiConfigPath(pluginConfig.linguiConfigPath);
 
   if (useTurbo) {
     if (
@@ -129,84 +110,34 @@ export default function getNextConfig(
       path.isAbsolute(pluginConfig.requestConfig)
     ) {
       throwError(
-        "Turbopack support for next-intl currently does not support absolute paths, please provide a relative one (e.g. './src/i18n/config.ts').\n\nFound: " +
-          pluginConfig.requestConfig
+        "Turbopack support for next-lingui does not support absolute paths for `requestConfig`. Please provide a relative path like './src/i18n/request.ts'."
       );
     }
 
-    // Assign alias for `next-lingui/config`
     const resolveAlias = {
-      // Turbo aliases don't work with absolute
-      // paths (see error handling above)
-      'next-lingui/config': resolveI18nPath(pluginConfig.requestConfig)
+      // Turbo aliases don't work with absolute paths
+      'next-lingui/config': resolveRequestConfigPath(pluginConfig.requestConfig)
     };
-
-    // Add loaders
-    let rules: Record<string, TurbopackRuleConfigCollection> | undefined;
-
-    // Add loader for extractor
-    if (pluginConfig.experimental?.extract) {
-      if (!isNextJs16OrHigher()) {
-        throwError('Message extraction requires Next.js 16 or higher.');
-      }
-      rules ??= getTurboRules();
-      const srcPaths = (
-        Array.isArray(pluginConfig.experimental.srcPath!)
-          ? pluginConfig.experimental.srcPath!
-          : [pluginConfig.experimental.srcPath!]
-      ).map((srcPath) =>
-        srcPath.endsWith('/') ? srcPath.slice(0, -1) : srcPath
-      );
-      addTurboRule(rules!, `*.{${SourceFileFilter.EXTENSIONS.join(',')}}`, {
-        loaders: [getExtractMessagesLoaderConfig()],
-        condition: {
-          // Note: We don't need `not: 'foreign'`, because this is
-          // implied by the filter based on `srcPath`.
-          path: `{${srcPaths.join(',')}}` + '/**/*',
-          content: /(useExtracted|getExtracted)/
-        }
-      });
-    }
-
-    // Add loader for catalog
-    if (pluginConfig.experimental?.messages) {
-      if (!isNextJs16OrHigher()) {
-        throwError('Message catalog loading requires Next.js 16 or higher.');
-      }
-      rules ??= getTurboRules();
-      const extension = getFormatExtension(
-        pluginConfig.experimental.messages.format
-      );
-      addTurboRule(rules!, `*${extension}`, {
-        loaders: [getCatalogLoaderConfig()],
-        condition: {
-          path: `${pluginConfig.experimental.messages.path}/**/*`
-        },
-        as: '*.js'
-      });
-    }
 
     if (
       hasStableTurboConfig() &&
       // @ts-expect-error -- For Next.js <16
       !nextConfig?.experimental?.turbo
     ) {
-      nextIntlConfig.turbopack = {
+      nextLinguiConfig.turbopack = {
         ...nextConfig?.turbopack,
-        ...(rules && {rules}),
         resolveAlias: {
           ...nextConfig?.turbopack?.resolveAlias,
           ...resolveAlias
         }
       };
     } else {
-      nextIntlConfig.experimental = {
+      nextLinguiConfig.experimental = {
         ...nextConfig?.experimental,
         // @ts-expect-error -- For Next.js <16
         turbo: {
           // @ts-expect-error -- For Next.js <16
           ...nextConfig?.experimental?.turbo,
-          ...(rules && {rules}),
           resolveAlias: {
             // @ts-expect-error -- For Next.js <16
             ...nextConfig?.experimental?.turbo?.resolveAlias,
@@ -216,49 +147,16 @@ export default function getNextConfig(
       };
     }
   } else {
-    nextIntlConfig.webpack = function webpack(config: Configuration, context) {
+    nextLinguiConfig.webpack = function webpack(config, context) {
       if (!config.resolve) config.resolve = {};
       if (!config.resolve.alias) config.resolve.alias = {};
 
-      // Assign alias for `next-lingui/config`
-      // (Webpack requires absolute paths)
+      // Assign alias for `next-lingui/config` (Webpack requires absolute paths)
       (config.resolve.alias as Record<string, string>)['next-lingui/config'] =
         path.resolve(
           config.context!,
-          resolveI18nPath(pluginConfig.requestConfig, config.context)
+          resolveRequestConfigPath(pluginConfig.requestConfig, config.context)
         );
-
-      // Add loader for extractor
-      if (pluginConfig.experimental?.extract) {
-        if (!config.module) config.module = {};
-        if (!config.module.rules) config.module.rules = [];
-        const srcPath = pluginConfig.experimental.srcPath;
-        config.module.rules.push({
-          test: new RegExp(`\\.(${SourceFileFilter.EXTENSIONS.join('|')})$`),
-          include: Array.isArray(srcPath)
-            ? srcPath.map((cur) => path.resolve(config.context!, cur))
-            : path.resolve(config.context!, srcPath || ''),
-          use: [getExtractMessagesLoaderConfig()]
-        });
-      }
-
-      // Add loader for catalog
-      if (pluginConfig.experimental?.messages) {
-        if (!config.module) config.module = {};
-        if (!config.module.rules) config.module.rules = [];
-        const extension = getFormatExtension(
-          pluginConfig.experimental.messages.format
-        );
-        config.module.rules.push({
-          test: new RegExp(`${extension.replace(/\./g, '\\.')}$`),
-          include: path.resolve(
-            config.context!,
-            pluginConfig.experimental.messages.path
-          ),
-          use: [getCatalogLoaderConfig()],
-          type: 'javascript/auto'
-        });
-      }
 
       if (typeof nextConfig?.webpack === 'function') {
         return nextConfig.webpack(config, context);
@@ -268,13 +166,36 @@ export default function getNextConfig(
     };
   }
 
-  // Forward config
-  if (nextConfig?.trailingSlash) {
-    nextIntlConfig.env = {
-      ...nextConfig.env,
-      _next_intl_trailing_slash: 'true'
-    };
-  }
+  const swcPlugins = withLinguiSwcPlugin(
+    (nextConfig?.experimental?.swcPlugins as
+      | Array<[string, Record<string, unknown>]>
+      | undefined) ?? undefined,
+    pluginConfig.swcPluginOptions
+  );
 
-  return Object.assign({}, nextConfig, nextIntlConfig);
+  nextLinguiConfig.experimental = {
+    ...nextConfig?.experimental,
+    ...nextLinguiConfig.experimental,
+    swcPlugins
+  };
+
+  nextLinguiConfig.env = {
+    ...nextConfig?.env,
+    ...nextLinguiConfig.env,
+    ...(linguiConfigPath
+      ? {
+          _next_lingui_config_path: path.resolve(
+            process.cwd(),
+            linguiConfigPath
+          )
+        }
+      : undefined),
+    ...(nextConfig?.trailingSlash
+      ? {
+          _next_lingui_trailing_slash: 'true'
+        }
+      : undefined)
+  };
+
+  return Object.assign({}, nextConfig, nextLinguiConfig);
 }

@@ -1,4 +1,4 @@
-import { defineConfig } from '@lingui/conf'
+import { defineConfig } from 'next-lingui/conf'
 
 export default defineConfig({
   locales: ['en', 'zh'],

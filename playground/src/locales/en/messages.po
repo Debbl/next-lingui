@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2026-01-14 17:36+0800\n"
+"POT-Creation-Date: 2026-02-25 16:44+0800\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -13,6 +13,10 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/app/page.tsx:16
+#: src/app/[locale]/page.tsx:13
+msgid "hello"
+msgstr "hello"
+
+#: src/app/[locale]/page.tsx:12
 msgid "hi"
 msgstr "hi"

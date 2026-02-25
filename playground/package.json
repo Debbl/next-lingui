@@ -15,8 +15,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "extract": "lingui extract",
-    "compile": "lingui compile",
+    "extract": "next-lingui extract",
+    "compile": "next-lingui compile",
     "build:analyze": "ANALYZE=true next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",

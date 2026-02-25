@@ -1,7 +1,6 @@
 /**
  * This is the main entry file when 'react-server' environments
- * (i.e. RSC) import from 'next-intl'. Currently we export everything
- * from Lingui core with compatibility wrappers.
+ * (i.e. RSC) import from 'next-lingui'.
  *
  * Make sure this mirrors the API from '../react-client'.
  */
@@ -14,7 +13,6 @@ export {default as useNow} from './useNow.js';
 export {default as useTimeZone} from './useTimeZone.js';
 export {default as useMessages} from './useMessages.js';
 export {default as NextIntlClientProvider} from './NextIntlClientProviderServer.js';
-export {default as useExtracted} from './useExtracted.js';
 
 // Re-export types
 export type {Locale, Messages, LinguiConfig} from '../shared/types.js';

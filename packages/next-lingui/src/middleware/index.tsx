@@ -1,5 +1,5 @@
 /**
- * The middleware, available as `next-intl/middleware`.
+ * The middleware, available as `next-lingui/middleware`.
  */
 
 export {default} from './middleware.js';

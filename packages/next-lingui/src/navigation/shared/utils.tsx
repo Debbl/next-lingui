@@ -190,7 +190,7 @@ function encodePathname(pathname: string) {
   // (https://developers.google.com/search/docs/crawling-indexing/url-structure),
   // we should always encode non-ASCII characters.
   //
-  // There are two places where next-intl interacts with potentially non-ASCII URLs:
+  // There are two places where next-lingui interacts with potentially non-ASCII URLs:
   // 1. Middleware: When mapping a localized pathname to a non-localized pathname internally
   // 2. Navigation APIs: When generating a URLs to be used for <Link /> & friends
   //
@@ -204,7 +204,7 @@ function encodePathname(pathname: string) {
   //
   // In addition to this, for getPathname() we need to encode non-ASCII characters.
   //
-  // Therefore, the bottom line is that next-intl should take care of encoding non-ASCII
+  // Therefore, the bottom line is that next-lingui should take care of encoding non-ASCII
   // characters in all cases, but can rely on `new URL()` to not double-encode characters.
   return new URL(pathname, 'http://l').pathname;
 }

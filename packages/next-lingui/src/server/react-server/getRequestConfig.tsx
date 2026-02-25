@@ -2,7 +2,7 @@ import type {LinguiConfig, Locale} from '../../shared/types.js';
 
 export type RequestConfig = Omit<LinguiConfig, 'locale'> & {
   /**
-   * @see https://next-intl.dev/docs/usage/configuration#i18n-request
+   * @see https://next-lingui.dev/docs/usage/configuration#i18n-request
    **/
   locale: LinguiConfig['locale'];
 };
@@ -28,7 +28,7 @@ export type GetRequestConfigParams = {
    *    catch-all for unknown routes (e.g. `/unknown.txt`), invalid values should
    *    be replaced with a valid locale.
    *
-   * @see https://next-intl.dev/docs/usage/configuration#i18n-request
+   * @see https://next-lingui.dev/docs/usage/configuration#i18n-request
    */
   requestLocale: Promise<string | undefined>;
 };

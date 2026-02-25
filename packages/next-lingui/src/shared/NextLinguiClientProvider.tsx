@@ -16,7 +16,7 @@ export default function NextLinguiClientProvider({children, locale, messages}: P
   if (!locale) {
     throw new Error(
       process.env.NODE_ENV !== 'production'
-        ? "Couldn't infer the `locale` prop in `NextIntlClientProvider`, please provide it explicitly.\n\nSee https://next-intl.dev/docs/configuration#locale"
+        ? "Couldn't infer the `locale` prop in `NextIntlClientProvider`, please provide it explicitly.\n\nSee https://next-lingui.dev/docs/configuration#locale"
         : undefined
     );
   }

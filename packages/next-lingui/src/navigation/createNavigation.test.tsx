@@ -151,7 +151,7 @@ describe.each([
         // Being able to accept a string and not only a strictly typed locale is
         // important in order to be able to use a result from `useLocale()`.
         // This is less relevant for `Link`, but this should be in sync across
-        // al navigation APIs (see https://github.com/amannn/next-intl/issues/1377)
+        // al navigation APIs (see https://github.com/amannn/next-lingui/issues/1377)
         const locale = 'de' as string;
 
         const markup = renderToString(
@@ -241,7 +241,7 @@ describe.each([
         // Being able to accept a string and not only a strictly typed locale is
         // important in order to be able to use a result from `useLocale()`.
         // This is less relevant for `Link`, but this should be in sync across
-        // al navigation APIs (see https://github.com/amannn/next-intl/issues/1377)
+        // al navigation APIs (see https://github.com/amannn/next-lingui/issues/1377)
         const locale = 'en' as string;
 
         expect(getPathname({href: '/unknown', locale})).toBe('/en/unknown');

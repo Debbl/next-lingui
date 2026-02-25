@@ -1,5 +1,4 @@
 import type {
-  getExtracted as getExtracted_type,
   getFormatter as getFormatter_type,
   getLocale as getLocale_type,
   getMessages as getMessages_type,
@@ -10,10 +9,10 @@ import type {
 } from '../react-server/index.js';
 
 /**
- * Allows to import `next-intl/server` in non-RSC environments.
+ * Allows to import `next-lingui/server` in non-RSC environments.
  *
  * This is mostly relevant for testing, since e.g. a `generateMetadata`
- * export from a page might use `next-intl/server`, but the test
+ * export from a page might use `next-lingui/server`, but the test
  * only uses the default export for a page.
  */
 
@@ -40,9 +39,6 @@ export const getMessages = notSupported(
   'getMessages'
 ) as typeof getMessages_type;
 export const getLocale = notSupported('getLocale') as typeof getLocale_type;
-export const getExtracted = notSupported(
-  'getExtracted'
-) as typeof getExtracted_type;
 
 // The type of `getTranslations` is not assigned here because it
 // causes a type error. The types use the `react-server` entry

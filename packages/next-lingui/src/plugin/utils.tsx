@@ -1,5 +1,5 @@
 function formatMessage(message: string) {
-  return `\n[next-intl] ${message}\n`;
+  return `\n[next-lingui] ${message}\n`;
 }
 
 export function throwError(message: string): never {

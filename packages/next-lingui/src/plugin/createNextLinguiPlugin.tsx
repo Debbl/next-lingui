@@ -1,9 +1,8 @@
 import type {NextConfig} from 'next';
 import createMessagesDeclaration from './declaration/index.js';
-import initExtractionCompiler from './extractor/initExtractionCompiler.js';
 import getNextConfig from './getNextConfig.js';
 import type {PluginConfig} from './types.js';
-import {warn} from './utils.js';
+import {throwError, warn} from './utils.js';
 
 function initPlugin(
   pluginConfig: PluginConfig,
@@ -11,12 +10,17 @@ function initPlugin(
 ): NextConfig {
   if (nextConfig?.i18n != null) {
     warn(
-      "An `i18n` property was found in your Next.js config. This likely causes conflicts and should therefore be removed if you use the App Router.\n\nIf you're in progress of migrating from the Pages Router, you can refer to this example: https://next-intl.dev/examples#app-router-migration\n"
+      "An `i18n` property was found in your Next.js config. This can conflict with App Router based i18n and should be removed when using next-lingui."
     );
   }
 
-  const messagesPathOrPaths =
-    pluginConfig.experimental?.createMessagesDeclaration;
+  if (pluginConfig.experimental != null) {
+    throwError(
+      "`experimental` plugin options are removed. Use top-level `linguiConfigPath`, `requestConfig`, `createMessagesDeclaration` and `swcPluginOptions` instead."
+    );
+  }
+
+  const messagesPathOrPaths = pluginConfig.createMessagesDeclaration;
   if (messagesPathOrPaths) {
     createMessagesDeclaration(
       typeof messagesPathOrPaths === 'string'
@@ -25,18 +29,17 @@ function initPlugin(
     );
   }
 
-  initExtractionCompiler(pluginConfig);
-
   return getNextConfig(pluginConfig, nextConfig);
 }
 
 export default function createNextLinguiPlugin(
-  i18nPathOrConfig: string | PluginConfig = {}
+  requestConfigPathOrConfig: string | PluginConfig = {}
 ) {
   const config =
-    typeof i18nPathOrConfig === 'string'
-      ? {requestConfig: i18nPathOrConfig}
-      : i18nPathOrConfig;
+    typeof requestConfigPathOrConfig === 'string'
+      ? {requestConfig: requestConfigPathOrConfig}
+      : requestConfigPathOrConfig;
+
   return function withNextLingui(nextConfig?: NextConfig) {
     return initPlugin(config, nextConfig);
   };

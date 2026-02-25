@@ -12,7 +12,7 @@ export default async function NextIntlClientProviderServer({
   return (
     <BaseNextIntlClientProvider
       // We need to be careful about potentially reading from headers here.
-      // See https://github.com/amannn/next-intl/issues/631
+      // See https://github.com/amannn/next-lingui/issues/631
       locale={locale ?? (await getLocale())}
       messages={messages === undefined ? await getMessages() : messages}
       {...rest}
