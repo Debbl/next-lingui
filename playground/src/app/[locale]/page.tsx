@@ -1,5 +1,5 @@
 'use client'
-import { Trans } from 'next-lingui/react/macro'
+import { Trans } from '@lingui/react/macro'
 import { ThemeSwitcher } from '~/components/theme-switcher'
 import Counter from '../components/counter'
 

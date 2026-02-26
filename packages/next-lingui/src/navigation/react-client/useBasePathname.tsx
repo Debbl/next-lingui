@@ -1,3 +1,4 @@
+import {useLingui} from '@lingui/react';
 import {usePathname as useNextPathname} from 'next/navigation.js';
 import {useMemo} from 'react';
 import type {
@@ -5,7 +6,6 @@ import type {
   LocalePrefixMode,
   Locales
 } from '../../routing/types.js';
-import {useLingui} from '../../shared/LinguiProvider.js';
 import {
   getLocaleAsPrefix,
   getLocalePrefix,

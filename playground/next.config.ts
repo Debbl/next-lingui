@@ -9,11 +9,13 @@ const withBundleAnalyzer = bundleAnalyzer({
 
 const withNextLingui = createNextLinguiPlugin({
   requestConfig: './src/i18n/requests.ts',
-  linguiConfigPath: './lingui.config.ts',
 })
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  experimental: {
+    swcPlugins: [['@lingui/swc-plugin', {}]],
+  },
 }
 
 export default [withBundleAnalyzer, withNextLingui].reduce(

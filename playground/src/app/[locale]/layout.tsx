@@ -1,4 +1,4 @@
-import { NextLinguiClientProvider } from 'next-lingui'
+import { NextLinguiServerProvider } from 'next-lingui'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { routing } from '~/i18n/routing'
 import { cn } from '~/lib/utils'
@@ -63,9 +63,9 @@ export default async function Layout({
       suppressHydrationWarning
     >
       <body>
-        <NextLinguiClientProvider>
+        <NextLinguiServerProvider>
           <Providers>{children}</Providers>
-        </NextLinguiClientProvider>
+        </NextLinguiServerProvider>
       </body>
     </html>
   )

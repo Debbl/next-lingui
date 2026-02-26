@@ -3,19 +3,18 @@ import {
   usePathname as useNextPathname,
   useRouter as useNextRouter
 } from 'next/navigation.js';
-import {type Locale, useLocale} from 'use-intl';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import type {DomainsConfig, Pathnames} from '../../routing.js';
+import {useLingui} from '../../shared/LinguiProvider.js';
 import createNavigation from './createNavigation.js';
 
 vi.mock('next/navigation.js');
-vi.mock('use-intl', async () => ({
-  ...(await vi.importActual('use-intl')),
-  useLocale: vi.fn(() => 'en')
+vi.mock('../../shared/LinguiProvider.js', () => ({
+  useLingui: vi.fn(() => ({i18n: {locale: 'en'}}))
 }));
 
-function mockCurrentLocale(locale: Locale) {
-  vi.mocked(useLocale).mockImplementation(() => locale);
+function mockCurrentLocale(locale: string) {
+  vi.mocked(useLingui).mockReturnValue({i18n: {locale}} as any);
 }
 
 function mockLocation(
@@ -154,7 +153,7 @@ describe("localePrefix: 'always'", () => {
 
       it('can use a locale from `useLocale`', () => {
         function Component() {
-          const locale = useLocale();
+          const locale = 'de' as string;
           const router = useRouter();
           router.push('/about', {locale});
           return null;

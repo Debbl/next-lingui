@@ -1,12 +1,9 @@
-import { defineConfig } from 'next-lingui/conf'
+import { defineConfig } from '@lingui/conf'
 
 export default defineConfig({
   locales: ['en', 'zh'],
   sourceLocale: 'en',
   compileNamespace: 'json',
-  macro: {
-    jsxPackage: ['next-lingui/react/macro'],
-  },
   catalogs: [
     {
       path: '<rootDir>/src/locales/{locale}/messages',

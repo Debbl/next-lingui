@@ -6,8 +6,8 @@ import createRequestConfig from './createRequestConfig.js';
 import type {GetRequestConfigParams} from './getRequestConfig.js';
 import validateLocale from './validateLocale.js';
 
-// This is automatically inherited by `NextIntlClientProvider` if
-// the component is rendered from a Server Component
+// This is automatically inherited by `NextLinguiServerProvider` if
+// the component is rendered from a Server Component.
 function getDefaultTimeZoneImpl() {
   return Intl.DateTimeFormat().resolvedOptions().timeZone;
 }

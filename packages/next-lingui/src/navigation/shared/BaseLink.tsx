@@ -1,5 +1,6 @@
 'use client';
 
+import {useLingui} from '@lingui/react';
 import NextLink, {type LinkProps} from 'next/link.js';
 import {usePathname} from 'next/navigation.js';
 import {
@@ -10,7 +11,6 @@ import {
   forwardRef
 } from 'react';
 import type {InitializedLocaleCookieConfig} from '../../routing/config.js';
-import {useLingui} from '../../shared/LinguiProvider.js';
 import type {Locale} from '../../shared/types.js';
 import syncLocaleCookie from './syncLocaleCookie.js';
 

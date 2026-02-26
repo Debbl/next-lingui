@@ -1,3 +1,4 @@
+import {useLingui} from '@lingui/react';
 import {
   usePathname as useNextPathname,
   useRouter as useNextRouter
@@ -13,7 +14,6 @@ import type {
   Locales,
   Pathnames
 } from '../../routing/types.js';
-import {useLingui} from '../../shared/LinguiProvider.js';
 import type {Locale} from '../../shared/types.js';
 import createSharedNavigationFns from '../shared/createSharedNavigationFns.js';
 import syncLocaleCookie from '../shared/syncLocaleCookie.js';

@@ -1,55 +1,52 @@
 import {render, screen} from '@testing-library/react';
 import {usePathname as useNextPathname} from 'next/navigation.js';
-import {useLocale} from 'use-intl';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {NextIntlClientProvider} from '../../index.react-client.js';
+import {NextLinguiClientProvider} from '../../index.react-client.js';
 import useBasePathname from './useBasePathname.js';
 
 vi.mock('next/navigation.js');
-vi.mock('use-intl', async () => ({
-  ...(await vi.importActual('use-intl')),
-  useLocale: vi.fn(() => 'en')
-}));
 
 function mockPathname(pathname: string) {
   vi.mocked(useNextPathname).mockImplementation(() => pathname);
-  vi.mocked(useLocale).mockImplementation(() => 'en');
 }
 
 function Component() {
   return useBasePathname({
     localePrefix: {
-      // The mode is not used, only the absence of
-      // `prefixes` is relevant for this test suite
       mode: 'as-needed'
     }
   });
 }
 
+function renderWithProvider(pathname: string) {
+  mockPathname(pathname);
+  render(
+    <NextLinguiClientProvider locale="en" messages={{}}>
+      <Component />
+    </NextLinguiClientProvider>
+  );
+}
+
 describe('unprefixed routing', () => {
   it('returns an unprefixed pathname', () => {
-    mockPathname('/');
-    render(<Component />);
+    renderWithProvider('/');
     screen.getByText('/');
   });
 
   it('returns an unprefixed pathname at sub paths', () => {
-    mockPathname('/about');
-    render(<Component />);
+    renderWithProvider('/about');
     screen.getByText('/about');
   });
 });
 
 describe('prefixed routing', () => {
   it('returns an unprefixed pathname', () => {
-    mockPathname('/en');
-    render(<Component />);
+    renderWithProvider('/en');
     screen.getByText('/');
   });
 
   it('returns an unprefixed pathname at sub paths', () => {
-    mockPathname('/en/about');
-    render(<Component />);
+    renderWithProvider('/en/about');
     screen.getByText('/about');
   });
 });
@@ -61,9 +58,9 @@ describe('usage outside of Next.js', () => {
 
   it('returns `null` when used within a provider', () => {
     const {container} = render(
-      <NextIntlClientProvider locale="en">
+      <NextLinguiClientProvider locale="en" messages={{}}>
         <Component />
-      </NextIntlClientProvider>
+      </NextLinguiClientProvider>
     );
     expect(container.innerHTML).toBe('');
   });

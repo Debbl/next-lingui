@@ -20,21 +20,13 @@
     "postpublish": "git checkout . && rm ./README.md",
     "size": "size-limit"
   },
-  "bin": {
-    "next-lingui": "./bin/next-lingui.mjs"
-  },
   "type": "module",
   "main": "./dist/esm/production/index.react-client.js",
   "typings": "./dist/types/index.react-client.d.ts",
   "exports": {
     ".": {
       "types": "./dist/types/index.react-client.d.ts",
-      "react-server": {
-        "development": "./dist/esm/development/index.react-server.js",
-        "default": "./dist/esm/production/index.react-server.js"
-      },
-      "development": "./dist/esm/development/index.react-client.js",
-      "default": "./dist/esm/production/index.react-client.js"
+      "default": "./dist/esm/production/index.react-server.js"
     },
     "./server": {
       "types": "./dist/types/server.react-server.d.ts",
@@ -44,16 +36,6 @@
       },
       "development": "./dist/esm/development/server.react-client.js",
       "default": "./dist/esm/production/server.react-client.js"
-    },
-    "./config": {
-      "types": "./dist/types/config.d.ts",
-      "development": "./dist/esm/development/config.js",
-      "default": "./dist/esm/production/config.js"
-    },
-    "./conf": {
-      "types": "./dist/types/conf.d.ts",
-      "development": "./dist/esm/development/conf.js",
-      "default": "./dist/esm/production/conf.js"
     },
     "./middleware": {
       "types": "./dist/types/middleware.d.ts",
@@ -85,31 +67,16 @@
         "default": "./dist/cjs/development/plugin.cjs"
       },
       "default": "./dist/esm/production/plugin.js"
-    },
-    "./react/macro": {
-      "types": "./react/macro.d.ts",
-      "require": "./react/macro.cjs",
-      "import": "./react/macro.cjs",
-      "default": "./react/macro.cjs"
-    },
-    "./extractor": {
-      "types": "./dist/types/extractor.d.ts",
-      "default": "./dist/esm/production/extractor.js"
     }
   },
   "files": [
-    "bin",
     "dist",
-    "react",
     "server.d.ts",
     "navigation.d.ts",
     "middleware.d.ts",
     "plugin.d.ts",
     "plugin.d.cts",
-    "routing.d.ts",
-    "config.d.ts",
-    "conf.d.ts",
-    "extractor.d.ts"
+    "routing.d.ts"
   ],
   "keywords": [
     "react",
@@ -126,34 +93,17 @@
   ],
   "dependencies": {
     "@formatjs/intl-localematcher": "^0.5.10",
-    "@lingui/cli": "^5.9.2",
-    "@lingui/conf": "^5.9.2",
     "@lingui/core": "^5.9.2",
     "@lingui/react": "^5.9.2",
-    "@parcel/watcher": "^2.5.6",
-    "@swc/core": "^1.15.13",
-    "negotiator": "^1.0.0",
-    "po-parser": "^2.1.1"
+    "negotiator": "^1.0.0"
   },
   "peerDependencies": {
-    "@lingui/swc-plugin": "^5.0.0",
     "next": "^12.0.0 || ^13.0.0 || ^14.0.0 || ^15.0.0 || ^16.0.0",
     "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || >=19.0.0-rc <19.0.0 || ^19.0.0",
-    "typescript": "^5.0.0",
-    "@lingui/babel-plugin-lingui-macro": "5.9.2",
-    "babel-plugin-macros": "2 || 3"
+    "typescript": "^5.0.0"
   },
   "peerDependenciesMeta": {
-    "@lingui/swc-plugin": {
-      "optional": true
-    },
     "typescript": {
-      "optional": true
-    },
-    "@lingui/babel-plugin-lingui-macro": {
-      "optional": true
-    },
-    "babel-plugin-macros": {
       "optional": true
     }
   },

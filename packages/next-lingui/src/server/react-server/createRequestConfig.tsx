@@ -1,4 +1,4 @@
-import getRuntimeConfig from 'next-lingui/config';
+import getRuntimeConfig from 'next-lingui/_internal/request-config';
 import type {
   GetRequestConfigParams,
   RequestConfig

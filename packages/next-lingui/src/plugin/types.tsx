@@ -1,25 +1,4 @@
 export type PluginConfig = {
-  /** Optional custom path to request config module for `next-lingui/config` aliasing. */
+  /** Optional custom path to request config module. */
   requestConfig?: string;
-
-  /** Optional custom path to `lingui.config.*`; validated by the plugin. */
-  linguiConfigPath?: string;
-
-  /**
-   * A path to the messages file that you'd like to create a declaration for.
-   * In case you want to consider multiple files, you can pass an array of paths.
-   */
-  createMessagesDeclaration?: string | Array<string>;
-
-  /**
-   * Legacy config was removed.
-   * Keep the shape as `unknown` so users get a focused migration error.
-   */
-  experimental?: unknown;
-
-  /** Optional options forwarded to `@lingui/swc-plugin`. */
-  swcPluginOptions?: Record<string, unknown>;
-
-  /** Disable auto-injection of `@lingui/swc-plugin` and use another transform pipeline (e.g. Babel). */
-  useSwcPlugin?: boolean;
 };

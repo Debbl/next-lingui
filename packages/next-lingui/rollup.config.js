@@ -18,7 +18,6 @@ function rewriteBundle(regex, replaceFn) {
 export default [
   ...getBuildConfig({
     input: {
-      'index.react-client': 'src/index.react-client.tsx',
       'index.react-server': 'src/index.react-server.tsx',
 
       'navigation.react-client': 'src/navigation.react-client.tsx',
@@ -29,16 +28,13 @@ export default [
 
       middleware: 'src/middleware.tsx',
       routing: 'src/routing.tsx',
-      conf: 'src/conf.tsx',
-      plugin: 'src/plugin.tsx',
-      config: 'src/config.tsx',
-      extractor: 'src/extractor.tsx'
+      plugin: 'src/plugin.tsx'
     },
     external: [
       ...Object.keys(pkg.dependencies),
       ...Object.keys(pkg.peerDependencies),
       'react/jsx-runtime',
-      'next-lingui/config'
+      'next-lingui/_internal/request-config'
     ],
     output: {
       preserveModules: true

@@ -5,9 +5,9 @@ import {
   redirect as nextRedirect
 } from 'next/navigation.js';
 import {renderToString} from 'react-dom/server';
-import {type Locale, useLocale} from 'use-intl';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {type DomainsConfig, type Pathnames, defineRouting} from '../routing.js';
+import {useLingui} from '../shared/LinguiProvider.js';
 import createNavigationClient from './react-client/createNavigation.js';
 import createNavigationServer from './react-server/createNavigation.js';
 import getServerLocale from './react-server/getServerLocale.js';
@@ -19,12 +19,13 @@ vi.mock('next/navigation.js', async () => ({
   permanentRedirect: vi.fn()
 }));
 vi.mock('./react-server/getServerLocale');
-vi.mock('use-intl', async () => ({
-  ...(await vi.importActual('use-intl')),
-  useLocale: vi.fn(() => 'en')
+vi.mock('../shared/LinguiProvider.js', () => ({
+  useLingui: vi.fn(() => ({i18n: {locale: 'en'}}))
 }));
 
-function mockCurrentLocale(locale: Locale) {
+function mockCurrentLocale(locale: string) {
+  vi.mocked(useLingui).mockReturnValue({i18n: {locale}} as any);
+
   // Enable synchronous rendering without having to suspend
   const value = locale;
   const promise = Promise.resolve(value);
@@ -32,8 +33,6 @@ function mockCurrentLocale(locale: Locale) {
   (promise as any).value = value;
 
   vi.mocked(getServerLocale).mockImplementation(() => promise);
-
-  vi.mocked(useLocale).mockImplementation(() => locale);
 }
 
 function mockLocation(location: Partial<typeof window.location>) {
@@ -229,7 +228,7 @@ describe.each([
 
       it('can use a locale from `useLocale`', () => {
         function Component() {
-          const locale = useLocale();
+          const locale = 'de' as string;
           return <Link href="/about" locale={locale} />;
         }
         render(<Component />);
@@ -328,7 +327,7 @@ describe.each([
 
       it('can use a locale from `useLocale`', () => {
         function Component() {
-          const locale = useLocale();
+          const locale = 'en' as string;
           return getPathname({
             locale,
             href: '/about'
@@ -387,7 +386,7 @@ describe.each([
 
       it('can use a locale from `useLocale`', () => {
         function Component() {
-          const locale = useLocale();
+          const locale = 'de' as string;
           return redirectFn({href: '/about', locale});
         }
         render(<Component />);

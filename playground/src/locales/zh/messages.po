@@ -15,8 +15,8 @@ msgstr ""
 
 #: src/app/[locale]/page.tsx:13
 msgid "hello"
-msgstr ""
+msgstr "你好"
 
 #: src/app/[locale]/page.tsx:12
 msgid "hi"
-msgstr ""
+msgstr "嗨"
