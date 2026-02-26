@@ -79,22 +79,6 @@ function resolveLinguiConfigPath(providedPath?: string, cwd?: string) {
   return undefined;
 }
 
-function withLinguiSwcPlugin(
-  swcPlugins: Array<[string, Record<string, unknown>]> | undefined,
-  swcPluginOptions?: Record<string, unknown>
-) {
-  const normalized = [...(swcPlugins ?? [])];
-  const hasLinguiPlugin = normalized.some(
-    (entry) => Array.isArray(entry) && entry[0] === '@lingui/swc-plugin'
-  );
-
-  if (!hasLinguiPlugin) {
-    normalized.unshift(['@lingui/swc-plugin', swcPluginOptions ?? {}]);
-  }
-
-  return normalized;
-}
-
 export default function getNextConfig(
   pluginConfig: PluginConfig,
   nextConfig?: NextConfig
@@ -166,17 +150,9 @@ export default function getNextConfig(
     };
   }
 
-  const swcPlugins = withLinguiSwcPlugin(
-    (nextConfig?.experimental?.swcPlugins as
-      | Array<[string, Record<string, unknown>]>
-      | undefined) ?? undefined,
-    pluginConfig.swcPluginOptions
-  );
-
   nextLinguiConfig.experimental = {
     ...nextConfig?.experimental,
-    ...nextLinguiConfig.experimental,
-    swcPlugins
+    ...nextLinguiConfig.experimental
   };
 
   nextLinguiConfig.env = {

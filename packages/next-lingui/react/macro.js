@@ -1,1 +1,1 @@
-module.exports = require('@lingui/babel-plugin-lingui-macro/macro');
+module.exports = require("@lingui/babel-plugin-lingui-macro/macro")

@@ -15,7 +15,6 @@
   "bugs": "https://github.com/Debbl/next-lingui/issues",
   "keywords": [],
   "scripts": {
-    "dev": "pnpm dev --filter=packages/next-lingui",
     "build": "pnpm --filter next-lingui build",
     "test": "vitest",
     "release": "pnpm build && bumpp -r",

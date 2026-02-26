@@ -12,7 +12,7 @@ export {default as useFormatter} from './useFormatter.js';
 export {default as useNow} from './useNow.js';
 export {default as useTimeZone} from './useTimeZone.js';
 export {default as useMessages} from './useMessages.js';
-export {default as NextIntlClientProvider} from './NextIntlClientProviderServer.js';
+export {default as NextLinguiClientProvider} from './NextLinguiClientProviderServer.js';
 
 // Re-export types
 export type {Locale, Messages, LinguiConfig} from '../shared/types.js';
