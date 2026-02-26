@@ -1,9 +1,52 @@
 import fs from 'fs';
 import path from 'path';
 import type {NextConfig} from 'next';
-import {hasStableTurboConfig} from './nextFlags.js';
+import {hasStableTurboConfig, isNextJs16OrHigher} from './nextFlags.js';
 import type {PluginConfig} from './types.js';
 import {throwError} from './utils.js';
+
+const NEXT_LINGUI_MACRO_ALIAS = 'next-lingui/react/macro';
+const LINGUI_REACT_MACRO_ALIAS = '@lingui/react/macro';
+const LINGUI_SWC_PLUGIN = '@lingui/swc-plugin';
+
+type SwcPluginTuple = [string, Record<string, unknown>?];
+
+function isSwcPluginTuple(plugin: unknown): plugin is SwcPluginTuple {
+  return (
+    Array.isArray(plugin) &&
+    typeof plugin[0] === 'string' &&
+    (plugin.length < 2 ||
+      plugin[1] == null ||
+      typeof plugin[1] === 'object')
+  );
+}
+
+function mergeLinguiSwcPlugin(
+  swcPlugins: unknown,
+  swcPluginOptions?: Record<string, unknown>
+) {
+  const plugins = Array.isArray(swcPlugins) ? [...swcPlugins] : [];
+  const normalizedOptions = swcPluginOptions ?? {};
+
+  for (let index = 0; index < plugins.length; index++) {
+    const plugin = plugins[index];
+    if (!isSwcPluginTuple(plugin) || plugin[0] !== LINGUI_SWC_PLUGIN) {
+      continue;
+    }
+
+    plugins[index] = [
+      LINGUI_SWC_PLUGIN,
+      {
+        ...(plugin[1] ?? {}),
+        ...normalizedOptions
+      }
+    ];
+    return plugins;
+  }
+
+  plugins.push([LINGUI_SWC_PLUGIN, normalizedOptions]);
+  return plugins;
+}
 
 function withExtensions(localPath: string) {
   return [
@@ -83,12 +126,18 @@ export default function getNextConfig(
   pluginConfig: PluginConfig,
   nextConfig?: NextConfig
 ) {
-  const useTurbo = process.env.TURBOPACK != null;
   const nextLinguiConfig: Partial<NextConfig> = {};
 
   const linguiConfigPath = resolveLinguiConfigPath(pluginConfig.linguiConfigPath);
 
-  if (useTurbo) {
+  const shouldConfigureTurbo =
+    process.env.TURBOPACK != null ||
+    isNextJs16OrHigher() ||
+    nextConfig?.turbopack != null ||
+    // @ts-expect-error -- For Next.js <16
+    nextConfig?.experimental?.turbo != null;
+
+  if (shouldConfigureTurbo) {
     if (
       pluginConfig.requestConfig &&
       path.isAbsolute(pluginConfig.requestConfig)
@@ -100,7 +149,8 @@ export default function getNextConfig(
 
     const resolveAlias = {
       // Turbo aliases don't work with absolute paths
-      'next-lingui/config': resolveRequestConfigPath(pluginConfig.requestConfig)
+      'next-lingui/config': resolveRequestConfigPath(pluginConfig.requestConfig),
+      [NEXT_LINGUI_MACRO_ALIAS]: LINGUI_REACT_MACRO_ALIAS
     };
 
     if (
@@ -130,30 +180,39 @@ export default function getNextConfig(
         }
       };
     }
-  } else {
-    nextLinguiConfig.webpack = function webpack(config, context) {
-      if (!config.resolve) config.resolve = {};
-      if (!config.resolve.alias) config.resolve.alias = {};
-
-      // Assign alias for `next-lingui/config` (Webpack requires absolute paths)
-      (config.resolve.alias as Record<string, string>)['next-lingui/config'] =
-        path.resolve(
-          config.context!,
-          resolveRequestConfigPath(pluginConfig.requestConfig, config.context)
-        );
-
-      if (typeof nextConfig?.webpack === 'function') {
-        return nextConfig.webpack(config, context);
-      }
-
-      return config;
-    };
   }
 
-  nextLinguiConfig.experimental = {
+  nextLinguiConfig.webpack = function webpack(config, context) {
+    if (!config.resolve) config.resolve = {};
+    if (!config.resolve.alias) config.resolve.alias = {};
+
+    // Assign alias for `next-lingui/config` (Webpack requires absolute paths)
+    (config.resolve.alias as Record<string, string>)['next-lingui/config'] =
+      path.resolve(
+        config.context!,
+        resolveRequestConfigPath(pluginConfig.requestConfig, config.context)
+      );
+    (config.resolve.alias as Record<string, string>)[NEXT_LINGUI_MACRO_ALIAS] =
+      LINGUI_REACT_MACRO_ALIAS;
+
+    if (typeof nextConfig?.webpack === 'function') {
+      return nextConfig.webpack(config, context);
+    }
+
+    return config;
+  };
+
+  const experimental = {
     ...nextConfig?.experimental,
     ...nextLinguiConfig.experimental
   };
+  if (pluginConfig.useSwcPlugin !== false) {
+    experimental.swcPlugins = mergeLinguiSwcPlugin(
+      experimental.swcPlugins,
+      pluginConfig.swcPluginOptions
+    );
+  }
+  nextLinguiConfig.experimental = experimental;
 
   nextLinguiConfig.env = {
     ...nextConfig?.env,

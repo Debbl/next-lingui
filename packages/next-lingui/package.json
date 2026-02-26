@@ -88,7 +88,9 @@
     },
     "./react/macro": {
       "types": "./react/macro.d.ts",
-      "default": "./react/macro.js"
+      "require": "./react/macro.cjs",
+      "import": "./react/macro.cjs",
+      "default": "./react/macro.cjs"
     },
     "./extractor": {
       "types": "./dist/types/extractor.d.ts",

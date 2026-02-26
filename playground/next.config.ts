@@ -14,9 +14,6 @@ const withNextLingui = createNextLinguiPlugin({
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
-  experimental: {
-    swcPlugins: [['@lingui/swc-plugin', {}]],
-  },
 }
 
 export default [withBundleAnalyzer, withNextLingui].reduce(
