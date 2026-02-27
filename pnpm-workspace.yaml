@@ -1,4 +1,10 @@
+packages:
+  - .
+  - packages/*
+  - playground
+
 onlyBuiltDependencies:
   - esbuild
+  - sharp
   - simple-git-hooks
   - unrs-resolver

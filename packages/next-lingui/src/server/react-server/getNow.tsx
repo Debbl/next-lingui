@@ -1,0 +1,7 @@
+import type {Locale} from '../../shared/types.js';
+import getConfigNow from './getConfigNow.js';
+import getDefaultNow from './getDefaultNow.js';
+
+export default async function getNow(opts?: {locale?: Locale}): Promise<Date> {
+  return (await getConfigNow(opts?.locale)) ?? getDefaultNow();
+}

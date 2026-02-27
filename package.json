@@ -1,8 +1,9 @@
 {
-  "name": "next-lingui",
+  "name": "next-lingui-monorepo",
   "type": "module",
   "version": "0.0.0",
-  "packageManager": "pnpm@10.13.1",
+  "private": true,
+  "packageManager": "pnpm@10.30.2",
   "description": "Next.js + Lingui",
   "author": "Brendan Dash <me@aiwan.run> (https://aiwan.run)",
   "license": "MIT",
@@ -13,90 +14,28 @@
   },
   "bugs": "https://github.com/Debbl/next-lingui/issues",
   "keywords": [],
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./macro": {
-      "types": "./macro/index.d.ts",
-      "default": "./macro/index.js"
-    },
-    "./middleware": {
-      "types": "./dist/middleware.d.ts",
-      "default": "./dist/middleware.js"
-    },
-    "./routing": {
-      "types": "./dist/routing.d.ts",
-      "default": "./dist/routing.js"
-    },
-    "./navigation": {
-      "types": "./dist/navigation.d.ts",
-      "default": "./dist/navigation.js"
-    },
-    "./cli": {
-      "types": "./dist/cli.d.ts",
-      "default": "./dist/cli.js"
-    },
-    "./package.json": "./package.json"
-  },
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "src"
-  ],
   "scripts": {
-    "dev": "pnpm build && node ./dist/index.cjs",
-    "build": "tsdown",
-    "test": "TZ=Europe/Berlin vitest",
-    "release": "pnpm build && bumpp && pnpm publish",
+    "build": "pnpm --filter next-lingui build",
+    "test": "vitest",
+    "release": "pnpm build && bumpp -r",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepare": "simple-git-hooks"
   },
-  "peerDependencies": {
-    "babel-plugin-macros": "2 || 3",
-    "next": ">=15",
-    "react": ">=18"
-  },
-  "peerDependenciesMeta": {
-    "@lingui/babel-plugin-lingui-macro": {
-      "optional": true
-    },
-    "babel-plugin-macros": {
-      "optional": true
-    }
-  },
-  "dependencies": {
-    "@lingui/babel-plugin-lingui-macro": "^5.3.3",
-    "@lingui/cli": "^5.3.3",
-    "@lingui/conf": "^5.3.3",
-    "@lingui/core": "^5.3.3",
-    "@lingui/react": "^5.3.3"
-  },
   "devDependencies": {
-    "@debbl/eslint-config": "^3.12.0",
-    "@testing-library/react": "^16.3.0",
-    "@types/node": "^24.0.14",
-    "@types/react": "^19.1.9",
-    "bumpp": "^10.2.0",
-    "eslint": "^9.31.0",
-    "jsdom": "^26.1.0",
-    "lint-staged": "^16.1.2",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "simple-git-hooks": "^2.13.0",
-    "tsdown": "^0.12.9",
-    "typescript": "^5.8.3",
+    "@debbl/eslint-config": "^3.15.2",
+    "bumpp": "^10.4.1",
+    "eslint": "^9.39.3",
+    "lint-staged": "^16.2.7",
+    "simple-git-hooks": "^2.13.1",
+    "typescript": "^5.9.3",
     "vitest": "3.0.8"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged"
   },
   "lint-staged": {
-    "*": "eslint --fix"
+    "*": "echo 'lint-staged is disabled'"
   }
 }

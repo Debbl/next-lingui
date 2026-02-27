@@ -1,0 +1,29 @@
+{
+  "name": "tools",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shared tools for the repo",
+  "main": "src/index.js",
+  "scripts": {
+    "lint": "eslint src"
+  },
+  "keywords": [],
+  "author": "Brendan Dash <me@aiwan.run> (https://aiwan.run)",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.0",
+    "@babel/preset-react": "^7.28.5",
+    "@babel/preset-typescript": "^7.28.5",
+    "@rollup/plugin-babel": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-replace": "^6.0.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "eslint": "^9.39.3",
+    "eslint-config-molindo": "^8.0.0",
+    "execa": "^9.6.1",
+    "globals": "^16.5.0",
+    "rollup": "^4.59.0"
+  }
+}
