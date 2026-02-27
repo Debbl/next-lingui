@@ -1,6 +1,6 @@
 {
   "extends": "eslint-config-molindo/tsconfig.json",
-  "include": ["src", "test", "__mocks__", "types", "next-env.d.ts"],
+  "include": ["src", "test", "__mocks__", "types", "next-env.d.ts", "tsdown.config.ts"],
   "compilerOptions": {
     "lib": ["dom", "esnext"],
     "target": "ES2020",

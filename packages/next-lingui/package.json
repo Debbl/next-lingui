@@ -10,72 +10,60 @@
     "url": "git+https://github.com/Debbl/next-lingui.git"
   },
   "scripts": {
-    "build": "rm -rf dist && rollup -c",
+    "build": "rm -rf dist && tsdown",
+    "verify:build-output": "node ./scripts/verify-build-output.mjs",
+    "build:verify": "pnpm run build && pnpm run lint:package && pnpm run size && pnpm run verify:build-output",
     "test": "TZ=Europe/Berlin vitest",
     "lint": "pnpm run lint:source && pnpm run lint:package",
     "lint:source": "eslint src test && tsc --noEmit && pnpm run lint:prettier",
-    "lint:package": "publint && attw --pack --ignore-rules=cjs-resolves-to-esm",
+    "lint:package": "publint && npm_config_cache=/tmp/next-lingui-npm-cache attw --pack --ignore-rules=cjs-resolves-to-esm",
     "lint:prettier": "prettier src --check",
     "prepublishOnly": "turbo build && cp ../../README.md .",
     "postpublish": "git checkout . && rm ./README.md",
     "size": "size-limit"
   },
   "type": "module",
-  "main": "./dist/esm/production/index.react-client.js",
-  "typings": "./dist/types/index.react-client.d.ts",
+  "main": "./dist/index.react-server.js",
+  "typings": "./dist/index.react-server.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/types/index.react-client.d.ts",
-      "default": "./dist/esm/production/index.react-server.js"
+      "types": "./dist/index.react-server.d.ts",
+      "default": "./dist/index.react-server.js"
     },
     "./server": {
-      "types": "./dist/types/server.react-server.d.ts",
-      "react-server": {
-        "development": "./dist/esm/development/server.react-server.js",
-        "default": "./dist/esm/production/server.react-server.js"
-      },
-      "development": "./dist/esm/development/server.react-client.js",
-      "default": "./dist/esm/production/server.react-client.js"
+      "types": "./dist/server.react-server.d.ts",
+      "react-server": "./dist/server.react-server.js",
+      "default": "./dist/server.react-client.js"
     },
     "./middleware": {
-      "types": "./dist/types/middleware.d.ts",
-      "development": "./dist/esm/development/middleware.js",
-      "default": "./dist/esm/production/middleware.js"
+      "types": "./dist/middleware.d.ts",
+      "default": "./dist/middleware.js"
     },
     "./navigation": {
-      "types": "./dist/types/navigation.react-client.d.ts",
-      "react-server": {
-        "development": "./dist/esm/development/navigation.react-server.js",
-        "default": "./dist/esm/production/navigation.react-server.js"
-      },
-      "development": "./dist/esm/development/navigation.react-client.js",
-      "default": "./dist/esm/production/navigation.react-client.js"
+      "types": "./dist/navigation.react-client.d.ts",
+      "react-server": "./dist/navigation.react-server.js",
+      "default": "./dist/navigation.react-client.js"
     },
     "./routing": {
-      "types": "./dist/types/routing.d.ts",
-      "development": "./dist/esm/development/routing.js",
-      "default": "./dist/esm/production/routing.js"
+      "types": "./dist/routing.d.ts",
+      "default": "./dist/routing.js"
     },
     "./plugin": {
-      "import": {
-        "types": "./dist/types/plugin.d.ts",
-        "development": "./dist/esm/development/plugin.js",
-        "default": "./dist/esm/production/plugin.js"
-      },
-      "require": {
-        "types": "./plugin.d.cts",
-        "default": "./dist/cjs/development/plugin.cjs"
-      },
-      "default": "./dist/esm/production/plugin.js"
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./_internal/request-config": {
+      "types": "./_internal/request-config.d.ts",
+      "default": "./_internal/request-config.js"
     }
   },
   "files": [
     "dist",
+    "_internal",
     "server.d.ts",
     "navigation.d.ts",
     "middleware.d.ts",
     "plugin.d.ts",
-    "plugin.d.cts",
     "routing.d.ts"
   ],
   "keywords": [
@@ -126,10 +114,8 @@
     "publint": "^0.2.12",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "rollup": "^4.59.0",
-    "rollup-plugin-preserve-directives": "0.4.0",
     "size-limit": "^11.2.0",
-    "tools": "workspace:^",
+    "tsdown": "^0.16.6",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   },

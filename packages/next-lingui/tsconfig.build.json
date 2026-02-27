@@ -4,7 +4,7 @@
   "compilerOptions": {
     "rootDir": "src",
     "noEmit": false,
-    "outDir": "dist/types",
+    "outDir": "dist",
     "emitDeclarationOnly": true
   }
 }

@@ -63,7 +63,7 @@ export default async function Layout({
       suppressHydrationWarning
     >
       <body>
-        <NextLinguiServerProvider>
+        <NextLinguiServerProvider locale={locale}>
           <Providers>{children}</Providers>
         </NextLinguiServerProvider>
       </body>

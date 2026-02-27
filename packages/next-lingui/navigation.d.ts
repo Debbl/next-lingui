@@ -1,2 +1,2 @@
 // Needed for projects with `moduleResolution: 'node'`
-export * from './dist/types/navigation.react-client';
+export * from './dist/navigation.react-client';
