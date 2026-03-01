@@ -2,7 +2,7 @@ import {
   permanentRedirect as nextPermanentRedirect,
   redirect as nextRedirect,
 } from 'next/navigation'
-import React, { forwardRef } from 'react'
+import { forwardRef } from 'react'
 import { receiveRoutingConfig } from '../../routing/config'
 import use from '../../shared/use'
 import { isLocalizableHref, isPromise } from '../../shared/utils'

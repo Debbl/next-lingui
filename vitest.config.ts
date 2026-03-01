@@ -9,6 +9,6 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
-    setupFiles: [path.resolve(__dirname, 'test/setup.tsx')],
+    setupFiles: [path.resolve(__dirname, 'test/setup.ts')],
   },
 })

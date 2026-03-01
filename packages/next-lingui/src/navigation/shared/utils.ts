@@ -197,7 +197,7 @@ function encodePathname(pathname: string) {
   // 2. Navigation APIs: When generating a URLs to be used for <Link /> & friends
   //
   // Next.js normalizes incoming pathnames to always be encoded, therefore we can safely
-  // decode them there (see middleware.tsx). On the other hand, Next.js doesn't consistently
+  // decode them there (see middleware.ts). On the other hand, Next.js doesn't consistently
   // encode non-ASCII characters that are passed to navigation APIs:
   // 1. <Link /> doesn't encode non-ASCII characters
   // 2. useRouter() uses `new URL()` internally, which will encode—but only if necessary

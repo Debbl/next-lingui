@@ -1,7 +1,6 @@
 import { useLingui } from '@lingui/react'
 import { render, screen } from '@testing-library/react'
 import { usePathname as useNextPathname } from 'next/navigation'
-import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import useBasePathname from './useBasePathname'
 

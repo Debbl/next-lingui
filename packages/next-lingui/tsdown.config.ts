@@ -2,29 +2,16 @@ import { defineConfig } from 'tsdown'
 import type { UserConfig } from 'tsdown'
 
 const entry = {
-  'index.react-client': 'src/index.react-client.tsx',
-  'index.react-server': 'src/index.react-server.tsx',
-  'navigation.react-client': 'src/navigation.react-client.tsx',
-  'navigation.react-server': 'src/navigation.react-server.tsx',
-  'server.react-client': 'src/server.react-client.tsx',
-  'server.react-server': 'src/server.react-server.tsx',
-  'middleware': 'src/middleware.tsx',
-  'routing': 'src/routing.tsx',
-  'plugin': 'src/plugin.tsx',
+  'index.react-client': 'src/index.react-client.ts',
+  'index.react-server': 'src/index.react-server.ts',
+  'navigation.react-client': 'src/navigation.react-client.ts',
+  'navigation.react-server': 'src/navigation.react-server.ts',
+  'server.react-client': 'src/server.react-client.ts',
+  'server.react-server': 'src/server.react-server.ts',
+  'middleware': 'src/middleware.ts',
+  'routing': 'src/routing.ts',
+  'plugin': 'src/plugin.ts',
 }
-
-const rewriteNextJsSuffix: any = () => ({
-  name: 'rewrite-next-js-suffix',
-  generateBundle(_options: any, bundle: any) {
-    for (const chunk of Object.values(bundle) as Array<any>) {
-      if (chunk.type !== 'chunk') continue
-      chunk.code = chunk.code.replace(
-        /(['"])next\/(link|navigation|server)\.js\1/g,
-        '$1next/$2$1',
-      )
-    }
-  },
-})
 
 const preserveUseClientDirectives: any = () => ({
   name: 'preserve-use-client-directives',
@@ -87,6 +74,6 @@ export default defineConfig([
     dts: true,
     sourcemap: true,
     inputOptions: ensureInternalRequestConfigExternal,
-    plugins: [rewriteNextJsSuffix(), preserveUseClientDirectives()],
+    plugins: [preserveUseClientDirectives()],
   },
 ])

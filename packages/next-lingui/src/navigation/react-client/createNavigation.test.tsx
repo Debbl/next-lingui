@@ -5,7 +5,6 @@ import {
   usePathname as useNextPathname,
   useRouter as useNextRouter,
 } from 'next/navigation'
-import React from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import createNavigation from './createNavigation'
 import type { DomainsConfig, Pathnames } from '../../routing'
