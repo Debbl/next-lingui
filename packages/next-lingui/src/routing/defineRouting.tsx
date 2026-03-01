@@ -19,6 +19,7 @@ export default function defineRouting<
     AppDomains
   >,
 ) {
+  // eslint-disable-next-line n/prefer-global/process
   if (process.env.NODE_ENV !== 'production' && config.domains) {
     validateUniqueLocalesPerDomain(config.domains)
   }

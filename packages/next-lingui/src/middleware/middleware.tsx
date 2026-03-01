@@ -149,6 +149,7 @@ export default function createMiddleware<
         )
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
       hasRedirected = true
       return NextResponse.redirect(urlObj.toString())
     }

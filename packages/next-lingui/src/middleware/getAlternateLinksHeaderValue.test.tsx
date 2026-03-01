@@ -1,3 +1,4 @@
+/* eslint-disable n/prefer-global/process */
 // @vitest-environment edge-runtime
 
 import { NextRequest } from 'next/server'

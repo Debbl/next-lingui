@@ -1,3 +1,5 @@
+/* eslint-disable n/prefer-global/process */
+/* eslint-disable unicorn/consistent-function-scoping */
 // @vitest-environment edge-runtime
 
 import { RequestCookies } from 'next/dist/compiled/@edge-runtime/cookies'
@@ -288,7 +290,7 @@ describe('prefix-based routing', () => {
       createMiddleware({
         ...routing,
         localeCookie: {
-          // @ts-expect-error
+          // @ts-expect-error -- Invalid attribute
           httpOnly: true,
           name: 'custom',
           value: 'custom',

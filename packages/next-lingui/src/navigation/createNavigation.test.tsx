@@ -1,3 +1,6 @@
+/* eslint-disable unicorn/consistent-function-scoping */
+/* eslint-disable no-restricted-globals */
+import { useLingui } from '@lingui/react'
 import { render, screen } from '@testing-library/react'
 import {
   permanentRedirect as nextPermanentRedirect,
@@ -7,20 +10,18 @@ import {
 import { renderToString } from 'react-dom/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineRouting } from '../routing'
-import { useLingui } from '../shared/LinguiProvider'
 import createNavigationClient from './react-client/createNavigation'
 import createNavigationServer from './react-server/createNavigation'
 import getServerLocale from './react-server/getServerLocale'
 import type { DomainsConfig, Pathnames } from '../routing'
 
-vi.mock('react')
 vi.mock('next/navigation', async () => ({
   ...(await vi.importActual('next/navigation')),
   redirect: vi.fn(),
   permanentRedirect: vi.fn(),
 }))
 vi.mock('./react-server/getServerLocale')
-vi.mock('../shared/LinguiProvider', () => ({
+vi.mock('@lingui/react', () => ({
   useLingui: vi.fn(() => ({ i18n: { locale: 'en' } })),
 }))
 
@@ -116,7 +117,7 @@ describe.each([
         ;() =>
           createNavigation({
             locales,
-            // @ts-expect-error
+            // @ts-expect-error -- Unknown locale
             defaultLocale: 'zh',
             localePrefix: 'always',
           })

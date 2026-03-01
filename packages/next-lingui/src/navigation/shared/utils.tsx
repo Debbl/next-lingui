@@ -150,6 +150,7 @@ export function compileLocalizedPathname<AppLocales extends Locales, Pathname>({
 
       // Clean up optional catch-all segments that were not replaced
       compiled = compiled.replace(/\[\[\.\.\..+\]\]/g, '')
+      // eslint-disable-next-line n/prefer-global/process
       if (process.env.NODE_ENV !== 'production' && compiled.includes('[')) {
         // Next.js throws anyway, therefore better provide a more helpful error message
         throw new Error(

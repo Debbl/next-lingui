@@ -3,7 +3,7 @@
 import { useLingui } from '@lingui/react'
 import NextLink from 'next/link'
 import { usePathname } from 'next/navigation'
-import { forwardRef } from 'react'
+import React, { forwardRef } from 'react'
 import syncLocaleCookie from './syncLocaleCookie'
 import type { LinkProps } from 'next/link'
 import type { ComponentProps, MouseEvent, ReactNode, Ref } from 'react'
