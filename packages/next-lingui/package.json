@@ -1,7 +1,7 @@
 {
   "name": "next-lingui",
+  "type": "module",
   "version": "0.0.0",
-  "sideEffects": false,
   "author": "Brendan Dash <me@aiwan.run> (https://aiwan.run)",
   "license": "MIT",
   "homepage": "https://github.com/Debbl/next-lingui#readme",
@@ -9,63 +9,7 @@
     "type": "git",
     "url": "git+https://github.com/Debbl/next-lingui.git"
   },
-  "scripts": {
-    "build": "rm -rf dist && tsdown",
-    "verify:build-output": "node ./scripts/verify-build-output.mjs",
-    "build:verify": "pnpm run build && pnpm run lint:package && pnpm run size && pnpm run verify:build-output",
-    "test": "TZ=Europe/Berlin vitest",
-    "lint": "pnpm run lint:source && pnpm run lint:package",
-    "lint:source": "eslint src test && tsc --noEmit && pnpm run lint:prettier",
-    "lint:package": "publint && npm_config_cache=/tmp/next-lingui-npm-cache attw --pack --ignore-rules=cjs-resolves-to-esm",
-    "lint:prettier": "prettier src --check",
-    "prepublishOnly": "turbo build && cp ../../README.md .",
-    "postpublish": "git checkout . && rm ./README.md",
-    "size": "size-limit"
-  },
-  "type": "module",
-  "main": "./dist/index.react-server.js",
-  "typings": "./dist/index.react-server.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.react-server.d.ts",
-      "default": "./dist/index.react-server.js"
-    },
-    "./server": {
-      "types": "./dist/server.react-server.d.ts",
-      "react-server": "./dist/server.react-server.js",
-      "default": "./dist/server.react-client.js"
-    },
-    "./middleware": {
-      "types": "./dist/middleware.d.ts",
-      "default": "./dist/middleware.js"
-    },
-    "./navigation": {
-      "types": "./dist/navigation.react-client.d.ts",
-      "react-server": "./dist/navigation.react-server.js",
-      "default": "./dist/navigation.react-client.js"
-    },
-    "./routing": {
-      "types": "./dist/routing.d.ts",
-      "default": "./dist/routing.js"
-    },
-    "./plugin": {
-      "types": "./dist/plugin.d.ts",
-      "default": "./dist/plugin.js"
-    },
-    "./_internal/request-config": {
-      "types": "./_internal/request-config.d.ts",
-      "default": "./_internal/request-config.js"
-    }
-  },
-  "files": [
-    "dist",
-    "_internal",
-    "server.d.ts",
-    "navigation.d.ts",
-    "middleware.d.ts",
-    "plugin.d.ts",
-    "routing.d.ts"
-  ],
+  "typings": "./dist/index.react-server.d.mts",
   "keywords": [
     "react",
     "intl",
@@ -79,13 +23,57 @@
     "next",
     "next.js"
   ],
-  "dependencies": {
-    "@formatjs/intl-localematcher": "^0.5.10",
-    "@lingui/core": "^5.9.2",
-    "@lingui/react": "^5.9.2",
-    "negotiator": "^1.0.0"
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.react-server.d.mts",
+      "default": "./dist/index.react-server.mjs"
+    },
+    "./server": {
+      "types": "./dist/server.react-server.d.mts",
+      "react-server": "./dist/server.react-server.mjs",
+      "default": "./dist/server.react-client.mjs"
+    },
+    "./middleware": {
+      "types": "./dist/middleware.d.mts",
+      "default": "./dist/middleware.mjs"
+    },
+    "./navigation": {
+      "types": "./dist/navigation.react-client.d.mts",
+      "react-server": "./dist/navigation.react-server.mjs",
+      "default": "./dist/navigation.react-client.mjs"
+    },
+    "./routing": {
+      "types": "./dist/routing.d.mts",
+      "default": "./dist/routing.mjs"
+    },
+    "./plugin": {
+      "types": "./dist/plugin.d.mts",
+      "default": "./dist/plugin.mjs"
+    },
+    "./_internal/request-config": {
+      "types": "./_internal/request-config.d.mts",
+      "default": "./_internal/request-config.mjs"
+    }
+  },
+  "main": "./dist/index.react-server.mjs",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "verify:build-output": "node ./scripts/verify-build-output.mjs",
+    "build:verify": "pnpm run build && pnpm run lint:package && pnpm run verify:build-output",
+    "test": "vitest",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "prepublishOnly": "turbo build && cp ../../README.md .",
+    "postpublish": "git checkout . && rm ./README.md"
   },
   "peerDependencies": {
+    "@lingui/core": "^5.9.2",
+    "@lingui/react": "^5.9.2",
     "next": "^12.0.0 || ^13.0.0 || ^14.0.0 || ^15.0.0 || ^16.0.0",
     "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || >=19.0.0-rc <19.0.0 || ^19.0.0",
     "typescript": "^5.0.0"
@@ -95,17 +83,22 @@
       "optional": true
     }
   },
+  "dependencies": {
+    "@formatjs/intl-localematcher": "^0.5.10",
+    "negotiator": "^1.0.0"
+  },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.17.4",
     "@edge-runtime/vm": "^5.0.0",
-    "@size-limit/preset-small-lib": "^11.2.0",
+    "@lingui/core": "^5.9.2",
+    "@lingui/react": "^5.9.2",
     "@testing-library/react": "^16.3.2",
     "@types/negotiator": "^0.6.4",
     "@types/node": "^20.19.33",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@types/webpack": "^5.28.5",
-    "eslint": "9.11.1",
+    "eslint": "^9.39.3",
     "eslint-config-molindo": "^8.0.0",
     "eslint-plugin-react-compiler": "0.0.0-experimental-8e3b87c-20240822",
     "next": "^16.1.6",
@@ -114,10 +107,8 @@
     "publint": "^0.2.12",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "size-limit": "^11.2.0",
     "tsdown": "^0.16.6",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
-  },
-  "prettier": "eslint-config-molindo/.prettierrc.json"
+  }
 }

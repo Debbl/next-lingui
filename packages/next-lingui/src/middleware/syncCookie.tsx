@@ -1,23 +1,23 @@
-import type {NextRequest, NextResponse} from 'next/server.js';
+import { getAcceptLanguageLocale } from './resolveLocale'
+import type { NextRequest, NextResponse } from 'next/server'
 import type {
   InitializedLocaleCookieConfig,
-  ResolvedRoutingConfig
-} from '../routing/config.js';
+  ResolvedRoutingConfig,
+} from '../routing/config'
 import type {
   DomainConfig,
   DomainsConfig,
   LocalePrefixMode,
   Locales,
-  Pathnames
-} from '../routing/types.js';
-import type {Locale} from '../shared/types.js';
-import {getAcceptLanguageLocale} from './resolveLocale.js';
+  Pathnames,
+} from '../routing/types'
+import type { Locale } from '../shared/types'
 
 export default function syncCookie<
   AppLocales extends Locales,
   AppLocalePrefixMode extends LocalePrefixMode,
   AppPathnames extends Pathnames<AppLocales> | undefined,
-  AppDomains extends DomainsConfig<AppLocales> | undefined
+  AppDomains extends DomainsConfig<AppLocales> | undefined,
 >(
   request: NextRequest,
   response: NextResponse,
@@ -31,33 +31,33 @@ export default function syncCookie<
     >,
     'locales' | 'defaultLocale'
   > & {
-    localeCookie: InitializedLocaleCookieConfig;
+    localeCookie: InitializedLocaleCookieConfig
   },
-  domain?: DomainConfig<AppLocales>
+  domain?: DomainConfig<AppLocales>,
 ) {
-  if (!routing.localeCookie) return;
+  if (!routing.localeCookie) return
 
-  const {name, ...rest} = routing.localeCookie;
-  const hasLocaleCookie = request.cookies.has(name);
+  const { name, ...rest } = routing.localeCookie
+  const hasLocaleCookie = request.cookies.has(name)
   const hasOutdatedCookie =
-    hasLocaleCookie && request.cookies.get(name)?.value !== locale;
+    hasLocaleCookie && request.cookies.get(name)?.value !== locale
 
   if (hasOutdatedCookie) {
     response.cookies.set(name, locale, {
       path: request.nextUrl.basePath || undefined,
-      ...rest
-    });
+      ...rest,
+    })
   } else if (!hasLocaleCookie) {
     const acceptLanguageLocale = getAcceptLanguageLocale(
       request.headers,
       domain?.locales || routing.locales,
-      routing.defaultLocale
-    );
+      routing.defaultLocale,
+    )
     if (acceptLanguageLocale !== locale) {
       response.cookies.set(name, locale, {
         path: request.nextUrl.basePath || undefined,
-        ...rest
-      });
+        ...rest,
+      })
     }
   }
 }

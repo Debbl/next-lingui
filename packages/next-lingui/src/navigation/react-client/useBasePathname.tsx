@@ -1,24 +1,24 @@
-import {useLingui} from '@lingui/react';
-import {usePathname as useNextPathname} from 'next/navigation.js';
-import {useMemo} from 'react';
-import type {
-  LocalePrefixConfigVerbose,
-  LocalePrefixMode,
-  Locales
-} from '../../routing/types.js';
+import { useLingui } from '@lingui/react'
+import { usePathname as useNextPathname } from 'next/navigation'
+import { useMemo } from 'react'
 import {
   getLocaleAsPrefix,
   getLocalePrefix,
   hasPathnamePrefixed,
-  unprefixPathname
-} from '../../shared/utils.js';
+  unprefixPathname,
+} from '../../shared/utils'
+import type {
+  LocalePrefixConfigVerbose,
+  LocalePrefixMode,
+  Locales,
+} from '../../routing/types'
 
 export default function useBasePathname<
   AppLocales extends Locales,
-  AppLocalePrefixMode extends LocalePrefixMode
+  AppLocalePrefixMode extends LocalePrefixMode,
 >(config: {
-  localePrefix: LocalePrefixConfigVerbose<AppLocales, AppLocalePrefixMode>;
-  defaultLocale?: AppLocales[number];
+  localePrefix: LocalePrefixConfigVerbose<AppLocales, AppLocalePrefixMode>
+  defaultLocale?: AppLocales[number]
 }) {
   // The types aren't entirely correct here. Outside of Next.js
   // `useParams` can be called, but the return type is `null`.
@@ -31,32 +31,32 @@ export default function useBasePathname<
   //   that the user sees in the browser is returned)
   const pathname = useNextPathname() as ReturnType<
     typeof useNextPathname
-  > | null;
+  > | null
 
-  const {i18n} = useLingui();
-  const locale = i18n.locale;
+  const { i18n } = useLingui()
+  const locale = i18n.locale
 
   return useMemo(() => {
-    if (!pathname) return pathname;
+    if (!pathname) return pathname
 
-    let unlocalizedPathname = pathname;
+    let unlocalizedPathname = pathname
 
-    const prefix = getLocalePrefix(locale, config.localePrefix);
-    const isPathnamePrefixed = hasPathnamePrefixed(prefix, pathname);
+    const prefix = getLocalePrefix(locale, config.localePrefix)
+    const isPathnamePrefixed = hasPathnamePrefixed(prefix, pathname)
 
     if (isPathnamePrefixed) {
-      unlocalizedPathname = unprefixPathname(pathname, prefix);
+      unlocalizedPathname = unprefixPathname(pathname, prefix)
     } else if (
       config.localePrefix.mode !== 'never' &&
       config.localePrefix.prefixes
     ) {
       // Workaround for https://github.com/vercel/next.js/issues/73085
-      const localeAsPrefix = getLocaleAsPrefix(locale);
+      const localeAsPrefix = getLocaleAsPrefix(locale)
       if (hasPathnamePrefixed(localeAsPrefix, pathname)) {
-        unlocalizedPathname = unprefixPathname(pathname, localeAsPrefix);
+        unlocalizedPathname = unprefixPathname(pathname, localeAsPrefix)
       }
     }
 
-    return unlocalizedPathname;
-  }, [config.localePrefix, locale, pathname]);
+    return unlocalizedPathname
+  }, [config.localePrefix, locale, pathname])
 }

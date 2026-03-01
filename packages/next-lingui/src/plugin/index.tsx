@@ -1,1 +1,1 @@
-export {default} from './createNextLinguiPlugin.js';
+export { default } from './createNextLinguiPlugin'

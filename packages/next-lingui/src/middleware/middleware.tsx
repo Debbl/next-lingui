@@ -1,21 +1,15 @@
-import {type NextRequest, NextResponse} from 'next/server.js';
-import {type RoutingConfig, receiveRoutingConfig} from '../routing/config.js';
-import type {
-  DomainsConfig,
-  LocalePrefixMode,
-  Locales,
-  Pathnames
-} from '../routing/types.js';
-import {HEADER_LOCALE_NAME} from '../shared/constants.js';
+import { NextResponse } from 'next/server'
+import { receiveRoutingConfig } from '../routing/config'
+import { HEADER_LOCALE_NAME } from '../shared/constants'
 import {
   getLocalePrefix,
   getLocalizedTemplate,
   matchesPathname,
-  normalizeTrailingSlash
-} from '../shared/utils.js';
-import getAlternateLinksHeaderValue from './getAlternateLinksHeaderValue.js';
-import resolveLocale from './resolveLocale.js';
-import syncCookie from './syncCookie.js';
+  normalizeTrailingSlash,
+} from '../shared/utils'
+import getAlternateLinksHeaderValue from './getAlternateLinksHeaderValue'
+import resolveLocale from './resolveLocale'
+import syncCookie from './syncCookie'
 import {
   applyBasePath,
   formatPathname,
@@ -26,92 +20,100 @@ import {
   getNormalizedPathname,
   getPathnameMatch,
   isLocaleSupportedOnDomain,
-  sanitizePathname
-} from './utils.js';
+  sanitizePathname,
+} from './utils'
+import type { NextRequest } from 'next/server'
+import type { RoutingConfig } from '../routing/config'
+import type {
+  DomainsConfig,
+  LocalePrefixMode,
+  Locales,
+  Pathnames,
+} from '../routing/types'
 
 export default function createMiddleware<
   const AppLocales extends Locales,
   const AppLocalePrefixMode extends LocalePrefixMode = 'always',
   const AppPathnames extends Pathnames<AppLocales> = never,
-  const AppDomains extends DomainsConfig<AppLocales> = never
+  const AppDomains extends DomainsConfig<AppLocales> = never,
 >(
   routing: RoutingConfig<
     AppLocales,
     AppLocalePrefixMode,
     AppPathnames,
     AppDomains
-  >
+  >,
 ) {
-  const resolvedRouting = receiveRoutingConfig(routing);
+  const resolvedRouting = receiveRoutingConfig(routing)
 
   return function middleware(request: NextRequest) {
-    let unsafeExternalPathname: string;
+    let unsafeExternalPathname: string
     try {
       // Resolve potential foreign symbols (e.g. /ja/%E7%B4%84 → /ja/約))
-      unsafeExternalPathname = decodeURI(request.nextUrl.pathname);
+      unsafeExternalPathname = decodeURI(request.nextUrl.pathname)
     } catch {
       // In case an invalid pathname is encountered, forward
       // it to Next.js which in turn responds with a 400
-      return NextResponse.next();
+      return NextResponse.next()
     }
 
     // Sanitize malicious URIs to prevent open redirect attacks due to
     // decodeURI doesn't escape encoded backslashes ('%5C' & '%5c')
-    const externalPathname = sanitizePathname(unsafeExternalPathname);
+    const externalPathname = sanitizePathname(unsafeExternalPathname)
 
-    const {domain, locale} = resolveLocale(
+    const { domain, locale } = resolveLocale(
       resolvedRouting,
       request.headers,
       request.cookies,
-      externalPathname
-    );
+      externalPathname,
+    )
 
     const hasMatchedDefaultLocale = domain
       ? domain.defaultLocale === locale
-      : locale === resolvedRouting.defaultLocale;
+      : locale === resolvedRouting.defaultLocale
 
     const domainsConfig =
       resolvedRouting.domains?.filter((curDomain) =>
-        isLocaleSupportedOnDomain(locale, curDomain)
-      ) || [];
-    const hasUnknownHost = resolvedRouting.domains != null && !domain;
+        isLocaleSupportedOnDomain(locale, curDomain),
+      ) || []
+    const hasUnknownHost = resolvedRouting.domains != null && !domain
 
     function next(url: string) {
-      const urlObj = new URL(url, request.url);
+      const urlObj = new URL(url, request.url)
 
       if (request.nextUrl.basePath) {
         urlObj.pathname = applyBasePath(
           urlObj.pathname,
-          request.nextUrl.basePath
-        );
+          request.nextUrl.basePath,
+        )
       }
 
-      const headers = new Headers(request.headers);
-      headers.set(HEADER_LOCALE_NAME, locale);
+      const headers = new Headers(request.headers)
+      headers.set(HEADER_LOCALE_NAME, locale)
 
       const isRewriteNecessary =
         normalizeTrailingSlash(request.nextUrl.pathname) !==
-        normalizeTrailingSlash(urlObj.pathname);
+        normalizeTrailingSlash(urlObj.pathname)
       if (isRewriteNecessary) {
-        return NextResponse.rewrite(urlObj, {request: {headers}});
+        return NextResponse.rewrite(urlObj, { request: { headers } })
       } else {
-        return NextResponse.next({request: {headers}});
+        return NextResponse.next({ request: { headers } })
       }
     }
 
     function redirect(url: string, redirectDomain?: string) {
-      const urlObj = new URL(url, request.url);
+      const urlObj = new URL(url, request.url)
 
-      urlObj.pathname = normalizeTrailingSlash(urlObj.pathname);
+      urlObj.pathname = normalizeTrailingSlash(urlObj.pathname)
 
       if (domainsConfig.length > 0 && !redirectDomain && domain) {
         const bestMatchingDomain = getBestMatchingDomain(
           domain,
           locale,
-          domainsConfig
-        );
+          domainsConfig,
+        )
         if (bestMatchingDomain) {
-          redirectDomain = bestMatchingDomain.domain;
+          redirectDomain = bestMatchingDomain.domain
           if (
             bestMatchingDomain.defaultLocale === locale &&
             resolvedRouting.localePrefix.mode === 'as-needed'
@@ -119,116 +121,115 @@ export default function createMiddleware<
             urlObj.pathname = getNormalizedPathname(
               urlObj.pathname,
               resolvedRouting.locales,
-              resolvedRouting.localePrefix
-            );
+              resolvedRouting.localePrefix,
+            )
           }
         }
       }
 
       if (redirectDomain) {
-        urlObj.host = redirectDomain;
+        urlObj.host = redirectDomain
 
         if (request.headers.get('x-forwarded-host')) {
           urlObj.protocol =
-            request.headers.get('x-forwarded-proto') ??
-            request.nextUrl.protocol;
+            request.headers.get('x-forwarded-proto') ?? request.nextUrl.protocol
 
           const redirectDomainPort = redirectDomain.split(':')[1] as
             | string
-            | undefined;
+            | undefined
           urlObj.port =
-            redirectDomainPort ?? request.headers.get('x-forwarded-port') ?? '';
+            redirectDomainPort ?? request.headers.get('x-forwarded-port') ?? ''
         }
       }
 
       if (request.nextUrl.basePath) {
         urlObj.pathname = applyBasePath(
           urlObj.pathname,
-          request.nextUrl.basePath
-        );
+          request.nextUrl.basePath,
+        )
       }
 
-      hasRedirected = true;
-      return NextResponse.redirect(urlObj.toString());
+      hasRedirected = true
+      return NextResponse.redirect(urlObj.toString())
     }
 
     const unprefixedExternalPathname = getNormalizedPathname(
       externalPathname,
       resolvedRouting.locales,
-      resolvedRouting.localePrefix
-    );
+      resolvedRouting.localePrefix,
+    )
 
     const pathnameMatch = getPathnameMatch(
       externalPathname,
       resolvedRouting.locales,
       resolvedRouting.localePrefix,
-      domain
-    );
-    const hasLocalePrefix = pathnameMatch != null;
+      domain,
+    )
+    const hasLocalePrefix = pathnameMatch != null
 
     const isUnprefixedRouting =
       resolvedRouting.localePrefix.mode === 'never' ||
       (hasMatchedDefaultLocale &&
-        resolvedRouting.localePrefix.mode === 'as-needed');
+        resolvedRouting.localePrefix.mode === 'as-needed')
 
-    let response;
-    let internalTemplateName: string | undefined;
-    let hasRedirected: boolean | undefined;
+    let response
+    let internalTemplateName: string | undefined
+    let hasRedirected: boolean | undefined
 
-    let unprefixedInternalPathname = unprefixedExternalPathname;
+    let unprefixedInternalPathname = unprefixedExternalPathname
     const pathnames = (resolvedRouting as any).pathnames as
       | AppPathnames
-      | undefined;
+      | undefined
     if (pathnames) {
-      let resolvedTemplateLocale: AppLocales[number] | undefined;
-      [resolvedTemplateLocale, internalTemplateName] = getInternalTemplate(
+      let resolvedTemplateLocale: AppLocales[number] | undefined
+      ;[resolvedTemplateLocale, internalTemplateName] = getInternalTemplate(
         pathnames,
         unprefixedExternalPathname,
-        locale
-      ) as [AppLocales[number] | undefined, string | undefined];
+        locale,
+      ) as [AppLocales[number] | undefined, string | undefined]
 
       if (internalTemplateName) {
-        const pathnameConfig = pathnames[internalTemplateName];
+        const pathnameConfig = pathnames[internalTemplateName]
         const localeTemplate: string = getLocalizedTemplate(
           pathnameConfig,
           locale,
-          internalTemplateName
-        );
+          internalTemplateName,
+        )
 
         if (matchesPathname(localeTemplate, unprefixedExternalPathname)) {
           unprefixedInternalPathname = formatTemplatePathname(
             unprefixedExternalPathname,
             localeTemplate,
-            internalTemplateName as string
-          );
+            internalTemplateName as string,
+          )
         } else {
-          let sourceTemplate: string;
+          let sourceTemplate: string
           if (resolvedTemplateLocale) {
             // A localized pathname from another locale has matched
             sourceTemplate = getLocalizedTemplate(
               pathnameConfig,
               resolvedTemplateLocale,
-              internalTemplateName
-            );
+              internalTemplateName,
+            )
           } else {
             // An internal pathname has matched that
             // doesn't have a localized pathname
-            sourceTemplate = internalTemplateName;
+            sourceTemplate = internalTemplateName
           }
 
           const localePrefix = isUnprefixedRouting
             ? undefined
-            : getLocalePrefix(locale, resolvedRouting.localePrefix);
+            : getLocalePrefix(locale, resolvedRouting.localePrefix)
 
           const template = formatTemplatePathname(
             unprefixedExternalPathname,
             sourceTemplate,
-            localeTemplate
-          );
+            localeTemplate,
+          )
 
           response = redirect(
-            formatPathname(template, localePrefix, request.nextUrl.search)
-          );
+            formatPathname(template, localePrefix, request.nextUrl.search),
+          )
         }
       }
     }
@@ -240,86 +241,86 @@ export default function createMiddleware<
             formatPathname(
               unprefixedInternalPathname,
               getLocaleAsPrefix(locale),
-              request.nextUrl.search
-            )
-          );
+              request.nextUrl.search,
+            ),
+          )
         } else {
           response = redirect(
             formatPathname(
               unprefixedExternalPathname,
               getLocalePrefix(locale, resolvedRouting.localePrefix),
-              request.nextUrl.search
-            )
-          );
+              request.nextUrl.search,
+            ),
+          )
         }
       } else {
         const internalHref = formatPathname(
           unprefixedInternalPathname,
           getLocaleAsPrefix(locale),
-          request.nextUrl.search
-        );
+          request.nextUrl.search,
+        )
 
         if (hasLocalePrefix) {
           const externalHref = formatPathname(
             unprefixedExternalPathname,
             pathnameMatch.prefix,
-            request.nextUrl.search
-          );
+            request.nextUrl.search,
+          )
 
           if (resolvedRouting.localePrefix.mode === 'never') {
             response = redirect(
               formatPathname(
                 unprefixedExternalPathname,
                 undefined,
-                request.nextUrl.search
-              )
-            );
+                request.nextUrl.search,
+              ),
+            )
           } else if (pathnameMatch.exact) {
             if (hasMatchedDefaultLocale && isUnprefixedRouting) {
               response = redirect(
                 formatPathname(
                   unprefixedExternalPathname,
                   undefined,
-                  request.nextUrl.search
-                )
-              );
+                  request.nextUrl.search,
+                ),
+              )
             } else {
               if (resolvedRouting.domains) {
                 const pathDomain = getBestMatchingDomain(
                   domain,
                   pathnameMatch.locale,
-                  domainsConfig
-                );
+                  domainsConfig,
+                )
 
                 if (domain?.domain !== pathDomain?.domain && !hasUnknownHost) {
-                  response = redirect(externalHref, pathDomain?.domain);
+                  response = redirect(externalHref, pathDomain?.domain)
                 } else {
-                  response = next(internalHref);
+                  response = next(internalHref)
                 }
               } else {
-                response = next(internalHref);
+                response = next(internalHref)
               }
             }
           } else {
-            response = redirect(externalHref);
+            response = redirect(externalHref)
           }
         } else {
           if (isUnprefixedRouting) {
-            response = next(internalHref);
+            response = next(internalHref)
           } else {
             response = redirect(
               formatPathname(
                 unprefixedExternalPathname,
                 getLocalePrefix(locale, resolvedRouting.localePrefix),
-                request.nextUrl.search
-              )
-            );
+                request.nextUrl.search,
+              ),
+            )
           }
         }
       }
     }
 
-    syncCookie(request, response, locale, resolvedRouting, domain);
+    syncCookie(request, response, locale, resolvedRouting, domain)
 
     if (
       !hasRedirected &&
@@ -337,11 +338,11 @@ export default function createMiddleware<
               ? pathnames[internalTemplateName]
               : undefined,
           request,
-          resolvedLocale: locale
-        })
-      );
+          resolvedLocale: locale,
+        }),
+      )
     }
 
-    return response;
-  };
+    return response
+  }
 }

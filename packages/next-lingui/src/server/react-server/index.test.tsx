@@ -1,13 +1,13 @@
-import {describe, expect, it} from 'vitest';
-import {getRequestConfig} from './index.js';
+import { describe, expect, it } from 'vitest'
+import { getRequestConfig } from './index'
 
 describe('server index', () => {
   it('exports getRequestConfig', () => {
-    const fn = getRequestConfig(async ({requestLocale}) => ({
+    const fn = getRequestConfig(async ({ requestLocale }) => ({
       locale: (await requestLocale) || 'en',
-      messages: {}
-    }));
+      messages: {},
+    }))
 
-    expect(typeof fn).toBe('function');
-  });
-});
+    expect(typeof fn).toBe('function')
+  })
+})

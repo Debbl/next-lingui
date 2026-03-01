@@ -1,6 +1,6 @@
-import type {InitializedLocaleCookieConfig} from '../../routing/config.js';
-import type {Locale} from '../../shared/types.js';
-import {getBasePath} from './utils.js';
+import { getBasePath } from './utils'
+import type { InitializedLocaleCookieConfig } from '../../routing/config'
+import type { Locale } from '../../shared/types'
 
 /**
  * We have to keep the cookie value in sync as Next.js might
@@ -11,9 +11,9 @@ export default function syncLocaleCookie(
   localeCookie: InitializedLocaleCookieConfig,
   pathname: string | null,
   locale: Locale,
-  nextLocale?: Locale
+  nextLocale?: Locale,
 ) {
-  const isSwitchingLocale = nextLocale !== locale && nextLocale != null;
+  const isSwitchingLocale = nextLocale !== locale && nextLocale != null
 
   if (
     !localeCookie ||
@@ -22,38 +22,38 @@ export default function syncLocaleCookie(
     // only not when running e.g. in a simulated test environment
     !pathname
   ) {
-    return;
+    return
   }
 
-  const basePath = getBasePath(pathname);
-  const hasBasePath = basePath !== '';
-  const defaultPath = hasBasePath ? basePath : '/';
+  const basePath = getBasePath(pathname)
+  const hasBasePath = basePath !== ''
+  const defaultPath = hasBasePath ? basePath : '/'
 
-  const {name, ...rest} = localeCookie;
+  const { name, ...rest } = localeCookie
 
   if (!rest.path) {
-    rest.path = defaultPath;
+    rest.path = defaultPath
   }
 
-  let localeCookieString = `${name}=${nextLocale};`;
+  let localeCookieString = `${name}=${nextLocale};`
   for (const [key, value] of Object.entries(rest)) {
     // Map object properties to cookie properties.
     // Interestingly, `maxAge` corresponds to `max-age`,
     // while `sameSite` corresponds to `SameSite`.
     // Also, keys are case-insensitive.
-    const targetKey = key === 'maxAge' ? 'max-age' : key;
+    const targetKey = key === 'maxAge' ? 'max-age' : key
 
-    localeCookieString += `${targetKey}`;
+    localeCookieString += `${targetKey}`
 
     if (typeof value !== 'boolean') {
-      localeCookieString += '=' + value;
+      localeCookieString += `=${value}`
     }
 
     // A trailing ";" is allowed by browsers
-    localeCookieString += ';';
+    localeCookieString += ';'
   }
 
   // Note that writing to `document.cookie` doesn't overwrite all
   // cookies, but only the ones referenced via the name here.
-  document.cookie = localeCookieString;
+  document.cookie = localeCookieString
 }

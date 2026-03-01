@@ -1,10 +1,10 @@
 import type {
   GetRequestConfigParams,
-  RequestConfig
-} from '../dist/server/react-server/getRequestConfig.js';
+  RequestConfig,
+} from '../dist/server/react-server/getRequestConfig'
 
 declare const getRuntimeConfig: (
-  params: GetRequestConfigParams
-) => RequestConfig | Promise<RequestConfig>;
+  params: GetRequestConfigParams,
+) => RequestConfig | Promise<RequestConfig>
 
-export default getRuntimeConfig;
+export default getRuntimeConfig

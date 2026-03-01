@@ -1,6 +1,6 @@
 declare namespace NodeJS {
   interface ProcessEnv {
-    NODE_ENV: 'development' | 'production';
+    NODE_ENV: 'development' | 'production'
   }
 }
 
@@ -13,7 +13,7 @@ declare namespace Intl {
    *
    * [Wikipedia](https://en.wikipedia.org/wiki/IETF_language_tag).
    */
-  type BCP47LanguageTag = string;
+  type BCP47LanguageTag = string
 
   /**
    * Unit to use in the relative time internationalized message.
@@ -38,7 +38,7 @@ declare namespace Intl {
     | 'minute'
     | 'minutes'
     | 'second'
-    | 'seconds';
+    | 'seconds'
 
   /**
    * The locale matching algorithm to use.
@@ -47,7 +47,7 @@ declare namespace Intl {
    *
    * [Specification](https://tc39.es/ecma402/#sec-InitializeRelativeTimeFormat).
    */
-  type RelativeTimeFormatLocaleMatcher = 'lookup' | 'best fit';
+  type RelativeTimeFormatLocaleMatcher = 'lookup' | 'best fit'
 
   /**
    * The format of output message.
@@ -56,7 +56,7 @@ declare namespace Intl {
    *
    * [Specification](https://tc39.es/ecma402/#sec-InitializeRelativeTimeFormat).
    */
-  type RelativeTimeFormatNumeric = 'always' | 'auto';
+  type RelativeTimeFormatNumeric = 'always' | 'auto'
 
   /**
    * The length of the internationalized message.
@@ -65,7 +65,7 @@ declare namespace Intl {
    *
    * [Specification](https://tc39.es/ecma402/#sec-InitializeRelativeTimeFormat).
    */
-  type RelativeTimeFormatStyle = 'long' | 'short' | 'narrow';
+  type RelativeTimeFormatStyle = 'long' | 'short' | 'narrow'
 
   /**
    * An object with some or all of properties of `options` parameter
@@ -76,9 +76,9 @@ declare namespace Intl {
    * [Specification](https://tc39.es/ecma402/#sec-InitializeRelativeTimeFormat).
    */
   interface RelativeTimeFormatOptions {
-    localeMatcher?: RelativeTimeFormatLocaleMatcher;
-    numeric?: RelativeTimeFormatNumeric;
-    style?: RelativeTimeFormatStyle;
+    localeMatcher?: RelativeTimeFormatLocaleMatcher
+    numeric?: RelativeTimeFormatNumeric
+    style?: RelativeTimeFormatStyle
   }
 
   /**
@@ -91,10 +91,10 @@ declare namespace Intl {
    * [Specification](https://tc39.es/ecma402/#table-relativetimeformat-resolvedoptions-properties)
    */
   interface ResolvedRelativeTimeFormatOptions {
-    locale: BCP47LanguageTag;
-    style: RelativeTimeFormatStyle;
-    numeric: RelativeTimeFormatNumeric;
-    numberingSystem: string;
+    locale: BCP47LanguageTag
+    style: RelativeTimeFormatStyle
+    numeric: RelativeTimeFormatNumeric
+    numberingSystem: string
   }
 
   /**
@@ -106,9 +106,9 @@ declare namespace Intl {
    * [Specification](https://tc39.es/ecma402/#sec-FormatRelativeTimeToParts).
    */
   interface RelativeTimeFormatPart {
-    type: string;
-    value: string;
-    unit?: RelativeTimeFormatUnit;
+    type: string
+    value: string
+    unit?: RelativeTimeFormatUnit
   }
 
   interface RelativeTimeFormat {
@@ -141,7 +141,8 @@ declare namespace Intl {
      *
      * [Specification](https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.prototype.format).
      */
-    format(value: number, unit: RelativeTimeFormatUnit): string;
+    // eslint-disable-next-line @typescript-eslint/method-signature-style
+    format(value: number, unit: RelativeTimeFormatUnit): string
 
     /**
      *  A version of the format method which it returns an array of objects
@@ -171,10 +172,11 @@ declare namespace Intl {
      *
      *  [Specification](https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.prototype.formatToParts).
      */
+    // eslint-disable-next-line @typescript-eslint/method-signature-style
     formatToParts(
       value: number,
-      unit: RelativeTimeFormatUnit
-    ): Array<RelativeTimeFormatPart>;
+      unit: RelativeTimeFormatUnit,
+    ): Array<RelativeTimeFormatPart>
 
     /**
      * Provides access to the locale and options computed during initialization of this `Intl.RelativeTimeFormat` object.
@@ -187,7 +189,8 @@ declare namespace Intl {
      *
      * [Specification](https://tc39.es/ecma402/#sec-intl.relativetimeformat.prototype.resolvedoptions)
      */
-    resolvedOptions(): ResolvedRelativeTimeFormatOptions;
+    // eslint-disable-next-line @typescript-eslint/method-signature-style
+    resolvedOptions(): ResolvedRelativeTimeFormatOptions
   }
 
   /**
@@ -232,8 +235,8 @@ declare namespace Intl {
      */
     new (
       locales?: BCP47LanguageTag | Array<BCP47LanguageTag>,
-      options?: RelativeTimeFormatOptions
-    ): RelativeTimeFormat;
+      options?: RelativeTimeFormatOptions,
+    ): RelativeTimeFormat
 
     /**
      * Returns an array containing those of the provided locales
@@ -266,21 +269,22 @@ declare namespace Intl {
      *
      * [Specification](https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.supportedLocalesOf).
      */
+    // eslint-disable-next-line @typescript-eslint/method-signature-style
     supportedLocalesOf(
       locales: BCP47LanguageTag | Array<BCP47LanguageTag>,
-      options?: RelativeTimeFormatOptions
-    ): Array<BCP47LanguageTag>;
-  };
+      options?: RelativeTimeFormatOptions,
+    ): Array<BCP47LanguageTag>
+  }
 
   interface NumberFormatOptions {
-    notation?: string;
-    unit?: string;
-    unitDisplay?: string;
+    notation?: string
+    unit?: string
+    unitDisplay?: string
   }
 
   interface ResolvedNumberFormatOptions {
-    notation?: string;
-    unit?: string;
-    unitDisplay?: string;
+    notation?: string
+    unit?: string
+    unitDisplay?: string
   }
 }

@@ -1,209 +1,212 @@
-import {describe, expect, it} from 'vitest';
+import { describe, expect, it } from 'vitest'
 import {
   formatPathnameTemplate,
   getInternalTemplate,
   getNormalizedPathname,
   getPathnameMatch,
-  getRouteParams
-} from './utils.js';
+  getRouteParams,
+} from './utils'
 
 describe('getNormalizedPathname', () => {
   it('should return the normalized pathname', () => {
     function getResult(pathname: string) {
-      return getNormalizedPathname(pathname, ['en', 'de'], {mode: 'always'});
+      return getNormalizedPathname(pathname, ['en', 'de'], { mode: 'always' })
     }
 
-    expect(getResult('/en/about')).toBe('/about');
-    expect(getResult('/en/energy')).toBe('/energy');
-    expect(getResult('/energy')).toBe('/energy');
-    expect(getResult('/de/about')).toBe('/about');
-    expect(getResult('/about')).toBe('/about');
-    expect(getResult('/')).toBe('/');
-    expect(getResult('/es')).toBe('/es');
-  });
-});
+    expect(getResult('/en/about')).toBe('/about')
+    expect(getResult('/en/energy')).toBe('/energy')
+    expect(getResult('/energy')).toBe('/energy')
+    expect(getResult('/de/about')).toBe('/about')
+    expect(getResult('/about')).toBe('/about')
+    expect(getResult('/')).toBe('/')
+    expect(getResult('/es')).toBe('/es')
+  })
+})
 
 describe('getRouteParams', () => {
   it('returns undefined for non-matching paths', () => {
     expect(
-      getRouteParams('/users/[userId]-[userName]', '/posts/42')
-    ).toBeUndefined();
-    expect(getRouteParams('/users/[userId]', '/posts/42')).toBeUndefined();
+      getRouteParams('/users/[userId]-[userName]', '/posts/42'),
+    ).toBeUndefined()
+    expect(getRouteParams('/users/[userId]', '/posts/42')).toBeUndefined()
     expect(
-      getRouteParams('/users/[userId]/posts/[postId]', '/users/23/comments/42')
-    ).toBeUndefined();
-  });
+      getRouteParams('/users/[userId]/posts/[postId]', '/users/23/comments/42'),
+    ).toBeUndefined()
+  })
 
   it('returns an object with parameters for matching paths', () => {
     expect(
-      getRouteParams('/users/[userId]-[userName]', '/users/23-jane')
-    ).toEqual({userId: '23', userName: 'jane'});
+      getRouteParams('/users/[userId]-[userName]', '/users/23-jane'),
+    ).toEqual({ userId: '23', userName: 'jane' })
     expect(getRouteParams('/users/[userId]', '/users/23')).toEqual({
-      userId: '23'
-    });
+      userId: '23',
+    })
     expect(
-      getRouteParams('/users/[userId]/posts/[postId]', '/users/23/posts/42')
-    ).toEqual({userId: '23', postId: '42'});
-  });
+      getRouteParams('/users/[userId]/posts/[postId]', '/users/23/posts/42'),
+    ).toEqual({ userId: '23', postId: '42' })
+  })
 
   it('handles special characters in parameter values', () => {
     expect(getRouteParams('/users/[userId]', '/users/23%20jane')).toEqual({
-      userId: '23%20jane'
-    });
+      userId: '23%20jane',
+    })
     expect(getRouteParams('/users/[userId]', '/users/23%2F42')).toEqual({
-      userId: '23%2F42'
-    });
-  });
+      userId: '23%2F42',
+    })
+  })
 
   it('handles arrays', () => {
     expect(
       getRouteParams(
         '/categories/[...categories]',
-        '/categories/clothing/t-shirts'
-      )
+        '/categories/clothing/t-shirts',
+      ),
     ).toEqual({
-      '...categories': 'clothing/t-shirts'
-    });
+      '...categories': 'clothing/t-shirts',
+    })
     expect(
       getRouteParams(
         '/categories/[[...categories]]',
-        '/categories/clothing/t-shirts'
-      )
+        '/categories/clothing/t-shirts',
+      ),
     ).toEqual({
-      '...categories': 'clothing/t-shirts'
-    });
-  });
+      '...categories': 'clothing/t-shirts',
+    })
+  })
 
   it('does not partially match similar optional catch-all segments', () => {
-    expect(getRouteParams('/stoc/[[...slug]]', '/stock')).toBeUndefined();
-    expect(getRouteParams('/stoc/[[...slug]]', '/stock/truck')).toBeUndefined();
-  });
-});
+    expect(getRouteParams('/stoc/[[...slug]]', '/stock')).toBeUndefined()
+    expect(getRouteParams('/stoc/[[...slug]]', '/stock/truck')).toBeUndefined()
+  })
+})
 
 describe('formatPathname', () => {
   it('returns the template if no params are provided', () => {
-    expect(formatPathnameTemplate('/users')).toBe('/users');
+    expect(formatPathnameTemplate('/users')).toBe('/users')
     expect(formatPathnameTemplate('/users/[userId]-[userName]')).toBe(
-      '/users/[userId]-[userName]'
-    );
+      '/users/[userId]-[userName]',
+    )
     expect(formatPathnameTemplate('/users/[userId]/posts/[postId]')).toBe(
-      '/users/[userId]/posts/[postId]'
-    );
-  });
+      '/users/[userId]/posts/[postId]',
+    )
+  })
 
   it('replaces parameter placeholders with values', () => {
     expect(
       formatPathnameTemplate('/users/[userId]-[userName]', {
         userId: '23',
-        userName: 'jane'
-      })
-    ).toBe('/users/23-jane');
-    expect(formatPathnameTemplate('/users/[userId]', {userId: '23'})).toBe(
-      '/users/23'
-    );
+        userName: 'jane',
+      }),
+    ).toBe('/users/23-jane')
+    expect(formatPathnameTemplate('/users/[userId]', { userId: '23' })).toBe(
+      '/users/23',
+    )
     expect(
       formatPathnameTemplate('/users/[userId]/posts/[postId]', {
         userId: '23',
-        postId: '42'
-      })
-    ).toBe('/users/23/posts/42');
-  });
+        postId: '42',
+      }),
+    ).toBe('/users/23/posts/42')
+  })
 
   it('ignores extra parameters', () => {
     expect(
       formatPathnameTemplate('/users/[userId]-[userName]', {
         userId: '23',
         userName: 'jane',
-        extra: 'param'
-      })
-    ).toBe('/users/23-jane');
+        extra: 'param',
+      }),
+    ).toBe('/users/23-jane')
     expect(
-      formatPathnameTemplate('/users/[userId]', {userId: '23', extra: 'param'})
-    ).toBe('/users/23');
+      formatPathnameTemplate('/users/[userId]', {
+        userId: '23',
+        extra: 'param',
+      }),
+    ).toBe('/users/23')
     expect(
       formatPathnameTemplate('/users/[userId]/posts/[postId]', {
         userId: '23',
         postId: '42',
-        extra: 'param'
-      })
-    ).toBe('/users/23/posts/42');
-  });
+        extra: 'param',
+      }),
+    ).toBe('/users/23/posts/42')
+  })
 
   it('does not encode special characters in parameter values', () => {
     expect(
-      formatPathnameTemplate('/users/[userId]', {userId: '23%20jane'})
-    ).toBe('/users/23%20jane');
-    expect(formatPathnameTemplate('/users/[userId]', {userId: '23/42'})).toBe(
-      '/users/23/42'
-    );
-  });
-});
+      formatPathnameTemplate('/users/[userId]', { userId: '23%20jane' }),
+    ).toBe('/users/23%20jane')
+    expect(formatPathnameTemplate('/users/[userId]', { userId: '23/42' })).toBe(
+      '/users/23/42',
+    )
+  })
+})
 
 describe('getInternalTemplate', () => {
   const pathnames = {
     '/categories/[[...slug]]': {
       en: '/categories/[[...slug]]',
       de: '/kategorien/[[...slug]]',
-      it: '/categorie/[[...slug]]'
+      it: '/categorie/[[...slug]]',
     },
     '/internal/[id]': {
       en: '/external-en/[id]',
       de: '/external/[id]',
-      it: '/external/[id]'
-    }
-  };
+      it: '/external/[id]',
+    },
+  }
 
   it('works when passing no params to optional catch-all segments', () => {
     expect(getInternalTemplate(pathnames, '/kategorien', 'en')).toEqual([
       'de',
-      '/categories/[[...slug]]'
-    ]);
-  });
+      '/categories/[[...slug]]',
+    ])
+  })
 
   it('works when passing params to optional catch-all segments', () => {
     expect(getInternalTemplate(pathnames, '/kategorien/neu', 'en')).toEqual([
       'de',
-      '/categories/[[...slug]]'
-    ]);
-  });
+      '/categories/[[...slug]]',
+    ])
+  })
 
   it('prefers a template from the current locale', () => {
     expect(getInternalTemplate(pathnames, '/external/2', 'it')).toEqual([
       'it',
-      '/internal/[id]'
-    ]);
-  });
-});
+      '/internal/[id]',
+    ])
+  })
+})
 
 describe('getPathnameMatch', () => {
   it('prioritizes more specific custom prefixes for overlapping ones', () => {
-    const locales = ['de', 'de-at', 'de-at-x-test'] as const;
+    const locales = ['de', 'de-at', 'de-at-x-test'] as const
     const localePrefix = {
       mode: 'always',
       prefixes: {
-        de: '/de',
+        'de': '/de',
         'de-at': '/de/at',
         // Longer locale, shorter prefix
-        'de-at-x-test': '/de/a'
-      }
-    } as const;
+        'de-at-x-test': '/de/a',
+      },
+    } as const
 
     expect(getPathnameMatch('/de/at/test', locales, localePrefix)).toEqual({
       locale: 'de-at',
       prefix: '/de/at',
       exact: true,
-      matchedPrefix: '/de/at'
-    });
-  });
+      matchedPrefix: '/de/at',
+    })
+  })
 
   it('does not confuse unrelated parts of the pathname with a locale', () => {
     expect(
-      getPathnameMatch('/de/ats', ['de', 'de-at'], {mode: 'always'})
+      getPathnameMatch('/de/ats', ['de', 'de-at'], { mode: 'always' }),
     ).toEqual({
       locale: 'de',
       prefix: '/de',
       exact: true,
-      matchedPrefix: '/de'
-    });
-  });
-});
+      matchedPrefix: '/de',
+    })
+  })
+})

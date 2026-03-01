@@ -1,16 +1,16 @@
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import validateLocale from './validateLocale.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import validateLocale from './validateLocale'
 
 describe('accepts valid formats', () => {
-  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>
 
   beforeEach(() => {
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-  });
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  })
 
   afterEach(() => {
-    consoleErrorSpy.mockRestore();
-  });
+    consoleErrorSpy.mockRestore()
+  })
 
   it.each([
     'en',
@@ -32,23 +32,23 @@ describe('accepts valid formats', () => {
     'en-US-x-usd',
 
     // Somehow tolerated by Intl.Locale
-    'english'
+    'english',
   ])('accepts: %s', (locale) => {
-    validateLocale(locale);
-    expect(consoleErrorSpy).not.toHaveBeenCalled();
-  });
-});
+    validateLocale(locale)
+    expect(consoleErrorSpy).not.toHaveBeenCalled()
+  })
+})
 
 describe('warns for invalid formats', () => {
-  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>
 
   beforeEach(() => {
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-  });
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  })
 
   afterEach(() => {
-    consoleErrorSpy.mockRestore();
-  });
+    consoleErrorSpy.mockRestore()
+  })
 
   it.each([
     'en_US',
@@ -63,9 +63,9 @@ describe('warns for invalid formats', () => {
     'en-US-',
     '@#$',
     'en US',
-    'en.US'
+    'en.US',
   ])('rejects: %s', (locale) => {
-    validateLocale(locale);
-    expect(consoleErrorSpy).toHaveBeenCalled();
-  });
-});
+    validateLocale(locale)
+    expect(consoleErrorSpy).toHaveBeenCalled()
+  })
+})

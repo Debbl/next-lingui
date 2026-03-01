@@ -1,20 +1,20 @@
-import {beforeEach, describe, expect, it, vi} from 'vitest';
-import defineRouting from './defineRouting.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import defineRouting from './defineRouting'
 
 describe('defaultLocale', () => {
   it('ensures the `defaultLocale` is within `locales`', () => {
     defineRouting({
       locales: ['en'],
-      // @ts-expect-error
-      defaultLocale: 'es'
-    });
+      // @ts-expect-error -- Invalid attribute
+      defaultLocale: 'es',
+    })
 
     defineRouting({
       locales: ['en', 'de'],
-      defaultLocale: 'en'
-    });
-  });
-});
+      defaultLocale: 'en',
+    })
+  })
+})
 
 describe('pathnames', () => {
   it('accepts a `pathnames` config', () => {
@@ -25,15 +25,15 @@ describe('pathnames', () => {
         '/': '/',
         '/about': {
           en: '/about',
-          de: '/ueber-uns'
-        }
-      }
-    });
+          de: '/ueber-uns',
+        },
+      },
+    })
 
     // Ensures the result is typed as narrow as possible
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    routing.pathnames['/about'].en;
-  });
+    routing.pathnames['/about'].en
+  })
 
   it('accepts a partial config for only some locales', () => {
     defineRouting({
@@ -41,12 +41,12 @@ describe('pathnames', () => {
       defaultLocale: 'en',
       pathnames: {
         '/about': {
-          de: '/ueber-uns'
-        }
-      }
-    });
-  });
-});
+          de: '/ueber-uns',
+        },
+      },
+    })
+  })
+})
 
 describe('domains', () => {
   it('accepts a `domains` config', () => {
@@ -57,11 +57,11 @@ describe('domains', () => {
         {
           defaultLocale: 'en',
           domain: 'example.com',
-          locales: ['en']
-        }
-      ]
-    });
-  });
+          locales: ['en'],
+        },
+      ],
+    })
+  })
 
   it('ensures `defaultLocale` is within `locales`', () => {
     defineRouting({
@@ -69,14 +69,14 @@ describe('domains', () => {
       defaultLocale: 'en',
       domains: [
         {
-          // @ts-expect-error
+          // @ts-expect-error -- Invalid attribute
           defaultLocale: 'es',
           domain: 'example.com',
-          locales: ['en']
-        }
-      ]
-    });
-  });
+          locales: ['en'],
+        },
+      ],
+    })
+  })
 
   it('ensures `locales` are within `locales`', () => {
     defineRouting({
@@ -86,10 +86,10 @@ describe('domains', () => {
         {
           defaultLocale: 'en',
           domain: 'example.com',
-          locales: ['en']
-        }
-      ]
-    });
+          locales: ['en'],
+        },
+      ],
+    })
 
     defineRouting({
       locales: ['en'],
@@ -98,21 +98,21 @@ describe('domains', () => {
         {
           defaultLocale: 'en',
           domain: 'example.com',
-          // @ts-expect-error
-          locales: ['es']
-        }
-      ]
-    });
-  });
+          // @ts-expect-error -- Invalid attribute
+          locales: ['es'],
+        },
+      ],
+    })
+  })
 
   describe('validation', () => {
     beforeEach(() => {
-      const originalConsoleWarn = console.warn;
-      console.warn = vi.fn();
+      const originalConsoleWarn = console.warn
+      console.warn = vi.fn()
       return () => {
-        console.warn = originalConsoleWarn;
-      };
-    });
+        console.warn = originalConsoleWarn
+      }
+    })
 
     it('does not warn if locales are unique per domain', () => {
       defineRouting({
@@ -122,23 +122,23 @@ describe('domains', () => {
           {
             domain: 'us.example.com',
             defaultLocale: 'en-US',
-            locales: ['en-US']
+            locales: ['en-US'],
           },
           {
             domain: 'ca.example.com',
             defaultLocale: 'en-CA',
-            locales: ['en-CA', 'fr-CA']
+            locales: ['en-CA', 'fr-CA'],
           },
           {
             domain: 'fr.example.com',
             defaultLocale: 'fr-FR',
-            locales: ['fr-FR']
-          }
-        ]
-      });
+            locales: ['fr-FR'],
+          },
+        ],
+      })
 
-      expect(console.warn).not.toHaveBeenCalled();
-    });
+      expect(console.warn).not.toHaveBeenCalled()
+    })
 
     it('should warn if locales are not unique per domain', () => {
       defineRouting({
@@ -148,63 +148,63 @@ describe('domains', () => {
           {
             domain: 'us.example.com',
             defaultLocale: 'en',
-            locales: ['en']
+            locales: ['en'],
           },
           {
             domain: 'ca.example.com',
             defaultLocale: 'en',
-            locales: ['en', 'fr']
+            locales: ['en', 'fr'],
           },
           {
             domain: 'fr.example.com',
             defaultLocale: 'fr',
-            locales: ['fr']
-          }
-        ]
-      });
+            locales: ['fr'],
+          },
+        ],
+      })
 
       expect(console.warn).toHaveBeenCalledWith(
         'Locales are expected to be unique per domain, but found overlap:\n' +
           '- "en" is used by: us.example.com, ca.example.com\n' +
           '- "fr" is used by: ca.example.com, fr.example.com\n' +
-          'Please see https://next-lingui.dev/docs/routing/configuration#domains'
-      );
-    });
-  });
-});
+          'Please see https://next-lingui.dev/docs/routing/configuration#domains',
+      )
+    })
+  })
+})
 
 describe('localePrefix', () => {
   it('accepts a shorthand `localePrefix`', () => {
     defineRouting({
       locales: ['en'],
       defaultLocale: 'en',
-      localePrefix: 'always'
-    });
+      localePrefix: 'always',
+    })
 
     defineRouting({
       locales: ['en'],
       defaultLocale: 'en',
-      localePrefix: 'never'
-    });
-  });
+      localePrefix: 'never',
+    })
+  })
 
   it('accepts a verbose `localePrefix`', () => {
     defineRouting({
       locales: ['en'],
       defaultLocale: 'en',
       localePrefix: {
-        mode: 'always'
-      }
-    });
+        mode: 'always',
+      },
+    })
 
     defineRouting({
       locales: ['en-GB', 'en-US'],
       defaultLocale: 'en-US',
       localePrefix: {
-        mode: 'as-needed'
-      }
-    });
-  });
+        mode: 'as-needed',
+      },
+    })
+  })
 
   describe('custom prefixes', () => {
     it('accepts partial prefixes', () => {
@@ -214,12 +214,12 @@ describe('localePrefix', () => {
         localePrefix: {
           mode: 'as-needed',
           prefixes: {
-            'en-US': '/us'
+            'en-US': '/us',
             // (en-GB is used as-is)
-          }
-        }
-      });
-    });
+          },
+        },
+      })
+    })
 
     it('ensures locales used in prefixes are valid', () => {
       defineRouting({
@@ -228,23 +228,23 @@ describe('localePrefix', () => {
         localePrefix: {
           mode: 'as-needed',
           prefixes: {
-            // @ts-expect-error
-            'en-ES': '/es'
-          }
-        }
-      });
-    });
-  });
-});
+            // @ts-expect-error -- Unknown locale
+            'en-ES': '/es',
+          },
+        },
+      })
+    })
+  })
+})
 
 describe('localeCookie', () => {
   it('can set it to `false`', () => {
     defineRouting({
       locales: ['en'],
       defaultLocale: 'en',
-      localeCookie: false
-    });
-  });
+      localeCookie: false,
+    })
+  })
 
   it('accepts a custom config', () => {
     defineRouting({
@@ -258,37 +258,37 @@ describe('localeCookie', () => {
         path: '/',
         priority: 'high',
         sameSite: 'strict',
-        secure: true
-      }
-    });
-  });
+        secure: true,
+      },
+    })
+  })
 
   it('restricts the available attributes', () => {
     defineRouting({
       locales: ['en'],
       defaultLocale: 'en',
       localeCookie: {
-        // @ts-expect-error
-        httpOnly: true
-      }
-    });
+        // @ts-expect-error -- Invalid attribute
+        httpOnly: true,
+      },
+    })
 
     defineRouting({
       locales: ['en'],
       defaultLocale: 'en',
       localeCookie: {
-        // @ts-expect-error
-        value: 'custom'
-      }
-    });
+        // @ts-expect-error -- Invalid attribute
+        value: 'custom',
+      },
+    })
 
     defineRouting({
       locales: ['en'],
       defaultLocale: 'en',
       localeCookie: {
-        // @ts-expect-error
-        expires: 123
-      }
-    });
-  });
-});
+        // @ts-expect-error -- Invalid attribute
+        expires: 123,
+      },
+    })
+  })
+})

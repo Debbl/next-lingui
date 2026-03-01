@@ -1,10 +1,10 @@
-import {cache} from 'react';
-import getConfig from './getConfig.js';
+import { cache } from 'react'
+import getConfig from './getConfig'
 
 async function getFormatsCachedImpl() {
-  const config = await getConfig();
-  return config.formats;
+  const config = await getConfig()
+  return config.formats
 }
-const getFormats = cache(getFormatsCachedImpl);
+const getFormats = cache(getFormatsCachedImpl)
 
-export default getFormats;
+export default getFormats

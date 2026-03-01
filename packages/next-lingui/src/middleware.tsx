@@ -1,1 +1,1 @@
-export {default} from './middleware/index.js';
+export { default } from './middleware/index'

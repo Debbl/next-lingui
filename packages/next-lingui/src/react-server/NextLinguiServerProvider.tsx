@@ -1,12 +1,15 @@
-import type {ComponentProps} from 'react';
-import getLocale from '../server/react-server/getLocale.js';
-import getMessages from '../server/react-server/getMessages.js';
-import NextLinguiClientProvider from '../shared/NextLinguiClientProvider.js';
+import getLocale from '../server/react-server/getLocale'
+import getMessages from '../server/react-server/getMessages'
+import NextLinguiClientProvider from '../shared/NextLinguiClientProvider'
+import type { ComponentProps } from 'react'
 
-type Props = Omit<ComponentProps<typeof NextLinguiClientProvider>, 'locale' | 'messages'> & {
-  locale?: ComponentProps<typeof NextLinguiClientProvider>['locale'];
-  messages?: ComponentProps<typeof NextLinguiClientProvider>['messages'];
-};
+type Props = Omit<
+  ComponentProps<typeof NextLinguiClientProvider>,
+  'locale' | 'messages'
+> & {
+  locale?: ComponentProps<typeof NextLinguiClientProvider>['locale']
+  messages?: ComponentProps<typeof NextLinguiClientProvider>['messages']
+}
 
 export default async function NextLinguiServerProvider({
   locale,
@@ -19,5 +22,5 @@ export default async function NextLinguiServerProvider({
       messages={messages === undefined ? await getMessages() : messages}
       {...rest}
     />
-  );
+  )
 }
