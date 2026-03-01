@@ -1,16 +1,16 @@
-import type {NextConfig} from 'next';
-import getNextConfig from './getNextConfig.js';
-import type {PluginConfig} from './types.js';
+import getNextConfig from './getNextConfig'
+import type { NextConfig } from 'next'
+import type { PluginConfig } from './types'
 
 export default function createNextLinguiPlugin(
-  requestConfigPathOrConfig: string | PluginConfig = {}
+  requestConfigPathOrConfig: string | PluginConfig = {},
 ) {
   const config =
     typeof requestConfigPathOrConfig === 'string'
-      ? {requestConfig: requestConfigPathOrConfig}
-      : requestConfigPathOrConfig;
+      ? { requestConfig: requestConfigPathOrConfig }
+      : requestConfigPathOrConfig
 
   return function withNextLingui(nextConfig?: NextConfig) {
-    return getNextConfig(config, nextConfig);
-  };
+    return getNextConfig(config, nextConfig)
+  }
 }

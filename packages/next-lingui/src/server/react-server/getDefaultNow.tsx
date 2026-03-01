@@ -1,10 +1,10 @@
-import {cache} from 'react';
+import { cache } from 'react'
 
 function defaultNow() {
   // See https://next-lingui.dev/docs/usage/dates-times#relative-times-server
-  return new Date();
+  return new Date()
 }
 
-const getDefaultNow = cache(defaultNow);
+const getDefaultNow = cache(defaultNow)
 
-export default getDefaultNow;
+export default getDefaultNow

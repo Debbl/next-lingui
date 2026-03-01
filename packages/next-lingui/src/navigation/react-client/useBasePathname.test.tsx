@@ -1,67 +1,69 @@
-import {render, screen} from '@testing-library/react';
-import {usePathname as useNextPathname} from 'next/navigation.js';
-import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {NextLinguiClientProvider} from '../../index.react-client.js';
-import useBasePathname from './useBasePathname.js';
+import { useLingui } from '@lingui/react'
+import { render, screen } from '@testing-library/react'
+import { usePathname as useNextPathname } from 'next/navigation'
+import React from 'react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import useBasePathname from './useBasePathname'
 
-vi.mock('next/navigation.js');
+vi.mock('next/navigation')
+vi.mock('@lingui/react', () => ({
+  useLingui: vi.fn(() => ({ i18n: { locale: 'en' } })),
+}))
 
 function mockPathname(pathname: string) {
-  vi.mocked(useNextPathname).mockImplementation(() => pathname);
+  vi.mocked(useNextPathname).mockImplementation(() => pathname)
+}
+
+function mockLocale(locale: string) {
+  vi.mocked(useLingui).mockReturnValue({ i18n: { locale } } as any)
 }
 
 function Component() {
   return useBasePathname({
     localePrefix: {
-      mode: 'as-needed'
-    }
-  });
+      mode: 'as-needed',
+    },
+  })
 }
 
-function renderWithProvider(pathname: string) {
-  mockPathname(pathname);
-  render(
-    <NextLinguiClientProvider locale="en" messages={{}}>
-      <Component />
-    </NextLinguiClientProvider>
-  );
+function renderComponent(pathname: string, locale = 'en') {
+  mockLocale(locale)
+  mockPathname(pathname)
+  render(<Component />)
 }
 
 describe('unprefixed routing', () => {
   it('returns an unprefixed pathname', () => {
-    renderWithProvider('/');
-    screen.getByText('/');
-  });
+    renderComponent('/')
+    screen.getByText('/')
+  })
 
   it('returns an unprefixed pathname at sub paths', () => {
-    renderWithProvider('/about');
-    screen.getByText('/about');
-  });
-});
+    renderComponent('/about')
+    screen.getByText('/about')
+  })
+})
 
 describe('prefixed routing', () => {
   it('returns an unprefixed pathname', () => {
-    renderWithProvider('/en');
-    screen.getByText('/');
-  });
+    renderComponent('/en')
+    screen.getByText('/')
+  })
 
   it('returns an unprefixed pathname at sub paths', () => {
-    renderWithProvider('/en/about');
-    screen.getByText('/about');
-  });
-});
+    renderComponent('/en/about')
+    screen.getByText('/about')
+  })
+})
 
 describe('usage outside of Next.js', () => {
   beforeEach(() => {
-    vi.mocked(useNextPathname).mockImplementation((() => null) as any);
-  });
+    vi.mocked(useNextPathname).mockImplementation((() => null) as any)
+  })
 
-  it('returns `null` when used within a provider', () => {
-    const {container} = render(
-      <NextLinguiClientProvider locale="en" messages={{}}>
-        <Component />
-      </NextLinguiClientProvider>
-    );
-    expect(container.innerHTML).toBe('');
-  });
-});
+  it('returns `null` when used in a non-Next.js environment', () => {
+    mockLocale('en')
+    const { container } = render(<Component />)
+    expect(container.innerHTML).toBe('')
+  })
+})

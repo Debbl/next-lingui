@@ -1,18 +1,18 @@
-type ParamValue = string | number | boolean;
+type ParamValue = string | number | boolean
 
 type ReadFrom<Path> = Path extends `${string}[${infer Rest}`
   ? ReadUntil<Rest>
-  : [];
+  : []
 
 type ReadUntil<Path> = Path extends `${infer Match}]${infer Rest}`
   ? [Match, ...ReadFrom<Rest>]
-  : [];
+  : []
 
 type RemovePrefixes<Key> = Key extends `[...${infer Name}`
   ? Name
   : Key extends `...${infer Name}`
     ? Name
-    : Key;
+    : Key
 
 type StrictParams<Pathname> = Pathname extends `${string}[${string}`
   ? {
@@ -20,8 +20,8 @@ type StrictParams<Pathname> = Pathname extends `${string}[${string}`
         ? Array<ParamValue> | undefined
         : Key extends `...${string}`
           ? Array<ParamValue>
-          : ParamValue;
+          : ParamValue
     }
-  : never;
+  : never
 
-export default StrictParams;
+export default StrictParams

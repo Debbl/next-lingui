@@ -1,1 +1,1 @@
-export * from './navigation/react-client/index.js';
+export * from './navigation/react-client/index'

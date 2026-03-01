@@ -1,15 +1,24 @@
 {
-  "extends": "eslint-config-molindo/tsconfig.json",
-  "include": ["src", "test", "__mocks__", "types", "next-env.d.ts"],
   "compilerOptions": {
-    "lib": ["dom", "esnext"],
-    "target": "ES2020",
-    "declaration": true,
-    "rootDir": ".",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "target": "ESNext",
     "jsx": "react-jsx",
-    "skipLibCheck": true,
-    "noEmit": true
-  }
+    "lib": ["ESNext", "DOM"],
+    "baseUrl": ".",
+    "rootDir": ".",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "paths": {
+      "~/*": ["src/*"]
+    },
+    "resolveJsonModule": true,
+    "strict": true,
+    "erasableSyntaxOnly": true,
+    "strictNullChecks": true,
+    "outDir": "./dist",
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true
+  },
+  "exclude": ["dist"]
 }

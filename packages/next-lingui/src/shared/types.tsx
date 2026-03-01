@@ -1,11 +1,11 @@
-import type {I18n} from '@lingui/core';
+import type { I18n } from '@lingui/core'
 
 export type ParametersExceptFirst<Fn> = Fn extends (
   arg0: any,
   ...rest: infer R
 ) => any
   ? R
-  : never;
+  : never
 
 export type ParametersExceptFirstTwo<Fn> = Fn extends (
   arg0: any,
@@ -13,31 +13,31 @@ export type ParametersExceptFirstTwo<Fn> = Fn extends (
   ...rest: infer R
 ) => any
   ? R
-  : never;
+  : never
 
 // https://www.totaltypescript.com/concepts/the-prettify-helper
 export type Prettify<Type> = {
-  [Key in keyof Type]: Type[Key];
-} & {};
+  [Key in keyof Type]: Type[Key]
+} & {}
 
 // Lingui-compatible types
-export type Locale = string;
+export type Locale = string
 // Allow both string and CompiledMessage types for compatibility with Lingui
-export type Messages = Record<string, string | any>;
+export type Messages = Record<string, string | any>
 
 // Lingui config interface
 export interface LinguiConfig {
-  locale: Locale;
-  messages: Messages;
-  now?: Date;
-  timeZone?: string;
-  formats?: Record<string, any>;
-  onError?(error: Error): void;
-  getMessageFallback?(info: {id: string; locale: Locale}): string;
+  locale: Locale
+  messages: Messages
+  now?: Date
+  timeZone?: string
+  formats?: Record<string, any>
+  onError?: (error: Error) => void
+  getMessageFallback?: (info: { id: string; locale: Locale }) => string
 }
 
 // Translation function type
-export type TranslationFn = I18n['_'];
+export type TranslationFn = I18n['_']
 
 // Re-export for compatibility with existing code
-export type {I18n} from '@lingui/core';
+export type { I18n } from '@lingui/core'

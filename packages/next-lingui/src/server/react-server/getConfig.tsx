@@ -1,21 +1,22 @@
-import {cache} from 'react';
-import type {LinguiConfig, Locale} from '../../shared/types.js';
-import {isPromise} from '../../shared/utils.js';
-import {getRequestLocale} from './RequestLocale.js';
-import createRequestConfig from './createRequestConfig.js';
-import type {GetRequestConfigParams} from './getRequestConfig.js';
-import validateLocale from './validateLocale.js';
+/* eslint-disable n/prefer-global/process */
+import { cache } from 'react'
+import { isPromise } from '../../shared/utils'
+import createRequestConfig from './createRequestConfig'
+import { getRequestLocale } from './RequestLocale'
+import validateLocale from './validateLocale'
+import type { LinguiConfig, Locale } from '../../shared/types'
+import type { GetRequestConfigParams } from './getRequestConfig'
 
-// This is automatically inherited by `NextLinguiServerProvider` if
+// This is automatically inherited by `NextLinguiClientProvider` if
 // the component is rendered from a Server Component.
 function getDefaultTimeZoneImpl() {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  return Intl.DateTimeFormat().resolvedOptions().timeZone
 }
-const getDefaultTimeZone = cache(getDefaultTimeZoneImpl);
+const getDefaultTimeZone = cache(getDefaultTimeZoneImpl)
 
 async function receiveRuntimeConfigImpl(
   getConfig: typeof createRequestConfig,
-  localeOverride?: Locale
+  localeOverride?: Locale,
 ) {
   if (
     process.env.NODE_ENV !== 'production' &&
@@ -29,8 +30,8 @@ Please verify that:
 2. You have a default export in your i18n request configuration file.
 
 See also: https://next-lingui.dev/docs/usage/configuration#i18n-request
-`
-    );
+`,
+    )
   }
 
   const params: GetRequestConfigParams = {
@@ -42,27 +43,27 @@ See also: https://next-lingui.dev/docs/usage/configuration#i18n-request
     get requestLocale() {
       return localeOverride
         ? Promise.resolve(localeOverride)
-        : getRequestLocale();
-    }
-  };
+        : getRequestLocale()
+    },
+  }
 
-  let result = getConfig(params);
+  let result = getConfig(params)
   if (isPromise(result)) {
-    result = await result;
+    result = await result
   }
 
   if (!result.locale) {
     throw new Error(
-      'No locale was returned from `getRequestConfig`.\n\nSee https://next-lingui.dev/docs/usage/configuration#i18n-request'
-    );
+      'No locale was returned from `getRequestConfig`.\n\nSee https://next-lingui.dev/docs/usage/configuration#i18n-request',
+    )
   }
   if (process.env.NODE_ENV !== 'production') {
-    validateLocale(result.locale);
+    validateLocale(result.locale)
   }
 
-  return result;
+  return result
 }
-const receiveRuntimeConfig = cache(receiveRuntimeConfigImpl);
+const receiveRuntimeConfig = cache(receiveRuntimeConfigImpl)
 
 function initializeLinguiConfig(config: LinguiConfig): LinguiConfig {
   return {
@@ -71,27 +72,29 @@ function initializeLinguiConfig(config: LinguiConfig): LinguiConfig {
     now: config.now,
     timeZone: config.timeZone,
     formats: config.formats,
-    onError: config.onError || ((error) => {
-      if (process.env.NODE_ENV !== 'production') {
-        console.error(error);
-      }
-    }),
-    getMessageFallback: config.getMessageFallback || (({id}) => id)
-  };
+    onError:
+      config.onError ||
+      ((error) => {
+        if (process.env.NODE_ENV !== 'production') {
+          console.error(error)
+        }
+      }),
+    getMessageFallback: config.getMessageFallback || (({ id }) => id),
+  }
 }
 
 async function getConfigImpl(localeOverride?: Locale): Promise<LinguiConfig> {
   const runtimeConfig = await receiveRuntimeConfig(
     createRequestConfig,
-    localeOverride
-  );
-  
-  const initializedConfig = initializeLinguiConfig(runtimeConfig);
-  
+    localeOverride,
+  )
+
+  const initializedConfig = initializeLinguiConfig(runtimeConfig)
+
   return {
     ...initializedConfig,
-    timeZone: runtimeConfig.timeZone || getDefaultTimeZone()
-  };
+    timeZone: runtimeConfig.timeZone || getDefaultTimeZone(),
+  }
 }
-const getConfig = cache(getConfigImpl);
-export default getConfig;
+const getConfig = cache(getConfigImpl)
+export default getConfig

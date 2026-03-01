@@ -1,1 +1,1 @@
-export * from './routing/index.js';
+export * from './routing/index'

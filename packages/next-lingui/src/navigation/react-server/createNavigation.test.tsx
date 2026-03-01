@@ -1,26 +1,26 @@
-import {describe, expect, it, vi} from 'vitest';
-import createNavigation from './createNavigation.js';
+import { describe, expect, it, vi } from 'vitest'
+import createNavigation from './createNavigation'
 
-vi.mock('react');
+vi.mock('react')
 
-const {usePathname, useRouter} = createNavigation();
+const { usePathname, useRouter } = createNavigation()
 
 describe('usePathname', () => {
   it('should throw an error', () => {
     expect(() => {
-      usePathname();
+      usePathname()
     }).toThrowError(
-      '`usePathname` is not supported in Server Components. You can use this hook if you convert the calling component to a Client Component.'
-    );
-  });
-});
+      '`usePathname` is not supported in Server Components. You can use this hook if you convert the calling component to a Client Component.',
+    )
+  })
+})
 
 describe('useRouter', () => {
   it('should throw an error', () => {
     expect(() => {
-      useRouter();
+      useRouter()
     }).toThrowError(
-      '`useRouter` is not supported in Server Components. You can use this hook if you convert the calling component to a Client Component.'
-    );
-  });
-});
+      '`useRouter` is not supported in Server Components. You can use this hook if you convert the calling component to a Client Component.',
+    )
+  })
+})

@@ -1,4 +1,3 @@
-export {default as NextLinguiClientProvider} from '../shared/NextLinguiClientProvider.js';
-export {default as NextLinguiServerProvider} from './NextLinguiServerProvider.js';
+export type { LinguiConfig, Locale, Messages } from '../shared/types'
 
-export type {Locale, Messages, LinguiConfig} from '../shared/types.js';
+export { default as NextLinguiClientProvider } from './NextLinguiClientProviderServer'

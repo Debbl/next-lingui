@@ -1,13 +1,13 @@
-import {cache} from 'react';
-import type {Locale} from '../../shared/types.js';
-import getConfig from './getConfig.js';
-import getServerFormatter from './getServerFormatter.js';
+import { cache } from 'react'
+import getConfig from './getConfig'
+import getServerFormatter from './getServerFormatter'
+import type { Locale } from '../../shared/types'
 
 async function getFormatterCachedImpl(locale?: Locale) {
-  const config = await getConfig(locale);
-  return getServerFormatter(config);
+  const config = await getConfig(locale)
+  return getServerFormatter(config)
 }
-const getFormatterCached = cache(getFormatterCachedImpl);
+const getFormatterCached = cache(getFormatterCachedImpl)
 
 /**
  * Returns a formatter based on the given locale.
@@ -16,7 +16,7 @@ const getFormatterCached = cache(getFormatterCachedImpl);
  * you can override it by passing in additional options.
  */
 export default async function getFormatter(opts?: {
-  locale?: Locale;
+  locale?: Locale
 }): Promise<ReturnType<typeof getServerFormatter>> {
-  return getFormatterCached(opts?.locale);
+  return getFormatterCached(opts?.locale)
 }

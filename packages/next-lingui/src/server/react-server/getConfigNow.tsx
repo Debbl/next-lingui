@@ -1,11 +1,11 @@
-import {cache} from 'react';
-import type {Locale} from '../../shared/types.js';
-import getConfig from './getConfig.js';
+import { cache } from 'react'
+import getConfig from './getConfig'
+import type { Locale } from '../../shared/types'
 
 async function getConfigNowImpl(locale?: Locale) {
-  const config = await getConfig(locale);
-  return config.now;
+  const config = await getConfig(locale)
+  return config.now
 }
-const getConfigNow = cache(getConfigNowImpl);
+const getConfigNow = cache(getConfigNowImpl)
 
-export default getConfigNow;
+export default getConfigNow

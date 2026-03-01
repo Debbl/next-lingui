@@ -1,19 +1,19 @@
-import type {LinguiConfig, Locale} from '../../shared/types.js';
+import type { LinguiConfig, Locale } from '../../shared/types'
 
 export type RequestConfig = Omit<LinguiConfig, 'locale'> & {
   /**
    * @see https://next-lingui.dev/docs/usage/configuration#i18n-request
-   **/
-  locale: LinguiConfig['locale'];
-};
+   */
+  locale: LinguiConfig['locale']
+}
 
-export type GetRequestConfigParams = {
+export interface GetRequestConfigParams {
   /**
    * If you provide an explicit locale to an async server-side function like
    * `getTranslations({locale: 'en'})`, it will be passed via `locale` to
    * `getRequestConfig` so you can use it instead of the segment value.
    */
-  locale?: Locale;
+  locale?: Locale
 
   /**
    * Typically corresponds to the `[locale]` segment that was matched by the middleware.
@@ -30,16 +30,16 @@ export type GetRequestConfigParams = {
    *
    * @see https://next-lingui.dev/docs/usage/configuration#i18n-request
    */
-  requestLocale: Promise<string | undefined>;
-};
+  requestLocale: Promise<string | undefined>
+}
 
 /**
  * Should be called in `i18n/request.ts` to create the configuration for the current request.
  */
 export default function getRequestConfig(
   createRequestConfig: (
-    params: GetRequestConfigParams
-  ) => RequestConfig | Promise<RequestConfig>
+    params: GetRequestConfigParams,
+  ) => RequestConfig | Promise<RequestConfig>,
 ) {
-  return createRequestConfig;
+  return createRequestConfig
 }

@@ -5,5 +5,5 @@
 export {
   default as getRequestConfig,
   type GetRequestConfigParams,
-  type RequestConfig
-} from './getRequestConfig.js';
+  type RequestConfig,
+} from './getRequestConfig'

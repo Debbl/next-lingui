@@ -8,7 +8,6 @@ Only these APIs are part of the public surface:
 
 - `next-lingui`
   - `NextLinguiClientProvider`
-  - `NextLinguiServerProvider`
 - `next-lingui/middleware`
   - `createMiddleware` (default export)
 - `next-lingui/plugin`
@@ -53,7 +52,7 @@ Removed exports and subpaths:
 - Macro imports: use `@lingui/react/macro` directly.
 - Lingui config helper: use `defineConfig` from `@lingui/conf`.
 - Catalog workflows: use official `lingui` CLI (`lingui extract`, `lingui compile`).
-- Automatic server-side locale/messages injection: use `NextLinguiServerProvider`.
+- Automatic server-side locale/messages injection: use `NextLinguiClientProvider`.
 - Explicit provider mode: use `NextLinguiClientProvider` with required `locale` and `messages`.
 
 ## Credits

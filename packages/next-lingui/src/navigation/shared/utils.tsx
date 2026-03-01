@@ -1,13 +1,3 @@
-import type {ParsedUrlQueryInput} from 'node:querystring';
-import type {UrlObject} from 'url';
-import type {ResolvedRoutingConfig} from '../../routing/config.js';
-import type {
-  DomainsConfig,
-  LocalePrefixMode,
-  Locales,
-  Pathnames
-} from '../../routing/types.js';
-import type {Locale} from '../../shared/types.js';
 import {
   getLocalePrefix,
   getLocalizedTemplate,
@@ -15,173 +5,185 @@ import {
   isLocalizableHref,
   matchesPathname,
   normalizeTrailingSlash,
-  prefixPathname
-} from '../../shared/utils.js';
-import type StrictParams from './StrictParams.js';
+  prefixPathname,
+} from '../../shared/utils'
+import type { ParsedUrlQueryInput } from 'node:querystring'
+import type { UrlObject } from 'node:url'
+import type { ResolvedRoutingConfig } from '../../routing/config'
+import type {
+  DomainsConfig,
+  LocalePrefixMode,
+  Locales,
+  Pathnames,
+} from '../../routing/types'
+import type { Locale } from '../../shared/types'
+import type StrictParams from './StrictParams'
 
-type SearchParamValue = ParsedUrlQueryInput[keyof ParsedUrlQueryInput];
+type SearchParamValue = ParsedUrlQueryInput[keyof ParsedUrlQueryInput]
 
 // Minor false positive: A route that has both optional and
 // required params will allow optional params.
 type HrefOrHrefWithParamsImpl<Pathname, Other> =
   Pathname extends `${string}[[...${string}`
     ? // Optional catch-all
-      Pathname | ({pathname: Pathname; params?: StrictParams<Pathname>} & Other)
+        | Pathname
+        | ({ pathname: Pathname; params?: StrictParams<Pathname> } & Other)
     : Pathname extends `${string}[${string}`
       ? // Required catch-all & regular params
-        {pathname: Pathname; params: StrictParams<Pathname>} & Other
+        { pathname: Pathname; params: StrictParams<Pathname> } & Other
       : // No params
-        Pathname | ({pathname: Pathname} & Other);
+          Pathname | ({ pathname: Pathname } & Other)
 
 // For `Link`
 export type HrefOrUrlObjectWithParams<Pathname> = HrefOrHrefWithParamsImpl<
   Pathname,
   Omit<UrlObject, 'pathname'>
->;
+>
 
-export type QueryParams = Record<string, SearchParamValue>;
+export type QueryParams = Record<string, SearchParamValue>
 
 // For `getPathname` (hence also its consumers: `redirect`, `useRouter`, …)
 export type HrefOrHrefWithParams<Pathname> = HrefOrHrefWithParamsImpl<
   Pathname,
-  {query?: QueryParams}
->;
+  { query?: QueryParams }
+>
 
 export function normalizeNameOrNameWithParams<Pathname>(
   href:
     | HrefOrHrefWithParams<Pathname>
     | {
-        locale: Locale;
-        href: HrefOrHrefWithParams<Pathname>;
-      }
+        locale: Locale
+        href: HrefOrHrefWithParams<Pathname>
+      },
 ): {
-  pathname: Pathname;
-  params?: StrictParams<Pathname>;
+  pathname: Pathname
+  params?: StrictParams<Pathname>
 } {
   return typeof href === 'string'
-    ? {pathname: href as Pathname}
+    ? { pathname: href as Pathname }
     : (href as {
-        pathname: Pathname;
-        params?: StrictParams<Pathname>;
-      });
+        pathname: Pathname
+        params?: StrictParams<Pathname>
+      })
 }
 
 export function serializeSearchParams(
-  searchParams: Record<string, SearchParamValue>
+  searchParams: Record<string, SearchParamValue>,
 ) {
   function serializeValue(value: SearchParamValue) {
-    return String(value);
+    return String(value)
   }
 
-  const urlSearchParams = new URLSearchParams();
+  const urlSearchParams = new URLSearchParams()
   for (const [key, value] of Object.entries(searchParams)) {
     if (Array.isArray(value)) {
       value.forEach((cur) => {
-        urlSearchParams.append(key, serializeValue(cur));
-      });
+        urlSearchParams.append(key, serializeValue(cur))
+      })
     } else {
-      urlSearchParams.set(key, serializeValue(value));
+      urlSearchParams.set(key, serializeValue(value))
     }
   }
-  return '?' + urlSearchParams.toString();
+  return `?${urlSearchParams.toString()}`
 }
 
 type StrictUrlObject<Pathname> = Omit<UrlObject, 'pathname'> & {
-  pathname: Pathname;
-};
+  pathname: Pathname
+}
 
 export function compileLocalizedPathname<
   AppLocales extends Locales,
-  Pathname
+  Pathname,
 >(opts: {
-  locale: AppLocales[number];
-  pathname: Pathname;
-  params?: StrictParams<Pathname>;
-  pathnames: Pathnames<AppLocales>;
-  query?: Record<string, SearchParamValue>;
-}): string;
+  locale: AppLocales[number]
+  pathname: Pathname
+  params?: StrictParams<Pathname>
+  pathnames: Pathnames<AppLocales>
+  query?: Record<string, SearchParamValue>
+}): string
 export function compileLocalizedPathname<
   AppLocales extends Locales,
-  Pathname
+  Pathname,
 >(opts: {
-  locale: AppLocales[number];
-  pathname: StrictUrlObject<Pathname>;
-  params?: StrictParams<Pathname>;
-  pathnames: Pathnames<AppLocales>;
-  query?: Record<string, SearchParamValue>;
-}): UrlObject;
+  locale: AppLocales[number]
+  pathname: StrictUrlObject<Pathname>
+  params?: StrictParams<Pathname>
+  pathnames: Pathnames<AppLocales>
+  query?: Record<string, SearchParamValue>
+}): UrlObject
 export function compileLocalizedPathname<AppLocales extends Locales, Pathname>({
   pathname,
   locale,
   params,
   pathnames,
-  query
+  query,
 }: {
-  locale: AppLocales[number];
-  pathname: keyof typeof pathnames | StrictUrlObject<keyof typeof pathnames>;
-  params?: StrictParams<Pathname>;
-  pathnames: Pathnames<AppLocales>;
-  query?: Record<string, SearchParamValue>;
+  locale: AppLocales[number]
+  pathname: keyof typeof pathnames | StrictUrlObject<keyof typeof pathnames>
+  params?: StrictParams<Pathname>
+  pathnames: Pathnames<AppLocales>
+  query?: Record<string, SearchParamValue>
 }) {
   function compilePath(value: string) {
-    const pathnameConfig = pathnames[value];
+    const pathnameConfig = pathnames[value]
 
-    let compiled: string;
+    let compiled: string
     if (pathnameConfig) {
-      const template = getLocalizedTemplate(pathnameConfig, locale, value);
-      compiled = template;
+      const template = getLocalizedTemplate(pathnameConfig, locale, value)
+      compiled = template
 
       if (params) {
         Object.entries(params).forEach(([key, paramValue]) => {
-          let regexp: string, replacer: string;
+          let regexp: string, replacer: string
 
           if (Array.isArray(paramValue)) {
-            regexp = `(\\[)?\\[...${key}\\](\\])?`;
-            replacer = paramValue.map((v) => String(v)).join('/');
+            regexp = `(\\[)?\\[...${key}\\](\\])?`
+            replacer = paramValue.map((v) => String(v)).join('/')
           } else {
-            regexp = `\\[${key}\\]`;
-            replacer = String(paramValue);
+            regexp = `\\[${key}\\]`
+            replacer = String(paramValue)
           }
 
-          compiled = compiled.replace(new RegExp(regexp, 'g'), replacer);
-        });
+          compiled = compiled.replace(new RegExp(regexp, 'g'), replacer)
+        })
       }
 
       // Clean up optional catch-all segments that were not replaced
-      compiled = compiled.replace(/\[\[\.\.\..+\]\]/g, '');
+      compiled = compiled.replace(/\[\[\.\.\..+\]\]/g, '')
+      // eslint-disable-next-line n/prefer-global/process
       if (process.env.NODE_ENV !== 'production' && compiled.includes('[')) {
         // Next.js throws anyway, therefore better provide a more helpful error message
         throw new Error(
           `Insufficient params provided for localized pathname.\nTemplate: ${template}\nParams: ${JSON.stringify(
-            params
-          )}`
-        );
+            params,
+          )}`,
+        )
       }
 
-      compiled = encodePathname(compiled);
+      compiled = encodePathname(compiled)
     } else {
       // Unknown pathnames
-      compiled = value;
+      compiled = value
     }
 
-    compiled = normalizeTrailingSlash(compiled);
+    compiled = normalizeTrailingSlash(compiled)
 
     if (query) {
       // This also encodes non-ASCII characters by
       // using `new URLSearchParams()` internally
-      compiled += serializeSearchParams(query);
+      compiled += serializeSearchParams(query)
     }
 
-    return compiled;
+    return compiled
   }
 
   if (typeof pathname === 'string') {
-    return compilePath(pathname);
+    return compilePath(pathname)
   } else {
-    const {pathname: internalPathname, ...rest} = pathname;
-    const compiled = compilePath(internalPathname);
-    const result: UrlObject = {...rest, pathname: compiled};
-    return result;
+    const { pathname: internalPathname, ...rest } = pathname
+    const compiled = compilePath(internalPathname)
+    const result: UrlObject = { ...rest, pathname: compiled }
+    return result
   }
 }
 
@@ -206,23 +208,23 @@ function encodePathname(pathname: string) {
   //
   // Therefore, the bottom line is that next-lingui should take care of encoding non-ASCII
   // characters in all cases, but can rely on `new URL()` to not double-encode characters.
-  return new URL(pathname, 'http://l').pathname;
+  return new URL(pathname, 'http://l').pathname
 }
 
 export function getRoute<AppLocales extends Locales>(
   locale: AppLocales[number],
   pathname: string,
-  pathnames: Pathnames<AppLocales>
+  pathnames: Pathnames<AppLocales>,
 ): keyof Pathnames<AppLocales> {
-  const sortedPathnames = getSortedPathnames(Object.keys(pathnames));
-  const decoded = decodeURI(pathname);
+  const sortedPathnames = getSortedPathnames(Object.keys(pathnames))
+  const decoded = decodeURI(pathname)
 
   for (const internalPathname of sortedPathnames) {
-    const localizedPathnamesOrPathname = pathnames[internalPathname];
+    const localizedPathnamesOrPathname = pathnames[internalPathname]
     if (typeof localizedPathnamesOrPathname === 'string') {
-      const localizedPathname = localizedPathnamesOrPathname;
+      const localizedPathname = localizedPathnamesOrPathname
       if (matchesPathname(localizedPathname, decoded)) {
-        return internalPathname;
+        return internalPathname
       }
     } else {
       if (
@@ -230,27 +232,27 @@ export function getRoute<AppLocales extends Locales>(
           getLocalizedTemplate(
             localizedPathnamesOrPathname,
             locale,
-            internalPathname
+            internalPathname,
           ),
-          decoded
+          decoded,
         )
       ) {
-        return internalPathname;
+        return internalPathname
       }
     }
   }
 
-  return pathname as keyof Pathnames<AppLocales>;
+  return pathname as keyof Pathnames<AppLocales>
 }
 
 export function getBasePath(
   pathname: string,
-  windowPathname = window.location.pathname
+  windowPathname = window.location.pathname,
 ) {
   if (pathname === '/') {
-    return windowPathname;
+    return windowPathname
   } else {
-    return windowPathname.replace(pathname, '');
+    return windowPathname.replace(pathname, '')
   }
 }
 
@@ -258,7 +260,7 @@ export function applyPathnamePrefix<
   AppLocales extends Locales,
   AppLocalePrefixMode extends LocalePrefixMode,
   AppPathnames extends Pathnames<AppLocales> | undefined,
-  AppDomains extends DomainsConfig<AppLocales> | undefined
+  AppDomains extends DomainsConfig<AppLocales> | undefined,
 >(
   pathname: string,
   locale: Locales[number],
@@ -282,35 +284,35 @@ export function applyPathnamePrefix<
         'defaultLocale'
       >
     >,
-  force?: boolean
+  force?: boolean,
 ): string {
-  const {mode} = routing.localePrefix;
+  const { mode } = routing.localePrefix
 
-  let shouldPrefix;
+  let shouldPrefix
   if (force !== undefined) {
-    shouldPrefix = force;
+    shouldPrefix = force
   } else if (isLocalizableHref(pathname)) {
     if (mode === 'always') {
-      shouldPrefix = true;
+      shouldPrefix = true
     } else if (mode === 'as-needed') {
       shouldPrefix = routing.domains
         ? // Since locales are unique per domain, any locale that is a
           // default locale of a domain doesn't require a prefix
           !routing.domains.some((cur) => cur.defaultLocale === locale)
-        : locale !== routing.defaultLocale;
+        : locale !== routing.defaultLocale
     }
   }
 
   return shouldPrefix
     ? prefixPathname(getLocalePrefix(locale, routing.localePrefix), pathname)
-    : pathname;
+    : pathname
 }
 
 export function validateReceivedConfig<
   AppLocales extends Locales,
   AppLocalePrefixMode extends LocalePrefixMode,
   AppPathnames extends Pathnames<AppLocales> | undefined,
-  AppDomains extends DomainsConfig<AppLocales> | undefined
+  AppDomains extends DomainsConfig<AppLocales> | undefined,
 >(
   config: Partial<
     Pick<
@@ -322,12 +324,12 @@ export function validateReceivedConfig<
       >,
       'defaultLocale' | 'localePrefix'
     >
-  >
+  >,
 ) {
   if (
     config.localePrefix?.mode === 'as-needed' &&
     !('defaultLocale' in config)
   ) {
-    throw new Error("`localePrefix: 'as-needed' requires a `defaultLocale`.");
+    throw new Error("`localePrefix: 'as-needed' requires a `defaultLocale`.")
   }
 }

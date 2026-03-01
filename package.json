@@ -16,11 +16,11 @@
   "keywords": [],
   "scripts": {
     "build": "pnpm --filter next-lingui build",
-    "test": "vitest",
+    "test": "pnpm --filter next-lingui test",
     "release": "pnpm build && bumpp -r",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "typecheck": "pnpm --filter next-lingui typecheck",
+    "lint": "pnpm --filter next-lingui lint",
+    "lint:fix": "pnpm --filter next-lingui lint:fix",
     "prepare": "simple-git-hooks"
   },
   "devDependencies": {

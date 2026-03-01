@@ -1,59 +1,56 @@
-'use client';
+'use client'
 
-import {useLingui} from '@lingui/react';
-import NextLink, {type LinkProps} from 'next/link.js';
-import {usePathname} from 'next/navigation.js';
-import {
-  type ComponentProps,
-  type MouseEvent,
-  type ReactNode,
-  type Ref,
-  forwardRef
-} from 'react';
-import type {InitializedLocaleCookieConfig} from '../../routing/config.js';
-import type {Locale} from '../../shared/types.js';
-import syncLocaleCookie from './syncLocaleCookie.js';
+import { useLingui } from '@lingui/react'
+import NextLink from 'next/link'
+import { usePathname } from 'next/navigation'
+import React, { forwardRef } from 'react'
+import syncLocaleCookie from './syncLocaleCookie'
+import type { LinkProps } from 'next/link'
+import type { ComponentProps, MouseEvent, ReactNode, Ref } from 'react'
+import type { InitializedLocaleCookieConfig } from '../../routing/config'
+import type { Locale } from '../../shared/types'
 
 type NextLinkProps = Omit<ComponentProps<'a'>, keyof LinkProps> &
-  Omit<LinkProps, 'locale'>;
+  Omit<LinkProps, 'locale'>
 
 type Props = NextLinkProps & {
-  locale?: Locale;
-  localeCookie: InitializedLocaleCookieConfig;
-};
+  locale?: Locale
+  localeCookie: InitializedLocaleCookieConfig
+}
 
 function BaseLink(
-  {href, locale, localeCookie, onClick, prefetch, ...rest}: Props,
-  ref: Ref<HTMLAnchorElement>
+  { href, locale, localeCookie, onClick, prefetch, ...rest }: Props,
+  ref: Ref<HTMLAnchorElement>,
 ) {
-  const {i18n} = useLingui();
-  const curLocale = i18n.locale;
-  const isChangingLocale = locale != null && locale !== curLocale;
+  const { i18n } = useLingui()
+  const curLocale = i18n.locale
+  const isChangingLocale = locale != null && locale !== curLocale
 
   // The types aren't entirely correct here. Outside of Next.js
   // `useParams` can be called, but the return type is `null`.
-  const pathname = usePathname() as ReturnType<typeof usePathname> | null;
+  const pathname = usePathname() as ReturnType<typeof usePathname> | null
 
   function onLinkClick(event: MouseEvent<HTMLAnchorElement>) {
     // Even though we force a prefix when changing locales,
     // this could be a cache hit of the client-side router,
     // therefore we sync the cookie to ensure it's up to date.
-    syncLocaleCookie(localeCookie, pathname, curLocale, locale);
-    if (onClick) onClick(event);
+    syncLocaleCookie(localeCookie, pathname, curLocale, locale)
+    if (onClick) onClick(event)
   }
 
   if (isChangingLocale) {
+    // eslint-disable-next-line n/prefer-global/process
     if (prefetch && process.env.NODE_ENV !== 'production') {
       console.error(
-        'The `prefetch` prop is currently not supported when using the `locale` prop on `Link` to switch the locale.`'
-      );
+        'The `prefetch` prop is currently not supported when using the `locale` prop on `Link` to switch the locale.`',
+      )
     }
-    prefetch = false;
+    prefetch = false
   }
 
   // Somehow the types for `next/link` don't work as expected
   // when `moduleResolution: "nodenext"` is used.
-  const Link = NextLink as unknown as (props: NextLinkProps) => ReactNode;
+  const Link = NextLink as unknown as (props: NextLinkProps) => ReactNode
 
   return (
     <Link
@@ -64,7 +61,7 @@ function BaseLink(
       prefetch={prefetch}
       {...rest}
     />
-  );
+  )
 }
 
-export default forwardRef(BaseLink);
+export default forwardRef(BaseLink)
