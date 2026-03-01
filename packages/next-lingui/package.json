@@ -64,8 +64,6 @@
   ],
   "scripts": {
     "build": "tsdown",
-    "verify:build-output": "node ./scripts/verify-build-output.mjs",
-    "build:verify": "pnpm run build && pnpm run lint:package && pnpm run verify:build-output",
     "test": "vitest",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
