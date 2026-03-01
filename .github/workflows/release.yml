@@ -1,6 +1,7 @@
 name: Release
 
 permissions:
+  id-token: write # Required for OIDC
   contents: write
 
 on:
