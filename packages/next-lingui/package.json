@@ -9,7 +9,7 @@
     "type": "git",
     "url": "git+https://github.com/Debbl/next-lingui.git"
   },
-  "typings": "./dist/index.react-server.d.mts",
+  "typings": "./dist/index.react-client.d.mts",
   "keywords": [
     "react",
     "intl",
@@ -26,8 +26,9 @@
   "sideEffects": false,
   "exports": {
     ".": {
-      "types": "./dist/index.react-server.d.mts",
-      "default": "./dist/index.react-server.mjs"
+      "types": "./dist/index.react-client.d.mts",
+      "react-server": "./dist/index.react-server.mjs",
+      "default": "./dist/index.react-client.mjs"
     },
     "./server": {
       "types": "./dist/server.react-server.d.mts",
@@ -56,7 +57,7 @@
       "default": "./_internal/request-config.mjs"
     }
   },
-  "main": "./dist/index.react-server.mjs",
+  "main": "./dist/index.react-client.mjs",
   "files": [
     "dist",
     "src"

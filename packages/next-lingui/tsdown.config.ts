@@ -2,6 +2,7 @@ import { defineConfig } from 'tsdown'
 import type { UserConfig } from 'tsdown'
 
 const entry = {
+  'index.react-client': 'src/index.react-client.tsx',
   'index.react-server': 'src/index.react-server.tsx',
   'navigation.react-client': 'src/navigation.react-client.tsx',
   'navigation.react-server': 'src/navigation.react-server.tsx',
@@ -21,6 +22,34 @@ const rewriteNextJsSuffix: any = () => ({
         /(['"])next\/(link|navigation|server)\.js\1/g,
         '$1next/$2$1',
       )
+    }
+  },
+})
+
+const preserveUseClientDirectives: any = () => ({
+  name: 'preserve-use-client-directives',
+  generateBundle(_options: any, bundle: any) {
+    const clientModuleSuffixes = [
+      '/src/shared/NextLinguiClientProvider.tsx',
+      '/src/navigation/shared/BaseLink.tsx',
+    ]
+
+    for (const chunk of Object.values(bundle) as Array<any>) {
+      if (chunk.type !== 'chunk') continue
+
+      const moduleIds = [
+        ...(Array.isArray(chunk.moduleIds) ? chunk.moduleIds : []),
+        ...Object.keys(chunk.modules ?? {}),
+      ].map((id) => id.replaceAll('\\', '/'))
+
+      const isClientChunk = moduleIds.some((id) =>
+        clientModuleSuffixes.some((suffix) => id.endsWith(suffix)),
+      )
+      if (!isClientChunk) continue
+
+      if (!/['"]use client['"]\s*;/.test(chunk.code)) {
+        chunk.code = `'use client';\n${chunk.code}`
+      }
     }
   },
 })
@@ -58,6 +87,6 @@ export default defineConfig([
     dts: true,
     sourcemap: true,
     inputOptions: ensureInternalRequestConfigExternal,
-    plugins: [rewriteNextJsSuffix()],
+    plugins: [rewriteNextJsSuffix(), preserveUseClientDirectives()],
   },
 ])

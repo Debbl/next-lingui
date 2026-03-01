@@ -7,7 +7,7 @@ import validateLocale from './validateLocale'
 import type { LinguiConfig, Locale } from '../../shared/types'
 import type { GetRequestConfigParams } from './getRequestConfig'
 
-// This is automatically inherited by `NextLinguiServerProvider` if
+// This is automatically inherited by `NextLinguiClientProvider` if
 // the component is rendered from a Server Component.
 function getDefaultTimeZoneImpl() {
   return Intl.DateTimeFormat().resolvedOptions().timeZone

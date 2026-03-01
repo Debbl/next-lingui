@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import NextLinguiClientProvider from '../shared/NextLinguiClientProvider'
-import NextLinguiServerProvider from './NextLinguiServerProvider'
+import NextLinguiClientProviderServer from './NextLinguiClientProviderServer'
 
 vi.mock('../server/react-server/getLocale', () => ({
   default: vi.fn(async () => 'en-US'),
@@ -9,9 +9,9 @@ vi.mock('../server/react-server/getMessages', () => ({
   default: vi.fn(async () => ({})),
 }))
 
-describe('nextLinguiServerProvider', () => {
+describe('nextLinguiClientProviderServer', () => {
   it('passes explicit locale and messages', async () => {
-    const result = await NextLinguiServerProvider({
+    const result = await NextLinguiClientProviderServer({
       locale: 'de-DE',
       messages: { hello: 'Hallo' },
       children: null,
@@ -23,7 +23,7 @@ describe('nextLinguiServerProvider', () => {
   })
 
   it('falls back to request config values', async () => {
-    const result = await NextLinguiServerProvider({ children: null })
+    const result = await NextLinguiClientProviderServer({ children: null })
 
     expect(result.type).toBe(NextLinguiClientProvider)
     expect(result.props.locale).toBe('en-US')

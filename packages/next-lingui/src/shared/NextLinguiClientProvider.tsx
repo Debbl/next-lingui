@@ -7,8 +7,8 @@ import type { ReactNode } from 'react'
 import type { Locale, Messages } from './types'
 
 export interface NextLinguiClientProviderProps {
-  locale: Locale
-  messages: Messages
+  locale?: Locale
+  messages?: Messages
   children?: ReactNode
 }
 
@@ -17,6 +17,12 @@ export default function NextLinguiClientProvider({
   locale,
   messages,
 }: NextLinguiClientProviderProps) {
+  if (!locale || !messages) {
+    throw new Error(
+      '`NextLinguiClientProvider` requires `locale` and `messages` in Client Components. In Server Components importing from `next-lingui`, they are injected automatically.',
+    )
+  }
+
   const [i18n] = useState(() => {
     const instance = setupI18n({
       locale,

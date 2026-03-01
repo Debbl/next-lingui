@@ -14,7 +14,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "lingui compile && next build",
     "extract": "lingui extract",
     "compile": "lingui compile",
     "build:analyze": "ANALYZE=true next build",
