@@ -8,7 +8,7 @@ const withBundleAnalyzer = bundleAnalyzer({
 })
 
 const withNextLingui = createNextLinguiPlugin({
-  requestConfig: './src/i18n/requests.ts',
+  requestConfig: './src/i18n/request.ts',
 })
 
 const nextConfig: NextConfig = {

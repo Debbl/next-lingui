@@ -14,7 +14,7 @@ import {
   serializeSearchParams,
   validateReceivedConfig,
 } from './utils'
-import type { ComponentProps } from 'react'
+import type { ComponentProps, DOMAttributes } from 'react'
 import type {
   RoutingConfigLocalizedNavigation,
   RoutingConfigSharedNavigation,
@@ -76,7 +76,12 @@ export default function createSharedNavigationFns<
   type LinkProps<Pathname extends keyof AppPathnames = never> = Prettify<
     Omit<
       ComponentProps<typeof BaseLink>,
-      'href' | 'localePrefix' | 'unprefixed' | 'defaultLocale' | 'localeCookie'
+      | 'href'
+      | 'localePrefix'
+      | 'unprefixed'
+      | 'defaultLocale'
+      | 'localeCookie'
+      | keyof DOMAttributes<HTMLAnchorElement>
     > & {
       /** @see https://next-lingui.dev/docs/routing/navigation#link */
       href: [AppPathnames] extends [never]
@@ -84,7 +89,7 @@ export default function createSharedNavigationFns<
         : HrefOrUrlObjectWithParams<Pathname>
       /** @see https://next-lingui.dev/docs/routing/navigation#link */
       locale?: Locale
-    }
+    } & DOMAttributes<HTMLAnchorElement>
   >
   function Link<Pathname extends keyof AppPathnames = never>(
     { href, locale, ...rest }: LinkProps<Pathname>,

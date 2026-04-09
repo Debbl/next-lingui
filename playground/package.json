@@ -14,6 +14,7 @@
   },
   "scripts": {
     "dev": "next dev",
+    "prebuild": "pnpm --filter next-lingui build",
     "build": "lingui compile && next build",
     "extract": "lingui extract",
     "compile": "lingui compile",

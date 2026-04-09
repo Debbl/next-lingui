@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { isDevelopmentOrNextBuild } from './config'
 import { hasStableTurboConfig, isNextJs16OrHigher } from './nextFlags'
 import { throwError } from './utils'
 import type { NextConfig } from 'next'
@@ -29,7 +30,7 @@ function pathExists(pathname: string, cwd?: string) {
 
 function resolveRequestConfigPath(providedPath?: string, cwd?: string) {
   if (providedPath) {
-    if (!pathExists(providedPath, cwd)) {
+    if (isDevelopmentOrNextBuild && !pathExists(providedPath, cwd)) {
       throwError(
         `Could not find request config at ${providedPath}, please provide a valid path.`,
       )
@@ -46,9 +47,13 @@ function resolveRequestConfigPath(providedPath?: string, cwd?: string) {
     }
   }
 
-  throwError(
-    `Could not locate request configuration module.\n\nSupported defaults:\n- ./(src/)i18n/request.{js,jsx,ts,tsx}\n\nOr specify it explicitly in your Next.js config:\n\nconst withNextLingui = createNextLinguiPlugin('./path/to/i18n/request.ts');`,
-  )
+  if (isDevelopmentOrNextBuild) {
+    throwError(
+      `Could not locate request configuration module.\n\nSupported defaults:\n- ./(src/)i18n/request.{js,jsx,ts,tsx}\n\nOr specify it explicitly in your Next.js config:\n\nconst withNextLingui = createNextLinguiPlugin('./path/to/i18n/request.ts');`,
+    )
+  }
+
+  return pathExists('./src', cwd) ? './src/i18n/request.ts' : './i18n/request.ts'
 }
 
 export default function getNextConfig(
@@ -56,10 +61,11 @@ export default function getNextConfig(
   nextConfig?: NextConfig,
 ) {
   const nextLinguiConfig: Partial<NextConfig> = {}
+  // eslint-disable-next-line n/prefer-global/process
+  const useTurbo = process.env.TURBOPACK != null
 
   const shouldConfigureTurbo =
-    // eslint-disable-next-line n/prefer-global/process
-    process.env.TURBOPACK != null ||
+    useTurbo ||
     isNextJs16OrHigher() ||
     nextConfig?.turbopack != null ||
     // @ts-expect-error -- For Next.js <16
@@ -110,20 +116,29 @@ export default function getNextConfig(
     }
   }
 
-  nextLinguiConfig.webpack = function webpack(config, context) {
-    if (!config.resolve) config.resolve = {}
-    if (!config.resolve.alias) config.resolve.alias = {}
-    ;(config.resolve.alias as Record<string, string>)[REQUEST_CONFIG_ALIAS] =
-      path.resolve(
-        config.context!,
-        resolveRequestConfigPath(pluginConfig.requestConfig, config.context),
-      )
+  if (!useTurbo) {
+    nextLinguiConfig.webpack = function webpack(config, context) {
+      if (!config.resolve) config.resolve = {}
+      if (!config.resolve.alias) config.resolve.alias = {}
+      ;(config.resolve.alias as Record<string, string>)[REQUEST_CONFIG_ALIAS] =
+        path.resolve(
+          config.context!,
+          resolveRequestConfigPath(pluginConfig.requestConfig, config.context),
+        )
 
-    if (typeof nextConfig?.webpack === 'function') {
-      return nextConfig.webpack(config, context)
+      if (typeof nextConfig?.webpack === 'function') {
+        return nextConfig.webpack(config, context)
+      }
+
+      return config
     }
+  }
 
-    return config
+  if (nextConfig?.trailingSlash) {
+    nextLinguiConfig.env = {
+      ...nextConfig.env,
+      _next_intl_trailing_slash: 'true',
+    }
   }
 
   return Object.assign({}, nextConfig, nextLinguiConfig)

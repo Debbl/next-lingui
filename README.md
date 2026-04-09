@@ -1,10 +1,12 @@
 # next-lingui
 
-A minimal Next.js integration layer for [Lingui](https://github.com/lingui/js-lingui).
+A minimal Next.js compatibility layer for [js-lingui](https://github.com/lingui/js-lingui).
+
+It is intentionally small: `next-lingui` does not try to replace Lingui itself, but provides a few Next.js-oriented pieces so you can integrate js-lingui into a Next.js app more easily.
 
 ## Supported APIs
 
-Only these APIs are part of the public surface:
+Only a small compatibility surface is provided:
 
 - `next-lingui`
   - `NextLinguiClientProvider`
